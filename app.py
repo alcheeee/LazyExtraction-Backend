@@ -5,12 +5,12 @@ from db import create_db_and_tables
 import random
 
 
-DO_ADD_USERS_TEST, users_to_add = 1, 10
+DO_ADD_USERS_TEST, users_to_add = 0, 10
 DO_USER_STAT_TEST = 0
-DO_CORP_TEST = 1
+DO_CORP_TEST = 0
 
 def Add_Users_tests(amount_tests):
-    for i in range(1, amount_tests):
+    for i in range(1, amount_tests+1):
         user_data_manager.create_user(f'Dev{random.randint(100, 10000)}', '123',
                                       f'dev{random.randint(100, 10000)}@dev.com')
 

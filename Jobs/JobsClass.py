@@ -15,37 +15,36 @@ class Job:
         self.required_stats = required_stats
         self.stat_changes = stat_changes
 
+
     def fetch_user_stats(self, user_id: int, session: Session):
         user = session.get(User, user_id)
         user_stats = user.stats
+        if not user_stats:
+            logger.error(f"User {user_id} stats not found")
+            return None
         return user_stats
+
 
     def apply_stat_changes(self, user_id: int):
         with Session(engine) as session:
             user_stats = self.fetch_user_stats(user_id, session)
-            if not user_stats:
-                logger.error("User %s stats not found", user_id)
-                return False
+            if user_stats:
+                for stat, change in self.stat_changes.items():
+                    if hasattr(user_stats, stat):
+                        setattr(user_stats, stat, getattr(user_stats, stat) + change)
+                session.add(user_stats)
+                session.commit()
+                return True
 
-            for stat, change in self.stat_changes.items():
-                if hasattr(user_stats, stat):
-                    setattr(user_stats, stat, getattr(user_stats, stat) + change)
-
-            session.add(user_stats)
-            session.commit()
-            return True
 
     def check_qualifications(self, user_id: int):
         with Session(engine) as session:
             user_stats = self.fetch_user_stats(user_id, session)
-            if not user_stats:
-                logger.error("User %s stats not found", user_id)
-                return False
-
-            for stat, required_value in self.required_stats.items():
-                if getattr(user_stats, stat, 0) < required_value:
-                    return False
-            return True
+            if user_stats:
+                for stat, required_value in self.required_stats.items():
+                    if getattr(user_stats, stat, 0) < required_value:
+                        return False
+                return True
 
 
 

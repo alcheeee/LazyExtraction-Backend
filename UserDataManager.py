@@ -1,4 +1,4 @@
-from sqlmodel import Session
+from sqlmodel import Session, select
 from models import User, Stats
 from db import engine
 import logging
@@ -12,6 +12,14 @@ class UserDataManager:
 
     def create_user(self, username: str, password: str, email: str):
         with Session(self.engine) as session:
+
+            #Check for name availability
+            existing_name = session.exec(select(User).where(User.username == username)).first()
+            existing_email = session.exec(select(User).where(User.email == email)).first()
+            if existing_name or existing_email:
+                logger.error(f"Username {username} or email {email} already exists.")
+                return None
+
             try:
                 new_user = User(username=username, password=password, email=email)
                 default_stats_data = {
@@ -21,7 +29,7 @@ class UserDataManager:
                     'level': 1,
                     'energy': 100,
                     'health': 100,
-                    'stamina': 100,
+                    'stamina': 1,
                     'strength': 1,
                     'intelligence': 1,
                     'knowledge': 1}
@@ -30,12 +38,12 @@ class UserDataManager:
                 new_user.stats = user_stats
                 session.add(new_user)
                 session.commit()
-                logger.info("Created User: %s", new_user.username)
-                return new_user.id
+                logger.info(f"Created User: {new_user.username}")
+                return True
 
             except Exception as e:
                 session.rollback()
-                logger.error("Failed to create user: %s", e)
+                logger.error(f"Failed to create user: {e}")
                 return False
 
 
@@ -45,28 +53,28 @@ class UserDataManager:
                 user = session.get(User, user_id)
                 user_stats = user.stats
             except Exception as e:
-                logger.error("User %s not found or has no stats. %s", user_id, e)
+                logger.error(f"User {user_id} not found or has no stats. {e}")
                 return False
 
             if user.stats.energy + energy_delta < 0:
-                logger.info("User %s: does not have enough energy.", user.id)
+                logger.info(f"User {user.id}: does not have enough energy.")
                 return False
 
             user.stats.energy += energy_delta
             session.commit()
-            logger.info("User %s: Energy Adjusted by %s. New Energy: %s", user.id, energy_delta, user.stats.energy)
+            logger.info(f"User {user.id}: Energy Adjusted by {energy_delta}. New Energy: {user.stats.energy}")
             return True
 
     def update_stat(self, user_id: int, stat_name: str, new_value: int):
         with Session(self.engine) as session:
             user = session.get(User, user_id)
             if not user or not hasattr(user.stats, stat_name):
-                logger.error("No user found with ID: %s or stat %s", user_id, stat_name)
+                logger.error(f"No user found with ID: {user_id} or stat {stat_name}")
                 return False
 
             setattr(user.stats, stat_name, new_value)
             session.commit()
-            logger.info("Updated %s: for user %s to %s", stat_name, user.id, new_value)
+            logger.info(f"Updated {stat_name}: for user {user.id} to {new_value}")
             return True
 
 user_data_manager = UserDataManager(engine)
