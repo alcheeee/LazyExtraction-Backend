@@ -35,7 +35,7 @@ class UserDataManager:
 
             except Exception as e:
                 session.rollback()
-                logger.info("Failed to create user: %s", e)
+                logger.error("Failed to create user: %s", e)
                 return False
 
 
@@ -45,7 +45,7 @@ class UserDataManager:
                 user = session.get(User, user_id)
                 user_stats = user.stats
             except Exception as e:
-                logger.info("User %s not found or has no stats. %s", user_id, e)
+                logger.error("User %s not found or has no stats. %s", user_id, e)
                 return False
 
             if user.stats.energy + energy_delta < 0:
@@ -61,7 +61,7 @@ class UserDataManager:
         with Session(self.engine) as session:
             user = session.get(User, user_id)
             if not user or not hasattr(user.stats, stat_name):
-                logger.info("No user found with ID: %s or stat %s", user_id, stat_name)
+                logger.error("No user found with ID: %s or stat %s", user_id, stat_name)
                 return False
 
             setattr(user.stats, stat_name, new_value)

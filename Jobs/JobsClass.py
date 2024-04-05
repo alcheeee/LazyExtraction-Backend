@@ -16,16 +16,15 @@ class Job:
         self.stat_changes = stat_changes
 
     def fetch_user_stats(self, user_id: int, session: Session):
-        statement = select(Stats).where(Stats.user_id == user_id)
-        results = session.exec(statement)
-        user_stats = results.first()
+        user = session.get(User, user_id)
+        user_stats = user.stats
         return user_stats
 
     def apply_stat_changes(self, user_id: int):
         with Session(engine) as session:
             user_stats = self.fetch_user_stats(user_id, session)
             if not user_stats:
-                logger.info("User %s stats not found", user_id)
+                logger.error("User %s stats not found", user_id)
                 return False
 
             for stat, change in self.stat_changes.items():
@@ -40,7 +39,7 @@ class Job:
         with Session(engine) as session:
             user_stats = self.fetch_user_stats(user_id, session)
             if not user_stats:
-                logger.info("User %s stats not found", user_id)
+                logger.error("User %s stats not found", user_id)
                 return False
 
             for stat, required_value in self.required_stats.items():
@@ -52,10 +51,10 @@ class Job:
 
 all_jobs = {
     'Store_Bagger': Job(
-        job_name='Example Job',
+        job_name='Store Bagger',
         job_type='General',
         income=100,
-        description='Example Description',
+        description='Bag groceries at the local market.',
         required_stats={'level': 1},
         stat_changes={'energy': -5, 'cash': 200}),
 

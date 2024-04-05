@@ -49,6 +49,7 @@ class Corporations(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     corporation_name: str
     corporation_type: str
+    leader: int
     employees: List["User"] = Relationship(back_populates="corporation")
 
 
