@@ -1,41 +1,108 @@
-from sqlmodel import Session, select
+from sqlmodel import Session
 from models import User, Stats
 from db import engine
+import logging
+from Utils.logger import setup_logging
+setup_logging()
+logger = logging.getLogger(__name__)
 
-def CreateUser(username: str, password: str, email: str):
-    with Session(engine) as session:
-        new_user = User(username=username, password=password, email=email)
-        stats_data = {
-            'level': 1,
-            'health': 100,
-            'stamina': 100,
-            'strength': 1,
-            'intelligence': 1,
-            'knowledge': 1}
+class UserDataManager:
+    def __init__(self, engine):
+        self.engine = engine
 
-        user_stats = Stats(**stats_data)
-        new_user.stats = user_stats
-        session.add(new_user)
-        session.commit()
-        session.refresh(new_user)
+    def create_user(self, username: str, password: str, email: str):
+        with Session(self.engine) as session:
+            try:
+                new_user = User(username=username, password=password, email=email)
+                default_stats_data = {
+                    'cash': 0,
+                    'bank': 1000,
+                    'education': 'none',
+                    'level': 1,
+                    'energy': 100,
+                    'health': 100,
+                    'stamina': 100,
+                    'strength': 1,
+                    'intelligence': 1,
+                    'knowledge': 1}
 
-        print("Created User:", new_user)
-        print("Users Stats:", new_user.stats)
+                user_stats = Stats(**default_stats_data)
+                new_user.stats = user_stats
+                session.add(new_user)
+                session.commit()
+                logger.info("Created User: %s", new_user.username)
+                return new_user.id
 
-def UpdateStats(user_id: int, stat_name: str, new_value: int):
-    with Session(engine) as session:
-        try:
-            user = session.get(User, user_id)
-            stats = session.get(Stats, user.stats_id)
-        except:
-            print(f"No user found with ID {user_id}")
-            return
+            except Exception as e:
+                session.rollback()
+                logger.info("Failed to create user: %s", e)
+                return False
 
-        if hasattr(stats, stat_name):
-            setattr(stats, stat_name, new_value)
-            session.add(stats)
+
+    def adjust_energy(self, user_id: int, energy_delta: int):
+        with Session(self.engine) as session:
+            try:
+                user = session.get(User, user_id)
+                user_stats = user.stats
+            except Exception as e:
+                logger.info("User %s not found or has no stats. %s", user_id, e)
+                return False
+
+            if user.stats.energy + energy_delta < 0:
+                logger.info("User %s: does not have enough energy.", user.id)
+                return False
+
+            user.stats.energy += energy_delta
             session.commit()
+            logger.info("User %s: Energy Adjusted by %s. New Energy: %s", user.id, energy_delta, user.stats.energy)
+            return True
 
-            print(f"Updated '{stat_name}' for user {user.id} to {new_value}.")
-        else:
-            print(f"Stat {stat_name} does not exist.")
+    def update_stat(self, user_id: int, stat_name: str, new_value: int):
+        with Session(self.engine) as session:
+            user = session.get(User, user_id)
+            if not user or not hasattr(user.stats, stat_name):
+                logger.info("No user found with ID: %s or stat %s", user_id, stat_name)
+                return False
+
+            setattr(user.stats, stat_name, new_value)
+            session.commit()
+            logger.info("Updated %s: for user %s to %s", stat_name, user.id, new_value)
+            return True
+
+user_data_manager = UserDataManager(engine)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
