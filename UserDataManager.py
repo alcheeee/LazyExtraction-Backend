@@ -13,7 +13,7 @@ class UserDataManager:
     def create_user(self, username: str, password: str, email: str):
         with Session(self.engine) as session:
 
-            #Check for name availability
+            #Check for name  & email availability
             existing_name = session.exec(select(User).where(User.username == username)).first()
             existing_email = session.exec(select(User).where(User.email == email)).first()
             if existing_name or existing_email:
@@ -25,9 +25,11 @@ class UserDataManager:
                 default_stats_data = {
                     'cash': 0,
                     'bank': 1000,
+                    'reputation': 0,
                     'education': 'none',
                     'level': 1,
                     'energy': 100,
+                    'max_energy': 100,
                     'health': 100,
                     'stamina': 1,
                     'strength': 1,
@@ -57,25 +59,51 @@ class UserDataManager:
                 return False
 
             if user.stats.energy + energy_delta < 0:
-                logger.info(f"User {user.id}: does not have enough energy.")
+                logger.info(f"User {user.id} does not have enough energy.")
                 return False
+
+            elif (user.stats.energy + energy_delta) > user.stats.max_energy:
+                user.stats.energy = user.stats.max_energy
+                session.commit()
+                logger.info(f"User {user.id} has max energy.")
+                return True
 
             user.stats.energy += energy_delta
             session.commit()
-            logger.info(f"User {user.id}: Energy Adjusted by {energy_delta}. New Energy: {user.stats.energy}")
+            logger.info(f"User {user.id}: Energy Adjusted by {energy_delta}. New Energy: {user.stats.energy}.")
             return True
+
 
     def update_stat(self, user_id: int, stat_name: str, new_value: int):
         with Session(self.engine) as session:
             user = session.get(User, user_id)
             if not user or not hasattr(user.stats, stat_name):
-                logger.error(f"No user found with ID: {user_id} or stat {stat_name}")
+                logger.error(f"No user found with ID: {user_id} or stat {stat_name}.")
                 return False
 
             setattr(user.stats, stat_name, new_value)
             session.commit()
-            logger.info(f"Updated {stat_name}: for user {user.id} to {new_value}")
+            logger.info(f"Updated {stat_name} for user: {user.id} to {new_value}.")
             return True
+
+    def update_user_job(self, user_id: int, job_name: str):
+        with Session(self.engine) as session:
+            user = session.get(User, user_id)
+            if not user:
+                logger.error(f"No user found with ID {user_id}.")
+                return False
+            user.job = job_name
+            session.commit()
+            logger.info(f"Updated user {user.id} job: {user.job}.")
+            return True
+
+    def get_user_info(self, user_id: int):
+        with Session(self.engine) as session:
+            user = session.get(User, user_id)
+            if not user:
+                logger.error(f"No user found with ID {user_id}.")
+                return False
+            return user
 
 user_data_manager = UserDataManager(engine)
 

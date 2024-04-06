@@ -9,9 +9,11 @@ class Stats(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     cash: int
     bank: int
+    reputation: int
     education: str
     level: int
     energy: int
+    max_energy: int
     health: int
     stamina: int
     strength: int

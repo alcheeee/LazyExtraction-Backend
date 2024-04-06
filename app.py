@@ -1,6 +1,7 @@
 from UserDataManager import user_data_manager
 from Corporations.CorporationManager import corporation_manager
-from Jobs.JobsClass import Job, all_jobs
+from Jobs.GeneralJobs import Job, all_jobs
+from Jobs.PoliceForce import PoliceForce, police_ranks
 from db import create_db_and_tables
 import random
 
@@ -8,6 +9,7 @@ import random
 DO_ADD_USERS_TEST, users_to_add = 0, 10
 DO_USER_STAT_TEST = 0
 DO_CORP_TEST = 0
+DO_JOB_TEST = 1
 
 def Add_Users_tests(amount_tests):
     for i in range(1, amount_tests+1):
@@ -25,6 +27,13 @@ def Corporation_tests():
     corporation_manager.remove_user_from_corporation(user_id=6, corporation_id=1) #Remove user from Corporation
     corporation_manager.is_user_in_corporation(user_id=6, corporation_id=1) #Is user in Corporation
 
+def Jobs_tests():
+    #store_bagger = all_jobs['Store Bagger']
+    #user_data_manager.update_user_job(user_id=3, job_name=store_bagger.job_name)
+
+    user_job_get = all_jobs[user_data_manager.get_user_info(user_id=3).job]
+
+    user_job_get.apply_stat_changes(user_id=3)
 
 def main():
     create_db_and_tables()
@@ -36,6 +45,8 @@ def main():
         Adjust_User_Stat_tests()
     if DO_CORP_TEST:
         Corporation_tests()
+    if DO_JOB_TEST:
+        Jobs_tests()
 
 
 if __name__ == "__main__":
