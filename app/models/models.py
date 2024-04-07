@@ -1,6 +1,7 @@
 from typing import List, Optional
 from sqlmodel import SQLModel, Field, Relationship
 
+
 class Stats(SQLModel, table=True):
     """
     Stats Table for Users, linked by id

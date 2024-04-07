@@ -1,12 +1,15 @@
 from sqlmodel import Session, select
-from models import User, Stats
-from db import engine
+from ..models.models import User, Stats
+from ..database.db import engine
+from ..auth.auth_handler import pwd_context
+
+#Logging stuff
 import logging
 from Utils.logger import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
-class UserDataManager:
+class UserCRUD:
     def __init__(self, engine):
         self.engine = engine
 
@@ -21,7 +24,8 @@ class UserDataManager:
                 return None
 
             try:
-                new_user = User(username=username, password=password, email=email)
+                hashed_password = pwd_context.hash(password)
+                new_user = User(username=username, password=hashed_password, email=email)
                 default_stats_data = {
                     'cash': 0,
                     'bank': 1000,
@@ -86,6 +90,7 @@ class UserDataManager:
             logger.info(f"Updated {stat_name} for user: {user.id} to {new_value}.")
             return True
 
+
     def update_user_job(self, user_id: int, job_name: str):
         with Session(self.engine) as session:
             user = session.get(User, user_id)
@@ -97,6 +102,7 @@ class UserDataManager:
             logger.info(f"Updated user {user.id} job: {user.job}.")
             return True
 
+
     def get_user_info(self, user_id: int):
         with Session(self.engine) as session:
             user = session.get(User, user_id)
@@ -105,40 +111,11 @@ class UserDataManager:
                 return False
             return user
 
-user_data_manager = UserDataManager(engine)
 
+    def get_user_by_username(self, username: str):
+        with Session(self.engine) as session:
+            user = session.exec(select(User).where(User.username == username)).first()
+            return user
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+user_data_manager = UserCRUD(engine)
 
