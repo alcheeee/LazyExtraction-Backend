@@ -11,7 +11,7 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
     # Database
-    SQLITE_URL = f"sqlite:///database.db"
+    SQLITE_URL = f"sqlite:///app/database.db"
 
 
 settings = Settings()

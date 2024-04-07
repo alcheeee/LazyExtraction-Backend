@@ -1,11 +1,11 @@
 from sqlmodel import Session, select
 from ..models.models import User, Stats
 from ..database.db import engine
-from ..auth.auth_handler import pwd_context
+from ..auth.auth_bearer import pwd_context
 
 #Logging stuff
 import logging
-from Utils.logger import setup_logging
+from ..utils.logger import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class UserCRUD:
             existing_email = session.exec(select(User).where(User.email == email)).first()
             if existing_name or existing_email:
                 logger.error(f"Username {username} or email {email} already exists.")
-                return None
+                return False
 
             try:
                 hashed_password = pwd_context.hash(password)
@@ -60,22 +60,22 @@ class UserCRUD:
                 user_stats = user.stats
             except Exception as e:
                 logger.error(f"User {user_id} not found or has no stats. {e}")
-                return False
+                return False, ""
 
             if user.stats.energy + energy_delta < 0:
                 logger.info(f"User {user.id} does not have enough energy.")
-                return False
+                return False, "Not Enough Energy!"
 
             elif (user.stats.energy + energy_delta) > user.stats.max_energy:
                 user.stats.energy = user.stats.max_energy
                 session.commit()
                 logger.info(f"User {user.id} has max energy.")
-                return True
+                return True, "Energy reached max!"
 
             user.stats.energy += energy_delta
             session.commit()
             logger.info(f"User {user.id}: Energy Adjusted by {energy_delta}. New Energy: {user.stats.energy}.")
-            return True
+            return True, str(user.stats.energy)
 
 
     def update_stat(self, user_id: int, stat_name: str, new_value: int):
@@ -117,5 +117,12 @@ class UserCRUD:
             user = session.exec(select(User).where(User.username == username)).first()
             return user
 
-user_data_manager = UserCRUD(engine)
+
+    def get_user_by_id(self, user_id: int):
+        with Session(self.engine) as session:
+            user = session.exec(select(User).where(User.id == user_id)).first()
+            return user
+
+
+user_crud = UserCRUD(engine)
 

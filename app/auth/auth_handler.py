@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, status
 from jose import jwt
-from .auth_bearer import SECRET_KEY, ALGORITHM, pwd_context, oauth2_scheme
-from Utils.logger import setup_logging
-from ..database.UserCRUD import user_data_manager
+from .auth_bearer import SECRET_KEY, ALGORITHM, pwd_context, oauth2_scheme, ACCESS_TOKEN_EXPIRE_MINUTES
+from ..utils.logger import setup_logging
+from ..database.UserCRUD import user_crud
 
 class UserAuthenticator:
     def __init__(self, user_data_manager):
@@ -44,17 +44,19 @@ def decode_token(token: str):
             detail="Could not validate credentials",)
 
 
-async def get_current_active_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},)
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
         payload = decode_token(token)
         user_id: str = payload.get("sub")
         if user_id is None:
             raise credentials_exception
-        user = user_data_manager.get_user_by_id(user_id)
+
+        user = user_crud.get_user_by_id(int(user_id))
         if user is None:
             raise credentials_exception
         return user

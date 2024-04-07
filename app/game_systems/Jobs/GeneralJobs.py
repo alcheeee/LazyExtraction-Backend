@@ -1,8 +1,8 @@
 from sqlmodel import Session
-from app.models.models import User
-from app.database.db import engine
+from ..models.models import User
+from ..database.db import engine
 import logging
-from app.Utils.logger import setup_logging
+from ..utils.logger import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
