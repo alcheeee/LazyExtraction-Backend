@@ -1,9 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Form, status
 from pydantic import BaseModel
 from ..models.models import User
-from ..auth.auth_handler import oauth2_scheme,user_crud, get_current_user
+from ..auth.auth_handler import oauth2_scheme,user_crud, get_current_user, UserAuthenticator
 
-
+authenticator = UserAuthenticator(user_data_manager=user_crud)
 router = APIRouter()
 
 class UserCreateRequest(BaseModel):
@@ -21,6 +21,23 @@ def create_user(user_request: UserCreateRequest):
         raise HTTPException(status_code=400, detail="Error creating user")
 
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+@router.post("/login")
+def login_for_access_token(username: str = Form(...), password: str = Form(...)):
+    user = authenticator.authenticate_user(username, password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = authenticator.create_access_token(user_id=user.id)
+    return {"access_token": access_token, "token_type": "bearer"}
+
 
 class EnergyAdjustRequest(BaseModel):
     energy_delta: int
@@ -32,5 +49,4 @@ async def adjust_energy(request: EnergyAdjustRequest, user: User = Depends(get_c
     if result:
         return {"message": "Energy adjusted successfully", "Energy Adjusted": msg}
     else:
-        # You might want to customize this message based on the actual reason of failure
         raise HTTPException(status_code=400, detail=msg)

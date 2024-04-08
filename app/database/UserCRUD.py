@@ -112,15 +112,15 @@ class UserCRUD:
             return user
 
 
-    def get_user_by_username(self, username: str):
-        with Session(self.engine) as session:
-            user = session.exec(select(User).where(User.username == username)).first()
-            return user
-
-
     def get_user_by_id(self, user_id: int):
         with Session(self.engine) as session:
             user = session.exec(select(User).where(User.id == user_id)).first()
+            return user
+
+
+    def get_user_by_username(self, username: str):
+        with Session(self.engine) as session:
+            user = session.exec(select(User).where(User.username == username)).first()
             return user
 
 

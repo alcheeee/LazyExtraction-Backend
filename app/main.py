@@ -22,7 +22,6 @@ app = create_app()
 r"""
 To run app:
 
-cd "C:\Users\romai\OneDrive\Documents\Python Projects\RPG API"
 uvicorn app.main:app --reload
 
 """

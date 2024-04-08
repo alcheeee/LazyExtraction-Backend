@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
-from jose import jwt
+from jose import jwt, JWTError
 from .auth_bearer import SECRET_KEY, ALGORITHM, pwd_context, oauth2_scheme, ACCESS_TOKEN_EXPIRE_MINUTES
 from ..utils.logger import setup_logging
 from ..database.UserCRUD import user_crud
@@ -9,11 +9,6 @@ class UserAuthenticator:
     def __init__(self, user_data_manager):
         self.user_data_manager = user_data_manager
 
-
-    def get_user(self, db, username: str):
-        if username in db:
-            user_dict = db[username]
-            return UserInDB(**user_dict)
 
     def authenticate_user(self, username: str, password: str):
         user = self.user_data_manager.get_user_by_username(username)
@@ -58,6 +53,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
         user = user_crud.get_user_by_id(int(user_id))
         if user is None:
+            print(user, 'user not found.')
             raise credentials_exception
         return user
     except JWTError:
