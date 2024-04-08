@@ -2,8 +2,6 @@ from sqlmodel import Session, select
 from ..models.models import User, Stats
 from ..database.db import engine
 from ..auth.auth_bearer import pwd_context
-
-#Logging stuff
 import logging
 from ..utils.logger import setup_logging
 setup_logging()
@@ -20,8 +18,9 @@ class UserCRUD:
             existing_name = session.exec(select(User).where(User.username == username)).first()
             existing_email = session.exec(select(User).where(User.email == email)).first()
             if existing_name or existing_email:
-                logger.error(f"Username {username} or email {email} already exists.")
-                return False
+                logger.warning(f"Username {username} or email {email} already exists.")
+                msg = f"Username or email already exists."
+                return False, msg
 
             try:
                 hashed_password = pwd_context.hash(password)
@@ -45,12 +44,14 @@ class UserCRUD:
                 session.add(new_user)
                 session.commit()
                 logger.info(f"Created User: {new_user.username}")
-                return True
+                msg = f"Account created, welcome {username}!"
+                return True, msg
 
             except Exception as e:
                 session.rollback()
                 logger.error(f"Failed to create user: {e}")
-                return False
+                msg = "Failed to create user."
+                return False, msg
 
 
     def adjust_energy(self, user_id: int, energy_delta: int):
@@ -88,18 +89,6 @@ class UserCRUD:
             setattr(user.stats, stat_name, new_value)
             session.commit()
             logger.info(f"Updated {stat_name} for user: {user.id} to {new_value}.")
-            return True
-
-
-    def update_user_job(self, user_id: int, job_name: str):
-        with Session(self.engine) as session:
-            user = session.get(User, user_id)
-            if not user:
-                logger.error(f"No user found with ID {user_id}.")
-                return False
-            user.job = job_name
-            session.commit()
-            logger.info(f"Updated user {user.id} job: {user.job}.")
             return True
 
 

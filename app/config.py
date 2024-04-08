@@ -4,7 +4,7 @@ class Settings:
 
     # Project
     PROJECT_NAME: str = "RPGapi | Development"
-    VERSION: str = "0.107"
+    VERSION: str = "0.108"
 
     # Security
     SECRET_KEY: str = secrets.token_urlsafe(32)
@@ -12,6 +12,5 @@ class Settings:
 
     # Database
     SQLITE_URL = f"sqlite:///app/database.db"
-
 
 settings = Settings()

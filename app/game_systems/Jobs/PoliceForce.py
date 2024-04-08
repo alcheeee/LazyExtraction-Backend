@@ -2,7 +2,7 @@ from sqlmodel import Session
 from app.models.models import User
 from app.database.db import engine
 import logging
-from app.Utils.logger import setup_logging
+from app.utils.logger import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
