@@ -4,7 +4,7 @@ from sqlmodel import SQLModel, Field, Relationship
 """
 Migrate Database:
 
-python -m alembic revision --autogenerate -m "Corporation Capital & Rep"
+python -m alembic revision --autogenerate -m "Added Jobs table"
 
 change 'server_default' in migration version.py
 
@@ -22,9 +22,7 @@ class Stats(SQLModel, table=True):
     education: str
     max_energy: int
     health: int
-    stamina: int
     strength: int
-    intelligence: int
     knowledge: int
     user: Optional["User"] = Relationship(back_populates="stats")
 
@@ -56,6 +54,17 @@ class Corporations(SQLModel, table=True):
     employees: List["User"] = Relationship(back_populates="corporation")
 
 
+class Jobs(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
+    job_name: str
+    job_type: str
+    income: int
+    energy_required: int
+    description: str
+    required_stats: str  # Json
+    stat_changes: str
+
+
 class User(SQLModel, table=True):
     """
     User Table
@@ -65,6 +74,7 @@ class User(SQLModel, table=True):
     email: set by user
     """
     id: Optional[int] = Field(default=None, primary_key=True)
+    is_admin: int = Field(default=None)
     username: str = Field(index=True)
     password: str = Field(index=True) # Will be encrypted, but not for development purposes
     email: str = Field(index=True)

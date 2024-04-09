@@ -7,3 +7,4 @@ engine = create_engine(settings.SQLITE_URL, connect_args=connect_args)
 def initialize_db():
     SQLModel.metadata.create_all(engine)
 
+

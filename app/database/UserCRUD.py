@@ -31,9 +31,7 @@ class UserCRUD:
                     'level': 1,
                     'max_energy': 100,
                     'health': 100,
-                    'stamina': 1,
                     'strength': 1,
-                    'intelligence': 1,
                     'knowledge': 1}
 
                 default_inventory_data = {'cash': 0, 'bank': 1000, 'energy': 100}

@@ -29,10 +29,6 @@ def register_new_user(user_request: UserCreateRequest):
 
 
 
-class LoginRequest(BaseModel):
-    username: str
-    password: str
-
 @router.post("/login")
 def login_for_access_token(username: str = Form(...), password: str = Form(...)):
     user = authenticator.authenticate_user(username, password)
@@ -61,11 +57,6 @@ async def user_action_buttons(request: UserActionRequest, user: User = Depends(g
 
 
 
-class CreateCorporationRequest(BaseModel):
-    corporation_name: str
-    corporation_type: str
-
-
 @router.post("/corporations/create-corporation")
 def create_corporation(corporation_name: str = Form(...), corporation_type: str = Form(...), user: User = Depends(get_current_user)):
     result, msg = corp_manager.create_corporation(corporation_name, corporation_type, user.id)
@@ -76,8 +67,6 @@ def create_corporation(corporation_name: str = Form(...), corporation_type: str 
 
 
 
-class AddUserToCorporationRequest(BaseModel):
-    username_to_add_corporation: str
 
 @router.post("/corporations/add-user")
 def add_user_to_corporation(username_to_add_corporation: str = Form(...), user: User = Depends(get_current_user)):
@@ -88,21 +77,6 @@ def add_user_to_corporation(username_to_add_corporation: str = Form(...), user: 
     else:
         msg = "You are not high enough in the Corporation to do that!"
         raise HTTPException(status_code=StatusCodes.ERROR_CODE, detail=msg)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
