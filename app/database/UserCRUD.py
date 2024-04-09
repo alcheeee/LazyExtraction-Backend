@@ -1,5 +1,5 @@
 from sqlmodel import Session, select
-from ..models.models import User, Stats
+from ..models.models import User, Stats, Inventory
 from ..database.db import engine
 from ..auth.auth_bearer import pwd_context
 import logging
@@ -26,12 +26,9 @@ class UserCRUD:
                 hashed_password = pwd_context.hash(password)
                 new_user = User(username=username, password=hashed_password, email=email)
                 default_stats_data = {
-                    'cash': 0,
-                    'bank': 1000,
                     'reputation': 0,
                     'education': 'none',
                     'level': 1,
-                    'energy': 100,
                     'max_energy': 100,
                     'health': 100,
                     'stamina': 1,
@@ -39,8 +36,10 @@ class UserCRUD:
                     'intelligence': 1,
                     'knowledge': 1}
 
-                user_stats = Stats(**default_stats_data)
-                new_user.stats = user_stats
+                default_inventory_data = {'cash': 0, 'bank': 1000, 'energy': 100}
+
+                new_user.stats = Stats(**default_stats_data)
+                new_user.inventory = Inventory(**default_inventory_data)
                 session.add(new_user)
                 session.commit()
                 logger.info(f"Created User: {new_user.username}")
@@ -58,25 +57,26 @@ class UserCRUD:
         with Session(self.engine) as session:
             try:
                 user = session.get(User, user_id)
-                user_stats = user.stats
+
             except Exception as e:
                 logger.error(f"User {user_id} not found or has no stats. {e}")
                 return False, ""
 
-            if user.stats.energy + energy_delta < 0:
+            users_energy = user.inventory.energy
+            if users_energy + energy_delta < 0:
                 logger.info(f"User {user.id} does not have enough energy.")
                 return False, "Not Enough Energy!"
 
-            elif (user.stats.energy + energy_delta) > user.stats.max_energy:
-                user.stats.energy = user.stats.max_energy
+            elif (users_energy + energy_delta) > user.stats.max_energy:
+                users_energy = user.stats.max_energy
                 session.commit()
                 logger.info(f"User {user.id} has max energy.")
                 return True, "Energy reached max!"
 
-            user.stats.energy += energy_delta
+            users_energy += energy_delta
             session.commit()
-            logger.info(f"User {user.id}: Energy Adjusted by {energy_delta}. New Energy: {user.stats.energy}.")
-            return True, str(user.stats.energy)
+            logger.info(f"User {user.id}: Energy Adjusted by {energy_delta}. New Energy: {users_energy}.")
+            return True, str(users_energy)
 
 
     def update_stat(self, user_id: int, stat_name: str, new_value: int):

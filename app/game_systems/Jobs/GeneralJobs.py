@@ -30,16 +30,17 @@ class GeneralJob:
         with Session(engine) as session:
             user = self.fetch_user(user_id, session)
             if self.job_name == user.job:
-                if user.stats and (user.stats.energy - self.energy_required) >= 0:
+                if (user.inventory.energy - self.energy_required) >= 0:
                     stat_changes = {}
                     for stat, change in self.stat_changes.items():
                         if hasattr(user.stats, stat):
                             setattr(user.stats, stat, getattr(user.stats, stat) + change)
                             stat_changes[stat] = change
 
-                    user.stats.bank += self.income
-                    user.stats.energy -= self.energy_required
+                    user.inventory.bank += self.income
+                    user.inventory.energy -= self.energy_required
                     session.add(user.stats)
+                    session.add(user.inventory)
                     session.commit()
                     stat_changes['income'] = self.income
                     stat_changes['energy-used'] = self.energy_required

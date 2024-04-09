@@ -1,5 +1,6 @@
 from ..database.UserCRUD import user_crud
 from ..game_systems.Jobs.AccessAllJobs import update_user_job, work_users_job
+from ..game_systems.Corporations.CorporationManager import corporation_manager
 
 
 class RouteIDs:
@@ -12,7 +13,7 @@ class RouteIDs:
         actions = {
             "play-game-button": lambda: user_crud.adjust_energy(self.user.id, -5),
             "work-job-button": lambda: work_users_job(self.user.id),
-            "store-bagger-job": lambda: update_user_job(self.user.id, 'Store Bagger')
+            "store-bagger-job": lambda: update_user_job(self.user.id, 'Store Bagger'),
         }
 
         if self.route_name_id in actions:

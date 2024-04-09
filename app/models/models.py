@@ -5,15 +5,11 @@ from sqlmodel import SQLModel, Field, Relationship
 class Stats(SQLModel, table=True):
     """
     Stats Table for Users, linked by id
-    id: Unique User Identifier in database
     """
     id: Optional[int] = Field(default=None, primary_key=True)
-    cash: int
-    bank: int
+    level: int
     reputation: int
     education: str
-    level: int
-    energy: int
     max_energy: int
     health: int
     stamina: int
@@ -22,6 +18,15 @@ class Stats(SQLModel, table=True):
     knowledge: int
     user: Optional["User"] = Relationship(back_populates="stats")
 
+class Inventory(SQLModel, table=True):
+    """
+    Inventory Table for Users, linked by id
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)
+    cash: int
+    bank: int
+    energy: int
+    user: Optional["User"] = Relationship(back_populates="inventory")
 
 class User(SQLModel, table=True):
     """
@@ -40,6 +45,8 @@ class User(SQLModel, table=True):
     corporation: Optional["Corporations"] = Relationship(back_populates="employees")
     stats_id: Optional[int] = Field(default=None, foreign_key="stats.id")
     stats: Optional[Stats] = Relationship(back_populates="user")
+    inv_id: Optional[int] = Field(default=None, foreign_key="inventory.id")
+    inventory: Optional[Inventory] = Relationship(back_populates="user")
 
 
 class Corporations(SQLModel, table=True):

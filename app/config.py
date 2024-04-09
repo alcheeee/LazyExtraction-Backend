@@ -4,7 +4,7 @@ class Settings:
 
     # Project
     PROJECT_NAME: str = "RPGapi | Development"
-    VERSION: str = "0.108"
+    VERSION: str = "0.109"
 
     # Security
     SECRET_KEY: str = secrets.token_urlsafe(32)
