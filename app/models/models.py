@@ -1,6 +1,16 @@
 from typing import List, Optional
 from sqlmodel import SQLModel, Field, Relationship
 
+"""
+Migrate Database:
+
+python -m alembic revision --autogenerate -m "Corporation Capital & Rep"
+
+change 'server_default' in migration version.py
+
+python -m alembic upgrade head
+"""
+
 
 class Stats(SQLModel, table=True):
     """
@@ -18,6 +28,7 @@ class Stats(SQLModel, table=True):
     knowledge: int
     user: Optional["User"] = Relationship(back_populates="stats")
 
+
 class Inventory(SQLModel, table=True):
     """
     Inventory Table for Users, linked by id
@@ -27,6 +38,23 @@ class Inventory(SQLModel, table=True):
     bank: int
     energy: int
     user: Optional["User"] = Relationship(back_populates="inventory")
+
+
+class Corporations(SQLModel, table=True):
+    """
+    Corporations Table | One-to-many
+    id: Unique Corporation Identifier
+    corp_type: [Crime, Industrial, Criminal Justice, ..?]
+    employees: [user_id list]
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)
+    corporation_name: str
+    corporation_type: str
+    leader: int
+    capital: Optional[int] = Field(default=0, nullable=False)
+    reputation: Optional[int] = Field(default=0, nullable=False)
+    employees: List["User"] = Relationship(back_populates="corporation")
+
 
 class User(SQLModel, table=True):
     """
@@ -47,19 +75,3 @@ class User(SQLModel, table=True):
     stats: Optional[Stats] = Relationship(back_populates="user")
     inv_id: Optional[int] = Field(default=None, foreign_key="inventory.id")
     inventory: Optional[Inventory] = Relationship(back_populates="user")
-
-
-class Corporations(SQLModel, table=True):
-    """
-    Corporations Table | One-to-many
-    id: Unique Corporation Identifier
-    corp_type: [Crime, Industrial, Criminal Justice, ..?]
-    employees: [user_id list]
-    """
-    id: Optional[int] = Field(default=None, primary_key=True)
-    corporation_name: str
-    corporation_type: str
-    leader: int
-    employees: List["User"] = Relationship(back_populates="corporation")
-
-

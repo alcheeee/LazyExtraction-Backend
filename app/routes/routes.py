@@ -86,6 +86,7 @@ def add_user_to_corporation(username_to_add_corporation: str = Form(...), user: 
         result, msg = corp_manager.add_user_to_corporation(username_to_add_corporation, user.corp_id)
         return {"message": msg}
     else:
+        msg = "You are not high enough in the Corporation to do that!"
         raise HTTPException(status_code=StatusCodes.ERROR_CODE, detail=msg)
 
 

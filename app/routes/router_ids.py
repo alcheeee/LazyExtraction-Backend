@@ -1,6 +1,5 @@
 from ..database.UserCRUD import user_crud
 from ..game_systems.Jobs.AccessAllJobs import update_user_job, work_users_job
-from ..game_systems.Corporations.CorporationManager import corporation_manager
 
 
 class RouteIDs:

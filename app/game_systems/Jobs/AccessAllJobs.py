@@ -1,5 +1,4 @@
-from .GeneralJobs import GeneralJob
-from .PoliceForce import PoliceForce
+from app.database.GameplayCRUDS.GeneralJobsCRUD import GeneralJob
 from app.database.UserCRUD import user_crud
 
 class JobFactory:
