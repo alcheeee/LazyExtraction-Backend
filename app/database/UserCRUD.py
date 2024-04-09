@@ -62,21 +62,21 @@ class UserCRUD:
                 logger.error(f"User {user_id} not found or has no stats. {e}")
                 return False, ""
 
-            users_energy = user.inventory.energy
-            if users_energy + energy_delta < 0:
+            user.inventory.energy
+            if user.inventory.energy + energy_delta < 0:
                 logger.info(f"User {user.id} does not have enough energy.")
                 return False, "Not Enough Energy!"
 
-            elif (users_energy + energy_delta) > user.stats.max_energy:
-                users_energy = user.stats.max_energy
+            elif (user.inventory.energy + energy_delta) > user.stats.max_energy:
+                user.inventory.energy = user.stats.max_energy
                 session.commit()
                 logger.info(f"User {user.id} has max energy.")
                 return True, "Energy reached max!"
 
-            users_energy += energy_delta
+            user.inventory.energy += energy_delta
             session.commit()
-            logger.info(f"User {user.id}: Energy Adjusted by {energy_delta}. New Energy: {users_energy}.")
-            return True, str(users_energy)
+            logger.info(f"User {user.id}: Energy Adjusted by {energy_delta}. New Energy: {user.inventory.energy}.")
+            return True, str(user.inventory.energy)
 
 
     def update_stat(self, user_id: int, stat_name: str, new_value: int):
