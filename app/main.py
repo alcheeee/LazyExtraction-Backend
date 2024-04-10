@@ -15,7 +15,7 @@ def create_app() -> FastAPI:
         initialize_db()
 
     app.include_router(user_router)
-    app.include_router(admin_router, prefix='/admin')
+    app.include_router(admin_router)
     return app
 
 

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 admin_router = APIRouter()
 
-@admin_router.post("/create-new-job")
+@admin_router.post("/admin/create-new-job")
 async def create_job_endpoint(
     job_name: str = Form(...),
     job_type: str = Form(...),
