@@ -30,6 +30,7 @@ class UserCRUD:
                     'education': 'none',
                     'level': 1,
                     'max_energy': 100,
+                    'evasiveness': 1,
                     'health': 100,
                     'strength': 1,
                     'knowledge': 1}

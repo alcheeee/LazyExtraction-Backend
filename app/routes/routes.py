@@ -7,11 +7,6 @@ from .router_ids  import user_crud, RouteIDs, corporation_manager as corp_manage
 authenticator = UserAuthenticator(user_data_manager=user_crud)
 router = APIRouter()
 
-class StatusCodes:
-    ERROR_CODE = 400
-    UNAUTHORIZED = 401
-    SUCCESS_OK = 200
-
 
 
 class UserCreateRequest(BaseModel):
@@ -25,7 +20,7 @@ def register_new_user(user_request: UserCreateRequest):
     if result:
         return {"message": msg}
     else:
-        raise HTTPException(status_code=StatusCodes.ERROR_CODE, detail=msg)
+        raise HTTPException(status_code=400, detail=msg)
 
 
 
@@ -34,7 +29,7 @@ def login_for_access_token(username: str = Form(...), password: str = Form(...))
     user = authenticator.authenticate_user(username, password)
     if not user:
         raise HTTPException(
-            status_code=status.StatusCodes.UNAUTHORIZED,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
@@ -53,7 +48,7 @@ async def user_action_buttons(request: UserActionRequest, user: User = Depends(g
     if result:
         return {"message": msg}
     else:
-        raise HTTPException(status_code=StatusCodes.ERROR_CODE, detail=msg)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
 
 
@@ -63,7 +58,7 @@ def create_corporation(corporation_name: str = Form(...), corporation_type: str 
     if result:
         return {"message": msg}
     else:
-        raise HTTPException(status_code=StatusCodes.ERROR_CODE, detail=msg)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
 
 
@@ -76,7 +71,7 @@ def add_user_to_corporation(username_to_add_corporation: str = Form(...), user: 
         return {"message": msg}
     else:
         msg = "You are not high enough in the Corporation to do that!"
-        raise HTTPException(status_code=StatusCodes.ERROR_CODE, detail=msg)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
 
 

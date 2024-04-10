@@ -21,9 +21,29 @@ def create_app() -> FastAPI:
 
 app = create_app()
 
+
 r"""
 To run app:
 
 uvicorn app.main:app --reload
 
 """
+
+
+r"""
+from sqlmodel import Session, select
+from app.models.models import User
+with Session(engine) as session:
+    # Fetch the user somehow, e.g., by ID
+    user_id = 1  # Example user ID
+    statement = select(User).where(User.id == user_id)
+    user = session.exec(statement).first()
+
+    if user:
+        user.is_admin = True
+        session.commit()  # This should commit the change
+        session.refresh(user)
+    else:
+        print("User not found.")
+"""
+
