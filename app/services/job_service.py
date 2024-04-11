@@ -33,7 +33,7 @@ class JobService:
                         if hasattr(user.stats, stat):
                             setattr(user.stats, stat, getattr(user.stats, stat) + change)
 
-                    user.stats.round(2)
+                    user.stats.round_stats()
                     user.inventory.bank += job.income
                     user.inventory.energy -= energy_required
                     session.commit()

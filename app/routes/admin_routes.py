@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from pydantic import BaseModel, parse_obj_as
 from typing import Optional, Union
 from enum import Enum
-from ..models.models import User, Jobs, Items, Weapon, FoodItems, IndustrialCrafting
+from ..models.models import User, Jobs, Items, Weapon, FoodItems, IndustrialCraftingRecipes
 from ..auth.auth_handler import oauth2_scheme, get_current_user
 from ..services.job_service import create_job, JOB_TYPES
 from ..database.UserCRUD import user_crud, engine
@@ -146,7 +146,7 @@ async def create_industrial_crafting_endpoint(request: IndustrialCraftingCreate,
         crafting_item = await create_general_item(session, item_data, ItemType.IndustrialCrafting)
         crafting_details = request.dict()
         crafting_details["item_id"] = crafting_item.id
-        industrial_crafting_detail = IndustrialCrafting(**crafting_details)
+        industrial_crafting_detail = IndustrialCraftingRecipes(**crafting_details)
         session.add(industrial_crafting_detail)
         session.commit()
 

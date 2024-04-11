@@ -58,7 +58,7 @@ class Corporations(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     corporation_name: str
     corporation_type: str
-    leader: int
+    leader: str
     capital: Optional[int] = Field(default=0, nullable=False)
     reputation: Optional[int] = Field(default=0, nullable=False)
     corp_inventory: str
@@ -76,7 +76,7 @@ class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     is_admin: bool = Field(default=False)
     username: str = Field(index=True)
-    password: str = Field(index=True) # Will be encrypted, but not for development purposes
+    password: str = Field(index=True)
     email: str = Field(index=True)
     job: Optional[str] = Field(default=None)
     corp_id: Optional[int] = Field(default=None, foreign_key="corporations.id")
@@ -114,13 +114,12 @@ class Items(SQLModel, table=True):
     quality: str
     illegal: bool
     category: ItemType = Field(sa_column=Column(Enum(ItemType)))
-
-
     # Relationships
     food_items: Optional["FoodItems"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
     weapon_details: Optional["Weapon"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
-    industrial_crafting_details: Optional["IndustrialCrafting"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
+    industrial_crafting_details: Optional["IndustrialCraftingRecipes"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
     black_market_posts: Optional["BlackMarket"] = Relationship(back_populates="item")
+    general_market_items: Optional["GeneralMarket"] = Relationship(back_populates="item")
 
 
 class FoodItems(SQLModel, table=True):
@@ -142,7 +141,7 @@ class Weapon(SQLModel, table=True):
     item: Optional[Items] = Relationship(back_populates="weapon_details")
 
 
-class IndustrialCrafting(SQLModel, table=True):
+class IndustrialCraftingRecipes(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     item_one: str
     item_one_amount: int
@@ -155,12 +154,21 @@ class IndustrialCrafting(SQLModel, table=True):
     item: Optional[Items] = Relationship(back_populates="industrial_crafting_details")
 
 
+class GeneralMarket(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
+    item_name: str
+    item_cost: int
+    item_sell: int
+    item_id: int = Field(default=None, foreign_key="items.id")
+    item: Optional[Items] = Relationship(back_populates="general_market_items")
+
+
 class BlackMarket(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     who_posted: str
-    item_id: int = Field(default=None, foreign_key="items.id")
     time_posted: str
     sell_price: int
+    item_id: int = Field(default=None, foreign_key="items.id")
     item: Optional[Items] = Relationship(back_populates="black_market_posts")
 
 
