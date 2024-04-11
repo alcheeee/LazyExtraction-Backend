@@ -33,6 +33,7 @@ class JobService:
                         if hasattr(user.stats, stat):
                             setattr(user.stats, stat, getattr(user.stats, stat) + change)
 
+                    user.stats.round(2)
                     user.inventory.bank += job.income
                     user.inventory.energy -= energy_required
                     session.commit()
@@ -61,11 +62,11 @@ class JobService:
             user = self.fetch_user(user_id, session)
             if not user:
                 return False, "User not found."
-            if job_name == 'quit':
+            elif job_name == 'quit':
                 user.job = None
                 session.commit()
                 return True, "You quit your job"
-            if self.check_qualifications(user_id, job_name):
+            elif self.check_qualifications(user_id, job_name):
                 job = session.query(Jobs).filter(Jobs.job_name == job_name).first()
                 if not job:
                     return False, "Job not found."

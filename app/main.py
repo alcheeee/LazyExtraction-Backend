@@ -34,6 +34,8 @@ r"""
 from sqlmodel import Session, select
 from app.models.models import User
 with Session(engine) as session:
+
+
     # Fetch the user somehow, e.g., by ID
     user_id = 1  # Example user ID
     statement = select(User).where(User.id == user_id)

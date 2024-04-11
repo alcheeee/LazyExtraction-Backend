@@ -7,6 +7,10 @@ from ..utils.logger import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
+default_user_inventory = {
+
+}
+
 class UserCRUD:
     def __init__(self, engine):
         self.engine = engine
@@ -35,7 +39,9 @@ class UserCRUD:
                     'strength': 1,
                     'knowledge': 1}
 
-                default_inventory_data = {'cash': 0, 'bank': 1000, 'energy': 100}
+                default_inventory_data = {'cash': 0, 'bank': 1000, 'energy': 100,
+                                          'inventory_items': str(default_user_inventory)
+                                        }
 
                 new_user.stats = Stats(**default_stats_data)
                 new_user.inventory = Inventory(**default_inventory_data)

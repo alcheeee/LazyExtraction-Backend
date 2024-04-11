@@ -1,12 +1,11 @@
-import enum
-
 from sqlmodel import SQLModel, Field, Enum, Relationship, Column, String
 from typing import List, Optional
+import enum
 
 
 """
 Migrate Database:
-python -m alembic revision --autogenerate -m "Added Items and sub-Tables"
+python -m alembic revision --autogenerate -m "Revision "
 
 change 'server_default' in migration version.py
 
@@ -23,11 +22,18 @@ class Stats(SQLModel, table=True):
     reputation: int
     education: str
     max_energy: int
-    evasiveness: int
+    evasiveness: float
     health: int
-    strength: int
-    knowledge: int
+    strength: float
+    knowledge: float
     user: Optional["User"] = Relationship(back_populates="stats")
+    def round_stats(self):
+        float_attributes = ['level', 'evasiveness', 'strength', 'knowledge']
+        for attr in float_attributes:
+            value = getattr(self, attr)
+            if isinstance(value, float):
+                rounded_value = round(value, 2)
+                setattr(self, attr, rounded_value)
 
 
 class Inventory(SQLModel, table=True):
@@ -38,6 +44,7 @@ class Inventory(SQLModel, table=True):
     cash: int
     bank: int
     energy: int
+    inventory_items: str
     user: Optional["User"] = Relationship(back_populates="inventory")
 
 
@@ -54,6 +61,7 @@ class Corporations(SQLModel, table=True):
     leader: int
     capital: Optional[int] = Field(default=0, nullable=False)
     reputation: Optional[int] = Field(default=0, nullable=False)
+    corp_inventory: str
     employees: List["User"] = Relationship(back_populates="corporation")
 
 
@@ -117,9 +125,8 @@ class Items(SQLModel, table=True):
 
 class FoodItems(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    health_bonus: int
+    health_increase: int
     item_id: int = Field(default=None, foreign_key="items.id")
-
     item: Optional[Items] = Relationship(back_populates="food_items")
 
 
@@ -132,7 +139,6 @@ class Weapon(SQLModel, table=True):
     attachment_one: Optional[str] = None
     attachment_two: Optional[str] = None
     item_id: int = Field(default=None, foreign_key="items.id")
-
     item: Optional[Items] = Relationship(back_populates="weapon_details")
 
 
@@ -146,7 +152,6 @@ class IndustrialCrafting(SQLModel, table=True):
     item_three_amount: int
     item_produced: str
     item_id: int = Field(default=None, foreign_key="items.id")
-
     item: Optional[Items] = Relationship(back_populates="industrial_crafting_details")
 
 
@@ -156,7 +161,6 @@ class BlackMarket(SQLModel, table=True):
     item_id: int = Field(default=None, foreign_key="items.id")
     time_posted: str
     sell_price: int
-
     item: Optional[Items] = Relationship(back_populates="black_market_posts")
 
 

@@ -8,6 +8,16 @@ logger = logging.getLogger(__name__)
 
 CORPORATION_TYPES = ['Industrial', 'Law', 'Restaurant', 'Criminal']
 
+industrial_corp_defaults = {
+    "Metal Scrap": 0,
+    "Electronic Components": 0,
+    "Polymer": 0
+}
+
+other_corp_defaults = {
+
+}
+
 class CorporationsManager:
     def __init__(self, engine):
         self.engine = engine
@@ -33,9 +43,13 @@ class CorporationsManager:
                 return False, "You must leave your corporation first!"
 
             #Create corporation in DB if OK
-            new_corporation = Corporations(corporation_name=corp_name,
-                                           corporation_type=corp_type,
-                                           leader=user.username)
+            if corp_type == "Industrial":
+                new_corporation = Corporations(corporation_name=corp_name,corporation_type=corp_type,leader=user.username)
+                new_corporation.corp_inventory = str(industrial_corp_defaults)
+            else:
+                new_corporation = Corporations(corporation_name=corp_name,corporation_type=corp_type,leader=user.username)
+                new_corporation.corp_inventory = str(other_corp_defaults)
+
             session.add(new_corporation)
             session.commit()
 
@@ -99,23 +113,23 @@ class CorporationsManager:
                 return False, ""
 
 
-    def remove_user_from_corporation(self, user_id: int, corporation_id: int):
+    def remove_user_from_corporation(self, username: int, corporation_id: int):
         with Session(self.engine) as session:
-            user = session.get(User, user_id)
+            user = session.exec(select(User).where(User.username == username)).first()
             if user is None or user.corp_id != corporation_id:
-                logger.error(f"User {user_id} is not part of corporation {corporation_id}.")
-                return None
+                logger.error(f"User {username} is not part of corporation {corporation_id}.")
+                return None, "User is not part of that corporation."
 
             corporation = session.get(Corporations, corporation_id)
-            if corporation.leader == user.id:
-                logger.info(f"User {user_id} can't leave, leader of corporation {corporation_id}.")
+            if corporation.leader == user.username:
+                logger.info(f"User {username} can't leave, leader of corporation {corporation_id}.")
                 return None
 
             user.corp_id = None
             session.add(user)
             session.commit()
-            logger.info(f"User {user_id} has been removed from corporation {corporation_id}.")
-
+            logger.info(f"User {username} has been removed from corporation {corporation_id}.")
+            return True, f"User removed from {corporation.corporation_name}"
 
 
 

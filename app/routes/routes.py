@@ -62,12 +62,14 @@ def create_corporation(corporation_name: str = Form(...), corporation_type: str 
 
 
 
-
 @router.post("/corporations/add-user")
-def add_user_to_corporation(username_to_add_corporation: str = Form(...), user: User = Depends(get_current_user)):
+def add_user_to_corporation(username_to_add: str = Form(...), user: User = Depends(get_current_user)):
     corporation = corp_manager.get_corp_from_user(user.id)
-    if corporation.leader == user.username:
-        result, msg = corp_manager.add_user_to_corporation(username_to_add_corporation, user.corp_id)
+    if not corporation or not user:
+        msg = "Invalid Request"
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
+    if str(corporation.leader) == user.username:
+        result, msg = corp_manager.add_user_to_corporation(username_to_add, user.corp_id)
         return {"message": msg}
     else:
         msg = "You are not high enough in the Corporation to do that!"
@@ -75,7 +77,18 @@ def add_user_to_corporation(username_to_add_corporation: str = Form(...), user: 
 
 
 
-
+@router.post("/corporations/remove-user")
+def remove_user_from_corporation(username_to_remove: str = Form(...), user: User = Depends(get_current_user)):
+    corporation = corp_manager.get_corp_from_user(user.id)
+    if not corporation or not user:
+        msg = "Invalid Request"
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
+    if str(corporation.leader) == user.username:
+        result, msg = corp_manager.remove_user_from_corporation(username_to_remove, user.corp_id)
+        return {"message": msg}
+    else:
+        msg = "You are not high enough in the Corporation to do that!"
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
 
 
