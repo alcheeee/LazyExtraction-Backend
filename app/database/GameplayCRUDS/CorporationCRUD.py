@@ -90,27 +90,27 @@ class CorporationsManager:
             return corporation
 
 
-    def add_user_to_corporation(self, username: int, corporation_id: int):
+    def add_user_to_corporation(self, username: str, corporation_id: int):
         with Session(self.engine) as session:
             user = session.exec(select(User).where(User.username == username)).first()
             corporation = session.get(Corporations, corporation_id)
-
             if user is None or corporation is None:
                 logger.error(f"User {username} or Corporation {corporation_id} not found.")
                 return None, ""
-
             elif user.corp_id is None:
                 user.corp_id = corporation.id
                 session.add(user)
                 session.commit()
                 logger.info(f"{user.username} has been added to corporation {corporation_id}.")
                 return True, f"{user.username} has been added to {corporation.corporation_name}."
-
             elif user.corp_id == corporation.id:
                 logger.info(f"{user.username} is already in that corporation {corporation.corporation_name}.")
                 return False, f"{user.username} is already in that corporation {corporation.corporation_name}."
+            elif user.corp_id:
+                logger.info(f"{user.username} is already in a corporation.")
+                return False, f"{user.username} is already in a corporation."
             else:
-                return False, ""
+                return False, "Could not add user."
 
 
     def remove_user_from_corporation(self, username: int, corporation_id: int):

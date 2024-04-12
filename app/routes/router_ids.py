@@ -1,5 +1,4 @@
 from ..database.UserCRUD import user_crud
-from ..database.GameplayCRUDS.CorporationCRUD import corporation_manager
 from ..services.job_service import job_service
 
 class RouteIDs:

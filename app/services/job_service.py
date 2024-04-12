@@ -1,6 +1,7 @@
 from sqlmodel import Session
 from sqlalchemy.orm import joinedload
-from app.models.models import User, Jobs
+from app.models.models import User
+from app.models.other_models import Jobs
 from app.database.db import engine
 import json
 import logging

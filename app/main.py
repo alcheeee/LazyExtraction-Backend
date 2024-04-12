@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from app.config import settings
 from app.database.db import initialize_db, engine
-from app.routes.routes import router as user_router
+from app.routes.routes import user_router
 from app.routes.admin_routes import admin_router
+from app.routes.corporation_routes import corporation_router
 
 
 def create_app() -> FastAPI:
@@ -15,19 +16,12 @@ def create_app() -> FastAPI:
         initialize_db()
 
     app.include_router(user_router)
+    app.include_router(corporation_router)
     app.include_router(admin_router)
     return app
 
 
 app = create_app()
-
-
-r"""
-To run app:
-
-uvicorn app.main:app --reload
-
-"""
 
 
 r"""

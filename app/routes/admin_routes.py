@@ -3,18 +3,24 @@ from sqlmodel import Session, select
 from pydantic import BaseModel, parse_obj_as
 from typing import Optional, Union
 from enum import Enum
-from ..models.models import User, Jobs, Items, Weapon, FoodItems, IndustrialCraftingRecipes
-from ..auth.auth_handler import oauth2_scheme, get_current_user
+from ..models.models import User
+from ..models.other_models import Jobs
+from ..models.item_models import Items, ItemType, ItemQuality, FoodItems, Weapon, IndustrialCraftingRecipes
+from ..auth.auth_handler import get_current_user
 from ..services.job_service import create_job, JOB_TYPES
-from ..database.UserCRUD import user_crud, engine
+from ..database.UserCRUD import engine
 import logging
 from app.utils.logger import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
-admin_router = APIRouter()
+admin_router = APIRouter(
+    prefix="/admin",
+    tags=["admin"],
+    responses={404: {"description": "Not Found"}}
+)
 
-@admin_router.post("/admin/create-new-job")
+@admin_router.post("/create-new-job")
 async def create_job_endpoint(
     job_name: str = Form(...),
     job_type: str = Form(...),
@@ -43,13 +49,13 @@ async def create_job_endpoint(
         }
 
         example_data = {
-            "job_name": "Store Bagger",
-            "job_type": "General",
-            "income": 150,
+            'job_name': 'Store Bagger',
+            "job_type": 'General',
+            "income": 40,
             "energy_required": 5,
             "description": "Bag Groceries at the store",
-            "required_stats": {"level": 1},
-            "stat_changes": {"level": 1}
+            "required_stats": '{"level": 1}',
+            "stat_changes": '{"level": 1}'
         }
 
         if job_data["job_type"] not in JOB_TYPES:
@@ -60,19 +66,12 @@ async def create_job_endpoint(
         return f"{new_job.job_name} created successfully."
 
 
-class ItemType(str, Enum):
-    Food = "Food"
-    IndustrialCrafting = "IndustrialCrafting"
-    Drug = "Drug"
-    Weapon = "Weapon"
-    Clothing = "Clothing"
-    Other = "Other"
 
-class ItemCreate(BaseModel):
-    item_name: str
-    illegal: bool
-    category: ItemType
-    buy_price: Optional[int]
+
+
+def item_data_json(item_name: str, illegal: bool, buy_price: int, category: str, quality: str):
+    item_data = {"item_name": item_name, "illegal": illegal, "buy_price": buy_price, "category": category, "quality": quality}
+    return item_data
 
 class WeaponDetailCreate(BaseModel):
     damage: int
@@ -94,6 +93,13 @@ class IndustrialCraftingCreate(BaseModel):
     item_three_amount: Optional[int]
     item_produced: Optional[str]
 
+class ItemCreate(BaseModel):
+    item_name: str
+    illegal: bool
+    category: ItemType
+    quality: ItemQuality
+    buy_price: Optional[int]
+
 class ItemCreateRequest(BaseModel):
     general: ItemCreate
     details: Union[WeaponDetailCreate, FoodItemsCreate, IndustrialCraftingCreate]
@@ -108,13 +114,13 @@ async def create_general_item(session: Session, item_data: dict, category: ItemT
     return item
 
 
-@admin_router.post("/admin/create-weapon")
-async def create_weapon_endpoint(request: WeaponDetailCreate, item_name: str, illegal: bool, buy_price: Optional[int] = None, user: User = Depends(get_current_user)):
+@admin_router.post("/create-weapon")
+async def create_weapon_endpoint(request: WeaponDetailCreate, item_name: str, illegal: bool, category: ItemType, quality: ItemQuality, buy_price: Optional[int] = None, user: User = Depends(get_current_user)):
     if not user.is_admin:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     with Session(engine) as session:
-        item_data = {"item_name": item_name, "illegal": illegal, "buy_price": buy_price}
+        item_data = item_data_json(item_name,illegal, buy_price, category, quality)
         weapon_item = await create_general_item(session, item_data, ItemType.Weapon)
         weapon_detail = Weapon(item_id=weapon_item.id, **request.dict())
         session.add(weapon_detail)
@@ -122,13 +128,13 @@ async def create_weapon_endpoint(request: WeaponDetailCreate, item_name: str, il
         return {"message": "Weapon item created successfully.", "item_id": weapon_item.id}
 
 
-@admin_router.post("/admin/create-food")
-async def create_food_endpoint(request: FoodItemsCreate, item_name: str, illegal: bool, buy_price: Optional[int] = None, user: User = Depends(get_current_user)):
+@admin_router.post("/create-food")
+async def create_food_endpoint(request: FoodItemsCreate, item_name: str, illegal: bool, category: ItemType, quality: ItemQuality, buy_price: Optional[int] = None, user: User = Depends(get_current_user)):
     if not user.is_admin:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     with Session(engine) as session:
-        item_data = {"item_name": item_name, "illegal": illegal, "buy_price": buy_price}
+        item_data = item_data_json(item_name,illegal, buy_price, category, quality)
         food_item = await create_general_item(session, item_data, ItemType.Food)
         food_detail = FoodItems(item_id=food_item.id, **request.dict())
         session.add(food_detail)
@@ -136,13 +142,13 @@ async def create_food_endpoint(request: FoodItemsCreate, item_name: str, illegal
         return {"message": "Food item created successfully.", "item_id": food_item.id}
 
 
-@admin_router.post("/admin/create-industrial-crafting")
-async def create_industrial_crafting_endpoint(request: IndustrialCraftingCreate, item_name: str, illegal: bool, buy_price: Optional[int] = None, user: User = Depends(get_current_user)):
+@admin_router.post("/create-industrial-crafting")
+async def create_industrial_crafting_endpoint(request: IndustrialCraftingCreate, item_name: str, illegal: bool, category: ItemType, quality: ItemQuality, buy_price: Optional[int] = None, user: User = Depends(get_current_user)):
     if not user.is_admin:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     with Session(engine) as session:
-        item_data = {"item_name": item_name, "illegal": illegal, "buy_price": buy_price}
+        item_data = item_data_json(item_name,illegal, buy_price, category, quality)
         crafting_item = await create_general_item(session, item_data, ItemType.IndustrialCrafting)
         crafting_details = request.dict()
         crafting_details["item_id"] = crafting_item.id

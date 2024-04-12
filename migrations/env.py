@@ -19,7 +19,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 from sqlmodel import SQLModel
-from app.models import models
+from app.models import models, other_models, item_models
 target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
