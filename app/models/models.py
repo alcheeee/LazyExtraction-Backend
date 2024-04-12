@@ -12,11 +12,12 @@ class Stats(SQLModel, table=True):
     max_energy: int
     evasiveness: float
     health: int
+    luck: float
     strength: float
     knowledge: float
     user: Optional["User"] = Relationship(back_populates="stats")
     def round_stats(self):
-        float_attributes = ['level', 'evasiveness', 'strength', 'knowledge']
+        float_attributes = ['level', 'evasiveness', 'strength', 'knowledge', 'luck']
         for attr in float_attributes:
             value = getattr(self, attr)
             if isinstance(value, float):

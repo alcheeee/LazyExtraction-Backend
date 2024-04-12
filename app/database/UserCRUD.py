@@ -4,12 +4,10 @@ from ..database.db import engine
 from ..auth.auth_bearer import pwd_context
 import logging
 from ..utils.logger import setup_logging
+from ..game_systems.gameplay_options import default_inventory_data, default_stats_data
 setup_logging()
 logger = logging.getLogger(__name__)
 
-default_user_inventory = {
-
-}
 
 class UserCRUD:
     def __init__(self, engine):
@@ -29,20 +27,6 @@ class UserCRUD:
             try:
                 hashed_password = pwd_context.hash(password)
                 new_user = User(username=username, password=hashed_password, email=email)
-                default_stats_data = {
-                    'reputation': 0,
-                    'education': 'none',
-                    'level': 1,
-                    'max_energy': 100,
-                    'evasiveness': 1,
-                    'health': 100,
-                    'strength': 1,
-                    'knowledge': 1}
-
-                default_inventory_data = {'cash': 0, 'bank': 1000, 'energy': 100,
-                                          'inventory_items': str(default_user_inventory)
-                                        }
-
                 new_user.stats = Stats(**default_stats_data)
                 new_user.inventory = Inventory(**default_inventory_data)
                 session.add(new_user)

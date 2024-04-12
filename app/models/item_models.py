@@ -1,25 +1,7 @@
-import enum
 from typing import Optional
 from sqlalchemy import Enum, Column
 from sqlmodel import SQLModel, Field, Relationship
-
-
-class ItemType(enum.Enum):
-    Food = "Food"
-    IndustrialCrafting = "IndustrialCrafting"
-    Drug = "Drug"
-    Weapon = "Weapon"
-    Clothing = "Clothing"
-    Other = "Other"
-
-
-class ItemQuality(enum.Enum):
-    Junk = 'Junk'
-    Common = 'Common'
-    Uncommon = 'Uncommon'
-    Rare = 'Rare'
-    Special = 'Special'
-    Unique = 'Unique'
+from app.game_systems.gameplay_options import ItemType, ItemQuality
 
 
 class Items(SQLModel, table=True):
@@ -67,7 +49,6 @@ class IndustrialCraftingRecipes(SQLModel, table=True):
     item_produced: str
     item_id: int = Field(default=None, foreign_key="items.id")
     item: Optional[Items] = Relationship(back_populates="industrial_crafting_details")
-
 
 
 

@@ -1,4 +1,5 @@
 from sqlmodel import Session, select
+from app.game_systems.gameplay_options import CORPORATION_TYPES, industrial_corp_defaults, other_corp_defaults
 from app.models.models import User, Corporations
 from app.database.db import engine
 import logging
@@ -6,17 +7,6 @@ from app.utils.logger import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
-CORPORATION_TYPES = ['Industrial', 'Law', 'Restaurant', 'Criminal']
-
-industrial_corp_defaults = {
-    "Metal Scrap": 0,
-    "Electronic Components": 0,
-    "Polymer": 0
-}
-
-other_corp_defaults = {
-
-}
 
 class CorporationsManager:
     def __init__(self, engine):
@@ -29,7 +19,8 @@ class CorporationsManager:
             if not user:
                 return None, ""
 
-            if corp_type not in CORPORATION_TYPES:
+            corp_types = {ctype.value for ctype in CORPORATION_TYPES}
+            if corp_type not in corp_types:
                 return False, "Invalid Corporation type."
 
             #Check for existing Corporations

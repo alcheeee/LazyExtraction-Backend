@@ -3,13 +3,13 @@ from sqlalchemy.orm import joinedload
 from app.models.models import User
 from app.models.other_models import Jobs
 from app.database.db import engine
+from ..game_systems.gameplay_options import JOB_TYPES
 import json
 import logging
 from app.utils.logger import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
-JOB_TYPES = ['General', 'Law', 'Crime']
 
 class JobService:
 
