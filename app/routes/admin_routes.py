@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException, Depends, Form, status
 from sqlmodel import Session, select
 from pydantic import BaseModel
 from typing import Optional, Union
-
 from ..game_systems.items.ItemCRUD import create_general_item, create_item, item_data_json
 from ..game_systems.items.ItemCreationLogic import WeaponDetailCreate, FoodItemsCreate, IndustrialCraftingCreate, ItemCreate
 from ..models.models import User
@@ -13,9 +12,10 @@ from ..auth.auth_handler import get_current_user
 from ..services.job_service import create_job, JOB_TYPES
 from ..database.UserCRUD import engine, user_crud
 import logging
-from app.utils.logger import setup_logging
-setup_logging()
-logger = logging.getLogger(__name__)
+from ..utils.logger import MyLogger
+user_log = MyLogger.user()
+admin_log = MyLogger.admin()
+game_log = MyLogger.game()
 
 admin_router = APIRouter(
     prefix="/admin",
@@ -34,29 +34,37 @@ async def create_job_endpoint(
     stat_changes: str = Form(...),
     user: User = Depends(get_current_user)):
     if not user.is_admin:
+        admin_log.warning(f"{user} made an admin request!")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
 
     with Session(engine) as session:
-        db_job = session.exec(select(Jobs).where(Jobs.job_name == job_name)).first()
-        if db_job:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Job already registered")
+        transaction = session.begin()
+        try:
+            db_job = session.exec(select(Jobs).where(Jobs.job_name == job_name)).first()
+            if db_job:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Job already created!")
 
-        job_data = {
-            "job_name": job_name,
-            "job_type": job_type,
-            "income": income,
-            "energy_required": energy_required,
-            "description": description,
-            "required_stats": required_stats,
-            "stat_changes": stat_changes,
-        }
+            job_data = {
+                "job_name": job_name,
+                "job_type": job_type,
+                "income": income,
+                "energy_required": energy_required,
+                "description": description,
+                "required_stats": required_stats,
+                "stat_changes": stat_changes,
+            }
 
-        if job_data["job_type"] not in JOB_TYPES:
-            return f'Job must be in {JOB_TYPES}'
+            if job_data["job_type"] not in JOB_TYPES:
+                return f'Job must be in {JOB_TYPES}'
 
-        new_job = create_job(job_data=job_data)
-        logger.info(f'ADMIN ACTION: Created new job {new_job.job_name}')
-        return f"{new_job.job_name} created successfully."
+            new_job = create_job(job_data=job_data)
+            admin_log.info(f'ADMIN {user.id} - Created new job {new_job.job_name}')
+            return f"{new_job.job_name} created successfully."
+
+        except Exception as e:
+            session.rollback()
+            admin_log.error(str(e))
+            return False
 
 
 class ItemCreateRequest(BaseModel):
@@ -74,7 +82,7 @@ async def create_weapon_endpoint(request: WeaponDetailCreate, item_name: str, il
                               random_generate_quality,
                               quality, quantity, buy_price)
     if result:
-        logger.info(f"ADMIN {user.id} - Created {item_name}.")
+        admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
         return msg
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
@@ -90,7 +98,7 @@ async def create_food_endpoint(request: FoodItemsCreate, item_name: str, illegal
                               random_generate_quality,
                               quality, quantity, buy_price)
     if result:
-        logger.info(f"ADMIN {user.id} - Created {item_name}.")
+        admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
         return msg
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
@@ -106,7 +114,7 @@ async def create_industrial_crafting_endpoint(request: IndustrialCraftingCreate,
                               random_generate_quality,
                               quality, quantity, buy_price)
     if result:
-        logger.info(f"ADMIN {user.id} - Created {item_name}.")
+        admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
         return msg
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)

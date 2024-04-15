@@ -52,20 +52,20 @@ class IndustrialCraftingRecipes(SQLModel, table=True):
     item: Optional[Items] = Relationship(back_populates="industrial_crafting_details")
 
 
-
 class GeneralMarket(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    item_name: str
     item_cost: int
-    item_sell: int
+    sell_price: int # FOR FUTURE USE - Players can sell items to Market for money
+    item_quantity: int
     item_id: int = Field(default=None, foreign_key="items.id")
     item: Optional[Items] = Relationship(back_populates="general_market_items")
 
 
 class BlackMarket(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    who_posted: str
-    time_posted: str
     sell_price: int
+    item_quantity: int
+    by_user: str
+    time_posted: str
     item_id: int = Field(default=None, foreign_key="items.id")
     item: Optional[Items] = Relationship(back_populates="black_market_posts")

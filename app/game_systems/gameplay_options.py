@@ -4,7 +4,7 @@ from typing import Optional
 
 
 JOB_TYPES = ['General', 'Law', 'Crime']
-
+ALL_MARKETS = ['General Market', 'Blackmarket']
 
 # USER DEFAULTS
 default_stats_data = {

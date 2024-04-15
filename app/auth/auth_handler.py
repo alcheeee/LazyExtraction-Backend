@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
 from jose import jwt, JWTError
-from .auth_bearer import SECRET_KEY, ALGORITHM, pwd_context, oauth2_scheme, ACCESS_TOKEN_EXPIRE_MINUTES
+from .auth_bearer import SECRET_KEY, ALGORITHM, oauth2_scheme, ACCESS_TOKEN_EXPIRE_MINUTES
 from ..database.UserCRUD import user_crud
-import logging
-from ..utils.logger import setup_logging
-setup_logging()
-logger = logging.getLogger(__name__)
+from ..utils.logger import MyLogger
+import bcrypt
+user_log = MyLogger.user()
+admin_log = MyLogger.admin()
 
 
 class UserAuthenticator:
@@ -16,10 +16,10 @@ class UserAuthenticator:
 
     def authenticate_user(self, username: str, password: str):
         user = self.user_data_manager.get_user_by_username(username)
-        if not user or not pwd_context.verify(password, user.password):
-            logger.warning(f"User {username} failed login.")
+        if not user or not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
+            admin_log.warning(f"Authentication failed for User {username}.")
             return False
-        logger.info(f"User {username} logged in.")
+        admin_log.info(f"User {username} logged in successfully.")
         return user
 
 
@@ -39,9 +39,8 @@ def decode_token(token: str):
     try:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except jwt.JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Could not validate credentials",)
+        admin_log.error("Failed to decode token.")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Could not validate credentials",)
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
@@ -54,11 +53,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         payload = decode_token(token)
         user_id: str = payload.get("sub")
         if user_id is None:
+            admin_log.warning("Token does not contain user ID.")
             raise credentials_exception
 
         user = user_crud.get_user_by_id(int(user_id))
         if user is None:
-            logger.warning(f"User {user_id} not found.")
+            admin_log.warning(f"User with ID {user_id} not found in database.")
             raise credentials_exception
         return user
     except JWTError:

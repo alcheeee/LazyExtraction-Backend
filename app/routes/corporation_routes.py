@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Form, status
 from ..models.models import User
 from ..auth.auth_handler import get_current_user
-from ..database.GameplayCRUDS.CorporationCRUD import corporation_manager as corp_manager
+from app.game_systems.corporations.CorporationCRUD import corporation_manager as corp_manager
 
 corporation_router = APIRouter(
     prefix="/corporations",

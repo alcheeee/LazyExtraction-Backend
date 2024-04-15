@@ -3,10 +3,6 @@ import random
 from math import sqrt
 from pydantic import BaseModel
 from ..gameplay_options import item_quality_mapper, ItemType, ItemQuality
-import logging
-from app.utils.logger import setup_logging
-setup_logging()
-logger = logging.getLogger(__name__)
 
 
 class GenerateItemQuality:
@@ -35,6 +31,14 @@ class GenerateItemQuality:
 
         return [adjusted_weights[q] for q in ItemQuality]
 
+
+class GenerateItemStats:
+    def __init__(self, quality):
+        self.quality = quality
+
+    """
+    TO BE ADDED
+    """
 
 
 class ItemCreate(BaseModel):
