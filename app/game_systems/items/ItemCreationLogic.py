@@ -39,10 +39,11 @@ class GenerateItemQuality:
 
 class ItemCreate(BaseModel):
     item_name: str
+    quantity: int
     illegal: bool
+    buy_price: Optional[int]
     category: ItemType
     quality: ItemQuality
-    buy_price: Optional[int]
 
 
 class WeaponDetailCreate(BaseModel):

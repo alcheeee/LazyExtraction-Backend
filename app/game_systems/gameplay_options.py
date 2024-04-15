@@ -1,4 +1,4 @@
-
+from typing import Optional
 # This will be a central hub for all options I can change
 # All adjustable gameplay stuff will be in here
 
@@ -30,6 +30,7 @@ default_inventory_data = {
 
 # ITEM DEFAULTS
 import enum
+
 class ItemType(enum.Enum):
     Food = "Food"
     IndustrialCrafting = "IndustrialCrafting"
@@ -54,6 +55,7 @@ item_quality_mapper = {
     'Special': (3, 1.15),
     'Unique': (1, 1.2)
 }
+
 
 class CORPORATION_TYPES(enum.Enum):
     Industrial = 'Industrial'

@@ -1,7 +1,9 @@
 from sqlmodel import Session, select
 from ..models.models import User, Stats, Inventory
+from ..models.item_models import Items
 from ..database.db import engine
 from ..auth.auth_bearer import pwd_context
+import json
 import logging
 from ..utils.logger import setup_logging
 from ..game_systems.gameplay_options import default_inventory_data, default_stats_data
@@ -76,18 +78,10 @@ class UserCRUD:
                 return False
 
             setattr(user.stats, stat_name, new_value)
+            user.stats.round_stats()
             session.commit()
             logger.info(f"Updated {stat_name} for user: {user.id} to {new_value}.")
             return True
-
-
-    def get_user_info(self, user_id: int):
-        with Session(self.engine) as session:
-            user = session.get(User, user_id)
-            if not user:
-                logger.error(f"No user found with ID {user_id}.")
-                return False
-            return user
 
 
     def get_user_by_id(self, user_id: int):
@@ -100,6 +94,35 @@ class UserCRUD:
         with Session(self.engine) as session:
             user = session.exec(select(User).where(User.username == username)).first()
             return user
+
+    def add_item_to_user_inventory(self, user_id: int, item_id: int, quantity: int = 1):
+        with Session(self.engine) as session:
+            user = session.get(User, user_id)
+            item = session.exec(select(Items).where(Items.id == item_id)).first()
+            if user and item:
+                item_name = item.item_name
+                if item.quantity < 1:
+                    logger.info(f"REQUESTED {user.id} - Item {item_name} has no stock.")
+                    msg = f"Item {item_name} has no stock."
+                    return False, msg
+
+                inventory_items = json.loads(user.inventory.inventory_items)
+                item_id = str(item_id)
+                if item_id in inventory_items:
+                    inventory_items[item_id] += quantity
+                else:
+                    inventory_items[item_id] = quantity
+
+                item.quantity -= quantity
+                user.inventory.inventory_items = json.dumps(inventory_items)
+                session.commit()
+                logger.info(f"REQUESTED {user.id} - Added {quantity} of item {item_name} to {user.username}'s inventory.")
+                msg = f"Added {quantity} {item_name} to {user.username}"
+                return True, msg
+            else:
+                logger.error(f"REQUESTED {user_id} - Couldn't get user {user_id} or item {item_id}.")
+                msg = f"Couldn't add {item_id} to {user_id}"
+                return False, msg
 
 
 user_crud = UserCRUD(engine)

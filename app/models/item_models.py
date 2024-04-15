@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import Enum, Column
+from sqlalchemy import Enum, Column, Integer
 from sqlmodel import SQLModel, Field, Relationship
 from app.game_systems.gameplay_options import ItemType, ItemQuality
 
@@ -7,9 +7,10 @@ from app.game_systems.gameplay_options import ItemType, ItemQuality
 class Items(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     item_name: str
-    buy_price: Optional[int] = None
+    buy_price: Optional[int] = Field(default=0)
     quality: ItemQuality = Field(sa_column=Column(Enum(ItemQuality)))
     illegal: bool
+    quantity: Optional[int] = Field(default=0)
     category: ItemType = Field(sa_column=Column(Enum(ItemType)))
     # Relationships
     food_items: Optional["FoodItems"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
