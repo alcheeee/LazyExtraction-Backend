@@ -10,6 +10,7 @@ from app.database.db import engine
 from app.config import settings
 from app.utils.logger import MyLogger
 game_log = MyLogger.game()
+admin_log = MyLogger.admin()
 
 
 item_class_map: Dict[ItemType, Type[Items]] = {
@@ -54,8 +55,8 @@ def generate_hash(item_id):
 
 def create_general_item(session: Session, item_data: dict) -> Items:
     item = Items(**item_data)
-    item.hash = generate_hash(item.id)
     session.add(item)
+    item.hash = generate_hash(item.id)
     session.commit()
     session.refresh(item)
     return item
@@ -74,7 +75,7 @@ def create_item(item_type_str: str, user_id: int, item_details,
 
     if not item_class:
         game_log.error(f"No class defined for item type {item_type_str}")
-        return False, f"No class defined for item type {item_type_str}"
+        return False, {"message": f"No class defined for item type {item_type_str}"}
 
     with Session(engine) as session:
         transaction = session.begin()
@@ -96,4 +97,4 @@ def create_item(item_type_str: str, user_id: int, item_details,
         except Exception as e:
             session.rollback()
             admin_log.error(str(e))
-            return False
+            return False, {"message": "Error creating item"}

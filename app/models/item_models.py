@@ -11,7 +11,7 @@ class Items(SQLModel, table=True):
     quality: ItemQuality = Field(sa_column=Column(Enum(ItemQuality)))
     illegal: bool
     quantity: Optional[int] = Field(default=0)
-    hash: Optional[int]
+    hash: Optional[str]
     category: ItemType = Field(sa_column=Column(Enum(ItemType)))
     # Relationships
     food_items: Optional["FoodItems"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})

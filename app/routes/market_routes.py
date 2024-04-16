@@ -5,6 +5,7 @@ from ..models.models import User
 from ..auth.auth_handler import get_current_user
 from app.models.item_models import GeneralMarket, Items
 from app.game_systems.markets.market_handler import MarketTransaction, engine
+from app.database.UserCRUD import user_crud
 from app.utils.logger import MyLogger
 user_log = MyLogger.user()
 admin_log = MyLogger.admin()
@@ -44,6 +45,7 @@ async def buy_market_items(request: MarketPurchaseRequest, user: User = Depends(
         transaction = session.begin()
         try:
             item = session.exec(select(Items).where(Items.hash == request.item_hash)).first()
+            session.add(user)
             if not item:
                 admin_log.error(f"{user.username} item not found.")
                 raise HTTPException(status_code=404, detail="Item not found")
@@ -59,6 +61,7 @@ async def buy_market_items(request: MarketPurchaseRequest, user: User = Depends(
                 user_log.error(f"{user.username} - Tried to buy more than available stock of {item.general_market_items.item_quantity}")
                 raise HTTPException(status_code=400, detail="Not enough stock available")
 
+            user_crud.update_user_inventory(user.id, item.id, request.quantity)
             session.commit()
             user_log.info(f"{user.username} purchased {request.quantity} of {item.item_name}.")
             return {"message": f"Purchased {item.item_name}"}
@@ -66,7 +69,7 @@ async def buy_market_items(request: MarketPurchaseRequest, user: User = Depends(
         except Exception as e:
             session.rollback()
             admin_log.error(f"{user.username} - Error purchasing item due to: {e}")
-            return {"message": f"Error purchasing item."}
+            return {"message": f"Item not available."}
 
 
 
