@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from pydantic import BaseModel
 from typing import Union
 from ..game_systems.items.ItemCRUD import create_item
-from ..game_systems.items.ItemCreationLogic import WeaponDetailCreate, FoodItemsCreate, IndustrialCraftingCreate, ItemCreate
+from ..game_systems.items.ItemCreationLogic import WeaponDetailCreate, ClothingDetailCreate, FoodDetailCreate, IndustrialCraftingCreate, ItemCreate
 from ..game_systems.markets.market_handler import BackendMarketHandler
 from ..models.models import User
 from ..models.other_models import Jobs
@@ -68,18 +68,18 @@ async def create_job_endpoint(
 
 class ItemCreateRequest(BaseModel):
     general: ItemCreate
-    details: Union[WeaponDetailCreate, FoodItemsCreate, IndustrialCraftingCreate]
+    details: Union[WeaponDetailCreate, FoodDetailCreate, IndustrialCraftingCreate]
 
 
 @admin_router.post("/create-item/weapon")
-async def create_weapon_endpoint(request: WeaponDetailCreate, item_name: str, illegal: bool, random_generate_quality: bool, quality: ItemQuality, quantity: int, buy_price: int, user: User = Depends(get_current_user)):
+async def create_weapon_endpoint(request: WeaponDetailCreate, item_name: str, illegal: bool, random_generate_quality: bool, quality: ItemQuality, quantity: int, user: User = Depends(get_current_user)):
     if not user.is_admin:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     item_type = "Weapon"
     result, msg = create_item(item_type, user.id, request, item_name, illegal,
                               random_generate_quality,
-                              quality, quantity, buy_price)
+                              quality, quantity)
     if result:
         admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
         return {"message": msg}
@@ -88,14 +88,30 @@ async def create_weapon_endpoint(request: WeaponDetailCreate, item_name: str, il
 
 
 @admin_router.post("/create-item/food")
-async def create_food_endpoint(request: FoodItemsCreate, item_name: str, illegal: bool, random_generate_quality: bool, quality: ItemQuality, quantity: int, buy_price: int, user: User = Depends(get_current_user)):
+async def create_food_endpoint(request: FoodDetailCreate, item_name: str, illegal: bool, random_generate_quality: bool, quality: ItemQuality, quantity: int, user: User = Depends(get_current_user)):
     if not user.is_admin:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     item_type = "Food"
     result, msg = create_item(item_type, user.id, request, item_name, illegal,
                               random_generate_quality,
-                              quality, quantity, buy_price)
+                              quality, quantity)
+    if result:
+        admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
+        return {"message": msg}
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
+
+
+@admin_router.post("/create-item/clothing")
+async def create_clothing_endpoint(request: ClothingDetailCreate, item_name: str, illegal: bool, random_generate_quality: bool, quality: ItemQuality, quantity: int, user: User = Depends(get_current_user)):
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+
+    item_type = "Clothing"
+    result, msg = create_item(item_type, user.id, request, item_name, illegal,
+                              random_generate_quality,
+                              quality, quantity)
     if result:
         admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
         return {"message": msg}
@@ -104,14 +120,16 @@ async def create_food_endpoint(request: FoodItemsCreate, item_name: str, illegal
 
 
 @admin_router.post("/create-item/industrial-crafting")
-async def create_industrial_crafting_endpoint(request: IndustrialCraftingCreate, item_name: str, illegal: bool, random_generate_quality: bool, quality: ItemQuality, quantity: int, buy_price: int, user: User = Depends(get_current_user)):
+async def create_industrial_crafting_endpoint(request: IndustrialCraftingCreate, user: User = Depends(get_current_user)):
     if not user.is_admin:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     item_type = "IndustrialCrafting"
-    result, msg = create_item(item_type, user.id, request, item_name, illegal,
-                              random_generate_quality,
-                              quality, quantity, buy_price)
+    result = False
+    """
+    TODO - ADD CRAFTING LOGIC
+    """
+
     if result:
         admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
         return {"message": msg}
@@ -137,9 +155,7 @@ async def add_an_item_to_user(username: str, item_id: int, quantity: int, user: 
     with Session(engine) as session:
         user_sending = session.exec(select(User).where(User.username == username)).first()
         if user_sending:
-            result, msg = user_crud.update_user_inventory(user_sending.id, item_id, quantity)
-            if not result:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
+            msg = user_crud.update_user_inventory(user_sending.id, item_id, quantity)
             return {"message": msg}
         else:
             msg = {"message": f"Couldn't find user."}

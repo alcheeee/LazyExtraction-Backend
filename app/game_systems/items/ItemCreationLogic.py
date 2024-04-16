@@ -45,22 +45,29 @@ class ItemCreate(BaseModel):
     item_name: str
     quantity: int
     illegal: bool
-    buy_price: Optional[int]
     category: ItemType
     quality: ItemQuality
 
 
 class WeaponDetailCreate(BaseModel):
-    damage: int
-    damage_bonus: Optional[int]
-    evasiveness_bonus: Optional[int]
-    strength_bonus: Optional[int]
-    attachment_one: Optional[str]
-    attachment_two: Optional[str]
+    damage_bonus: int
+    evasiveness_bonus: Optional[float]
+    strength_bonus: Optional[float]
 
 
-class FoodItemsCreate(BaseModel):
+class FoodDetailCreate(BaseModel):
     health_increase: int
+
+
+class ClothingDetailCreate(BaseModel):
+    clothing_type: str
+    reputation_bonus: Optional[int]
+    max_energy_bonus: Optional[int]
+    evasiveness_bonus: Optional[float]
+    health_bonus: Optional[int]
+    luck_bonus: Optional[float]
+    strength_bonus: Optional[float]
+    knowledge_bonus: Optional[float]
 
 
 class IndustrialCraftingCreate(BaseModel):
@@ -70,7 +77,7 @@ class IndustrialCraftingCreate(BaseModel):
     item_two_amount: Optional[int]
     item_three: Optional[str]
     item_three_amount: Optional[int]
-    item_produced: Optional[str]
+    produced_item_id: Optional[str]
 
 
 

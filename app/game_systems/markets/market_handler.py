@@ -58,14 +58,20 @@ class BackendMarketHandler:
         with Session(engine) as session:
             transaction = session.begin()
             try:
-                item = session.exec(select(Items).where(Items.id == self.item_id)).first()
+                item = session.get(Items, self.item_id)
                 if not item:
                     admin_log.error(f"Couldn't add item id {self.item_id} to {self.market_name}.")
                     raise ValueError(f"Item with id {self.item_id} not found.")
 
+                existing_item = item.general_market_items.id
+                if existing_item:
+                    admin_log.error(f"{item.item_name} is already in the market")
+                    raise ValueError(f"{item.item_name} is already in the market")
+
                 market_item = {
                     "item_cost": self.item_cost,
                     "sell_price": self.sell_price,
+                    "item_quality": item.quality.value,
                     "item_quantity": item.quantity,
                     "item_id": item.id
                 }

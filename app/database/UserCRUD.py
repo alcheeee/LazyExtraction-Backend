@@ -6,6 +6,7 @@ import bcrypt
 import json
 import logging
 from ..utils.logger import MyLogger
+from app.game_systems.gameplay_options import default_stats_data, default_inventory_data
 user_log = MyLogger.user()
 admin_log = MyLogger.admin()
 game_log = MyLogger.game()
@@ -107,49 +108,47 @@ class UserCRUD:
             return user
 
 
-    def update_user_inventory(self, user_id: int, item_id: int, quantity: int = 1):
+    def update_user_inventory(self, user_id: int, item_id: int, quantity: int = 1, selling=False):
         with Session(self.engine) as session:
             transaction = session.begin()
             try:
                 user = session.get(User, user_id)
-                item = session.exec(select(Items).where(Items.id == item_id)).first()
+                item = session.get(Items, item_id)
                 if not user or not item:
                     admin_log.error(f"Couldn't get user {user_id} or item {item_id}.")
-                    return False, f"Couldn't add {item_id} to {user_id}"
+                    raise ValueError(f"Couldn't add {item_id} to {user_id}")
 
                 # Get users inventory
                 inventory_items = json.loads(user.inventory.inventory_items)
-                item_id_str = str(item_id)
+                item_hash = item.hash
+
+                item_details = inventory_items.get(item_hash, {"quantity": 0, "equipped": False})
+                if selling and item_details["equipped"]:
+                    raise ValueError("Cannot sell an equipped item.")
 
                 # Calculate new quantity in inventory
-                current_inventory_qty = inventory_items.get(item_id_str, 0)
-                new_inventory_qty = current_inventory_qty + quantity
+                new_inventory_qty = item_details["quantity"] + quantity
 
                 if new_inventory_qty < 0:
-                    admin_log.error(f"{user_id} tried to remove item with 0.")
-                    return False, f"Can't remove 0 items."
+                    admin_log.error(f"{user_id} tried to remove more items than available.")
+                    raise ValueError("Not enough items in inventory.")
 
                 # Update quantity in user inventory
                 if new_inventory_qty > 0:
-                    inventory_items[item_id_str] = new_inventory_qty
+                    inventory_items[item_hash] = {"quantity": new_inventory_qty, "equipped": item_details["equipped"]}
                 else:
-                    del inventory_items[item_id_str] # If new quantity is 0, remove from inventory
-
-                if item.quantity < quantity:
-                    game_log.info(f"{user.id} - Item {item.item_name} has no stock.")
-                    return False, f"Item {item.item_name} has no stock."
+                    del inventory_items[item_hash] # Remove item if quantity hits zero
 
                 user.inventory.inventory_items = json.dumps(inventory_items)
-
                 session.commit()
                 action = "Added" if quantity > 0 else "Removed"
-                game_log.info(f"{action} {abs(quantity)} of item {item.item_name} to/from {user.username}'s inventory.")
-                return True, f"{action} {abs(quantity)} {item.item_name} to/from {user.username}"
+                game_log.info(f"{action} {abs(quantity)} of {item.item_name} to/from {user.username}'s inventory.")
+                return f"{action} {abs(quantity)} {item.item_name} to/from {user.username}"
 
             except Exception as e:
                 session.rollback()
                 admin_log.error(str(e))
-                return False, str(e)
+                return str(e)
 
 
 user_crud = UserCRUD(engine)

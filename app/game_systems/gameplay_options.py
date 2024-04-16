@@ -7,18 +7,18 @@ JOB_TYPES = ['General', 'Law', 'Crime']
 
 # USER DEFAULTS
 default_stats_data = {
-    'level': 1,
+    'level': 1.00,
     'reputation': 0,
     'education': 'none',
     'max_energy': 100,
-    'evasiveness': 1,
+    'damage': 1,
+    'evasiveness': 1.00,
     'health': 100,
-    'luck': 1,
-    'strength': 1,
-    'knowledge': 1
+    'luck': 1.00,
+    'strength': 1.00,
+    'knowledge': 1.00
 }
 default_inventory_data = {
-    'cash': 0,
     'bank': 1000,
     'energy': 100,
     'inventory_items': str(
@@ -32,7 +32,6 @@ import enum
 
 class ItemType(enum.Enum):
     Food = "Food"
-    IndustrialCrafting = "IndustrialCrafting"
     Drug = "Drug"
     Weapon = "Weapon"
     Clothing = "Clothing"
@@ -54,6 +53,23 @@ item_quality_mapper = {
     'Special': (3, 1.15),
     'Unique': (1, 1.2)
 }
+
+item_bonus_mapper = {
+    "reputation": "reputation_bonus",
+    "max_energy": "max_energy_bonus",
+    "damage": "damage_bonus",
+    "evasiveness": "evasiveness_bonus",
+    "health": "health_bonus",
+    "luck": "luck_bonus",
+    "strength": "strength_bonus",
+    "knowledge": "knowledge_bonus"
+}
+
+
+class ClothingTypes(enum.Enum):
+    Mask = "Mask"
+    Body = "Body"
+    Legs = "Legs"
 
 class CORPORATION_TYPES(enum.Enum):
     Industrial = 'Industrial'

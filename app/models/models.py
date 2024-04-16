@@ -10,6 +10,7 @@ class Stats(SQLModel, table=True):
     reputation: int
     education: str
     max_energy: int
+    damage: int
     evasiveness: float
     health: int
     luck: float
@@ -21,8 +22,7 @@ class Stats(SQLModel, table=True):
         for attr in float_attributes:
             value = getattr(self, attr)
             if isinstance(value, float):
-                rounded_value = round(value, 2)
-                setattr(self, attr, rounded_value)
+                setattr(self, attr, round(value, 2))
 
 
 class Inventory(SQLModel, table=True):
@@ -30,10 +30,13 @@ class Inventory(SQLModel, table=True):
     Inventory Table for Users, linked by id
     """
     id: Optional[int] = Field(default=None, primary_key=True)
-    cash: int
     bank: int
     energy: int
     inventory_items: str
+    equipped_weapon: Optional[int] = Field(default=None, foreign_key="items.id", nullable=True)
+    equipped_body: Optional[int] = Field(default=None, foreign_key="items.id", nullable=True)
+    equipped_legs: Optional[int] = Field(default=None, foreign_key="items.id", nullable=True)
+    equipped_mask: Optional[int] = Field(default=None, foreign_key="items.id", nullable=True)
     user: Optional["User"] = Relationship(back_populates="inventory")
 
 

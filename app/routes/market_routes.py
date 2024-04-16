@@ -12,7 +12,7 @@ admin_log = MyLogger.admin()
 game_log = MyLogger.game()
 
 market_router = APIRouter(
-    prefix="/user/market",
+    prefix="/game/market",
     tags=["market"],
     responses={404: {"description": "Not Found"}}
 )
@@ -27,9 +27,10 @@ async def get_all_generalmarket_items(user: User = Depends(get_current_user)):
             item_data = {
                 "item_id": item.item.hash,
                 "item_name": item.item.item_name,
+                "item_quality": item.item_quality,
+                "quantity": item.item_quantity,
                 "item_cost": item.item_cost,
-                "sell_price": item.sell_price,
-                "quantity": item.item_quantity
+                "sell_price": item.sell_price
             }
             result.append(item_data)
         return result
@@ -50,6 +51,10 @@ async def buy_market_items(request: MarketPurchaseRequest, user: User = Depends(
                 admin_log.error(f"{user.username} item not found.")
                 raise HTTPException(status_code=404, detail="Item not found")
 
+            if request.quantity <= 0:
+                game_log.error(f"{user.username} tried to purchase {request.quantity} of {item.id}.")
+                raise HTTPException(status_code=400, detail="Can't purchase no items")
+
             if user.inventory.bank < item.general_market_items.item_cost * request.quantity:
                 user_log.info(f"{user.username} doesn't have enough for {item.item_name}.")
                 raise HTTPException(status_code=403, detail="Insufficient funds")
@@ -69,7 +74,7 @@ async def buy_market_items(request: MarketPurchaseRequest, user: User = Depends(
         except Exception as e:
             session.rollback()
             admin_log.error(f"{user.username} - Error purchasing item due to: {e}")
-            return {"message": f"Item not available."}
+            return {"message": str(e)}
 
 
 
