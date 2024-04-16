@@ -9,44 +9,6 @@ admin_log = MyLogger.admin()
 game_log = MyLogger.game()
 
 
-class MarketTransaction:
-    def __init__(self, user_id, item_id, quantity):
-        self.item_id = item_id
-        self.user_id = user_id
-        self.quantity = quantity
-
-    def handle_market_purchase(self):
-        with Session(engine) as session:
-            transaction = session.begin()
-            try:
-                user = session.get(User, self.user_id)
-                market_item = session.get(GeneralMarket, self.item_id)
-
-                if not user:
-                    admin_log.error(f"No user found with ID: {self.user_id}")
-                    raise ValueError(f"No user found with ID: {self.user_id}")
-
-                if not market_item:
-                    admin_log.error(f"User {user.username} - Market item {self.item_id} not found.")
-                    raise ValueError(f"User {user.username} - Market item {self.item_id} not found.")
-
-                if user.inventory.bank < market_item.item_cost:
-                    game_log.error(f"User {user.username} - Not enough to purchase {market_item.item.item_name}")
-                    raise ValueError(f"User {user.username} - Not enough to purchase {market_item.item.item_name}")
-
-                user.inventory.bank -= market_item.item_cost
-                user_crud.update_user_inventory(user.id, market_item.item_id, self.quantity)
-                session.commit()
-                game_log.info(f"{user.username} purchased {market_item.item.item_name} from the Market.")
-                return True
-
-            except Exception as e:
-                session.rollback()
-                admin_log.error(f"{self.user_id} failed to purchase item due to error: {e}")
-                return False
-
-
-
 class BackendMarketHandler:
     def __init__(self, item_id, market_name, item_cost, sell_price):
         self.item_id = item_id

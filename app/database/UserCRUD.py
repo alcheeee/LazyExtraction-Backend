@@ -84,51 +84,48 @@ class UserCRUD:
             return user
 
 
-    def update_user_inventory(self, user_id: int, item_id: int, quantity: int = 1, selling=False):
-        with Session(self.engine) as session:
-            transaction = session.begin()
-            try:
-                user = session.get(User, user_id)
-                item = session.get(Items, item_id)
-                if not user or not item:
-                    admin_log.error(f"Couldn't get user {user_id} or item {item_id}.")
-                    raise ValueError(f"Couldn't add {item_id} to {user_id}")
+    def update_user_inventory(self, user_id: int, item_id: int, quantity: int = 1, selling=False, session=None):
+        if not session:
+            session = Session(self.engine)
+        try:
+            user = session.get(User, user_id)
+            item = session.get(Items, item_id)
+            if not user or not item:
+                admin_log.error(f"Couldn't get user {user_id} or item {item_id}.")
+                raise ValueError(f"Couldn't add {item_id} to {user_id}")
 
-                # Get users inventory
-                inventory_item = session.query(InventoryItem).filter_by(
-                    inventory_id=user.inventory.id, item_id=item.id).first()
+            # Get users inventory
+            inventory_item = session.query(InventoryItem).filter_by(
+                inventory_id=user.inventory.id, item_id=item.id).first()
 
-                if not inventory_item:
-                    if quantity <= 0:
-                        raise ValueError("Cannot add zero or negative quantity.")
-                    inventory_item = InventoryItem(
-                        inventory_id=user.inventory.id,
-                        item_id=item.id,
-                        quantity=quantity,
-                        equipped=False
-                    )
-                    session.add(inventory_item)
-
+            if not inventory_item:
+                if quantity <= 0:
+                    raise ValueError("Cannot add zero or negative quantity.")
+                inventory_item = InventoryItem(
+                    inventory_id=user.inventory.id,
+                    item_id=item.id,
+                    quantity=quantity,
+                    equipped=False
+                )
+                session.add(inventory_item)
+            else:
                 if selling and inventory_item.equipped:
                     raise ValueError("Cannot sell an equipped item.")
 
                 # Update inventory quantity
-                new_quantity = inventory_item.quantity + quantity
-                if new_quantity < 0:
+                inventory_item.quantity += quantity
+                if inventory_item.quantity < 0:
                     raise ValueError("Not enough items in inventory to remove.")
-                if new_quantity == 0:
-                    session.delete(inventory_item)
 
-                session.commit()
-                action = "Added" if quantity > 0 else "Removed"
-                to_from = "to" if quantity > 0 else "from"
-                game_log.info(f"{action} {abs(quantity)} of {item.item_name} to/from {user.username}'s inventory.")
-                return f"{action} {abs(quantity)} {item.item_name} {to_from} {user.username}"
+            action = "Added" if quantity > 0 else "Removed"
+            to_from = "to" if quantity > 0 else "from"
+            game_log.info(f"{action} {abs(quantity)} of {item.item_name} to/from {user.username}'s inventory.")
+            return f"{action} {abs(quantity)} {item.item_name} {to_from} {user.username}"
 
-            except Exception as e:
-                session.rollback()
-                admin_log.error(str(e))
-                return "An error occured when trying to add the item"
+        except Exception as e:
+            session.rollback()
+            admin_log.error(str(e))
+            return "An error occured when trying to add the item"
 
 
 user_crud = UserCRUD(engine)

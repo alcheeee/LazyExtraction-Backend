@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from ..models.models import User
 from ..auth.auth_handler import get_current_user
 from app.models.item_models import GeneralMarket, Items
-from app.game_systems.markets.MarketHandlerCRUD import MarketTransaction, engine
+from app.game_systems.markets.MarketHandlerCRUD import engine
 from app.database.UserCRUD import user_crud
 from app.utils.logger import MyLogger
 user_log = MyLogger.user()
@@ -70,8 +70,8 @@ async def buy_market_items(request: MarketPurchaseRequest, user: User = Depends(
 
             user.inventory.bank -= total_cost
             item.general_market_items.item_quantity -= request.quantity
+            user_crud.update_user_inventory(user.id, item.id, request.quantity, session=session)
             session.commit()
-            user_crud.update_user_inventory(user.id, item.id, request.quantity)
             user_log.info(f"{user.username} purchased {request.quantity} of {item.item_name}.")
             return {"message": f"Purchased {request.quantity} of {item.item_name}"}
 

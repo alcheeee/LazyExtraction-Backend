@@ -155,7 +155,8 @@ async def add_an_item_to_user(username: str, item_id: int, quantity: int, user: 
     with Session(engine) as session:
         user_sending = session.exec(select(User).where(User.username == username)).first()
         if user_sending:
-            user_crud.update_user_inventory(user_sending.id, item_id, quantity)
+            user_crud.update_user_inventory(user_sending.id, item_id, quantity, session=session)
+            session.commit()
             return {"message": f"Added item to {user_sending.username}"}
         else:
             msg = {"message": f"Couldn't find user."}

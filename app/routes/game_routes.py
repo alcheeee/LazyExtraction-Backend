@@ -36,11 +36,15 @@ async def get_all_generalmarket_items(user: User = Depends(get_current_user)):
             item_details = [{
                 "item_id": item.item_id,
                 "item_name": item.item.item_name,
+                "item_quality": item.item.quality,
                 "quantity": item.quantity,
+                "category": item.item.category,
                 "equipped": item.equipped
             } for item in inventory_items]
             return item_details
 
+        except ValueError as e:
+            return {"message": str(e)}
         except Exception as e:
             admin_log.error(f"Error getting user inventory: {str(e)}")
             raise HTTPException(status_code=500, detail="Error getting inventory")
