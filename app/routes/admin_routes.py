@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import Union
 from ..game_systems.items.ItemCRUD import create_item
 from ..game_systems.items.ItemCreationLogic import WeaponDetailCreate, ClothingDetailCreate, FoodDetailCreate, IndustrialCraftingCreate, ItemCreate
-from ..game_systems.markets.market_handler import BackendMarketHandler
+from ..game_systems.markets.MarketHandlerCRUD import BackendMarketHandler
 from ..models.models import User
 from ..models.other_models import Jobs
 from ..game_systems.gameplay_options import ItemQuality
@@ -132,7 +132,7 @@ async def create_industrial_crafting_endpoint(request: IndustrialCraftingCreate,
 
     if result:
         admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
-        return {"message": msg}
+        return {"message": ""}
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
@@ -155,8 +155,8 @@ async def add_an_item_to_user(username: str, item_id: int, quantity: int, user: 
     with Session(engine) as session:
         user_sending = session.exec(select(User).where(User.username == username)).first()
         if user_sending:
-            msg = user_crud.update_user_inventory(user_sending.id, item_id, quantity)
-            return {"message": msg}
+            user_crud.update_user_inventory(user_sending.id, item_id, quantity)
+            return {"message": f"Added item to {user_sending.username}"}
         else:
             msg = {"message": f"Couldn't find user."}
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)

@@ -20,10 +20,7 @@ default_stats_data = {
 }
 default_inventory_data = {
     'bank': 1000,
-    'energy': 100,
-    'inventory_items': str(
-        {}
-    )
+    'energy': 100
 }
 
 

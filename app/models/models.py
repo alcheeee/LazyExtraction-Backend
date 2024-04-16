@@ -32,12 +32,22 @@ class Inventory(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     bank: int
     energy: int
-    inventory_items: str
-    equipped_weapon: Optional[int] = Field(default=None, foreign_key="items.id", nullable=True)
-    equipped_body: Optional[int] = Field(default=None, foreign_key="items.id", nullable=True)
-    equipped_legs: Optional[int] = Field(default=None, foreign_key="items.id", nullable=True)
-    equipped_mask: Optional[int] = Field(default=None, foreign_key="items.id", nullable=True)
+    items: List["InventoryItem"] = Relationship(back_populates="inventory")
     user: Optional["User"] = Relationship(back_populates="inventory")
+
+
+class InventoryItem(SQLModel, table=True):
+    """
+    Represents individual items within a user's inventory.
+    """
+    id: int = Field(default=None, primary_key=True)
+    inventory_id: int = Field(default=None, foreign_key="inventory.id")
+    item_id: int = Field(default=None, foreign_key="items.id")
+    quantity: int
+    equipped: bool = Field(default=False)
+
+    inventory: Optional["Inventory"] = Relationship(back_populates="items")
+    item: Optional["Items"] = Relationship()
 
 
 class Corporations(SQLModel, table=True):

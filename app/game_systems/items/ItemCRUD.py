@@ -1,5 +1,4 @@
 import datetime
-import hashlib
 import time
 
 from sqlmodel import Session
@@ -45,22 +44,14 @@ def item_data_json(item_name: str, illegal: bool, category: str,
          "illegal": illegal,
          "category": category,
          "quality": quality,
-         "quantity": quantity,
-         "hash": None
+         "quantity": quantity
         }
 
     return item_data
 
 
-def generate_hash(item_id):
-    unique_string = f"{item_id}-{time.time()}-{settings.ITEMS_SECRET_KEY}"
-    return hashlib.sha224(unique_string.encode()).hexdigest()
-
 def create_general_item(session: Session, item_data: dict) -> Items:
     item = Items(**item_data)
-    session.add(item)
-    session.commit()
-    item.hash = generate_hash(item.id)
     session.add(item)
     session.commit()
     session.refresh(item)
