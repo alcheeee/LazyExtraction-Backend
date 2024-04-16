@@ -1,3 +1,5 @@
+import datetime
+import hashlib
 from sqlmodel import Session
 from typing import Optional, Dict, Type
 from app.game_systems.gameplay_options import ItemType, ItemQuality, item_quality_mapper
@@ -5,6 +7,7 @@ from app.game_systems.items.ItemCreationLogic import GenerateItemQuality
 from app.models.item_models import Items, Weapon, FoodItems, IndustrialCraftingRecipes
 from app.models.models import User
 from app.database.db import engine
+from app.config import settings
 from app.utils.logger import MyLogger
 game_log = MyLogger.game()
 
@@ -26,6 +29,7 @@ def is_item_type(item_type_str):
     except ValueError:
         return False
 
+
 def item_data_json(item_name: str, illegal: bool, buy_price: int, category: str,
                    random_generate_quality: bool, quality: str, quantity: int, user_luck):
     if random_generate_quality:
@@ -44,8 +48,13 @@ def item_data_json(item_name: str, illegal: bool, buy_price: int, category: str,
     return item_data
 
 
+def generate_hash(item_id):
+    unique_string = f"{item_id}-{settings.ITEMS_SECRET_KEY}"
+    return hashlib.sha224(unique_string.encode()).hexdigest()
+
 def create_general_item(session: Session, item_data: dict) -> Items:
     item = Items(**item_data)
+    item.hash = generate_hash(item.id)
     session.add(item)
     session.commit()
     session.refresh(item)

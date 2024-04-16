@@ -52,7 +52,6 @@ class UserCRUD:
                     admin_log.error(f"User {user_id} not found.")
                     return False, "User not found"
 
-
                 user.inventory.energy
                 if user.inventory.energy + energy_delta < 0:
                     game_log.info(f"User {user.id} does not have enough energy.")
@@ -108,7 +107,7 @@ class UserCRUD:
             return user
 
 
-    def add_item_to_user_inventory(self, user_id: int, item_id: int, quantity: int = 1):
+    def update_user_inventory(self, user_id: int, item_id: int, quantity: int = 1):
         with Session(self.engine) as session:
             transaction = session.begin()
             try:
@@ -118,22 +117,37 @@ class UserCRUD:
                     admin_log.error(f"Couldn't get user {user_id} or item {item_id}.")
                     return False, f"Couldn't add {item_id} to {user_id}"
 
-                if item.quantity < quantity:
-                    game_log.info(f"REQUESTED {user.id} - Item {item.item_name} has no stock.")
-                    return False, f"Item {item.item_name} has no stock."
-
+                # Get users inventory
                 inventory_items = json.loads(user.inventory.inventory_items)
                 item_id_str = str(item_id)
-                inventory_items[item_id_str] = inventory_items.get(item_id_str, 0) + quantity
 
-                item.quantity -= quantity
+                # Calculate new quantity in inventory
+                current_inventory_qty = inventory_items.get(item_id_str, 0)
+                new_inventory_qty = current_inventory_qty + quantity
+
+                if new_inventory_qty < 0:
+                    admin_log.error(f"{user_id} tried to remove item with 0.")
+                    return False, f"Can't remove 0 items."
+
+                # Update quantity in user inventory
+                if new_inventory_qty > 0:
+                    inventory_items[item_id_str] = new_inventory_qty
+                else:
+                    del inventory_items[item_id_str] # If new quantity is 0, remove from inventory
+
+                if item.quantity < quantity:
+                    game_log.info(f"{user.id} - Item {item.item_name} has no stock.")
+                    return False, f"Item {item.item_name} has no stock."
+
                 user.inventory.inventory_items = json.dumps(inventory_items)
 
                 session.commit()
-                game_log.info(f"Added {quantity} of item {item.item_name} to {user.username}'s inventory.")
-                return True, f"Added {quantity} {item.item_name} to {user.username}"
+                action = "Added" if quantity > 0 else "Removed"
+                game_log.info(f"{action} {abs(quantity)} of item {item.item_name} to/from {user.username}'s inventory.")
+                return True, f"{action} {abs(quantity)} {item.item_name} to/from {user.username}"
 
             except Exception as e:
+                session.rollback()
                 admin_log.error(str(e))
                 return False, str(e)
 

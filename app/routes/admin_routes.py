@@ -1,17 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends, Form, status
 from sqlmodel import Session, select
 from pydantic import BaseModel
-from typing import Optional, Union
-from ..game_systems.items.ItemCRUD import create_general_item, create_item, item_data_json
+from typing import Union
+from ..game_systems.items.ItemCRUD import create_item
 from ..game_systems.items.ItemCreationLogic import WeaponDetailCreate, FoodItemsCreate, IndustrialCraftingCreate, ItemCreate
+from ..game_systems.markets.market_handler import BackendMarketHandler
 from ..models.models import User
 from ..models.other_models import Jobs
-from ..models.item_models import FoodItems, Weapon, IndustrialCraftingRecipes
-from ..game_systems.gameplay_options import ItemType, ItemQuality
+from ..game_systems.gameplay_options import ItemQuality
 from ..auth.auth_handler import get_current_user
 from ..services.job_service import create_job, JOB_TYPES
 from ..database.UserCRUD import engine, user_crud
-import logging
 from ..utils.logger import MyLogger
 user_log = MyLogger.user()
 admin_log = MyLogger.admin()
@@ -55,11 +54,11 @@ async def create_job_endpoint(
             }
 
             if job_data["job_type"] not in JOB_TYPES:
-                return f'Job must be in {JOB_TYPES}'
+                return {"message": f'Job must be in {JOB_TYPES}'}
 
             new_job = create_job(job_data=job_data)
             admin_log.info(f'ADMIN {user.id} - Created new job {new_job.job_name}')
-            return f"{new_job.job_name} created successfully."
+            return {"message": f"{new_job.job_name} created successfully."}
 
         except Exception as e:
             session.rollback()
@@ -83,7 +82,7 @@ async def create_weapon_endpoint(request: WeaponDetailCreate, item_name: str, il
                               quality, quantity, buy_price)
     if result:
         admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
-        return msg
+        return {"message": msg}
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
@@ -99,7 +98,7 @@ async def create_food_endpoint(request: FoodItemsCreate, item_name: str, illegal
                               quality, quantity, buy_price)
     if result:
         admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
-        return msg
+        return {"message": msg}
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
@@ -115,9 +114,19 @@ async def create_industrial_crafting_endpoint(request: IndustrialCraftingCreate,
                               quality, quantity, buy_price)
     if result:
         admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
-        return msg
+        return {"message": msg}
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
+
+
+@admin_router.post("/add-item-to-market")
+async def add_item_to_market(item_id: int, market_name: str, item_cost: int, sell_price: int, user: User = Depends(get_current_user)):
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    result = BackendMarketHandler(item_id, market_name, item_cost, sell_price).add_item_to_market()
+    if not result:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request")
+    return {"message": f"Added {item_id} to {market_name}"}
 
 
 @admin_router.post("/add-item-to-user")
@@ -128,11 +137,11 @@ async def add_an_item_to_user(username: str, item_id: int, quantity: int, user: 
     with Session(engine) as session:
         user_sending = session.exec(select(User).where(User.username == username)).first()
         if user_sending:
-            result, msg = user_crud.add_item_to_user_inventory(user_sending.id, item_id, quantity)
+            result, msg = user_crud.update_user_inventory(user_sending.id, item_id, quantity)
             if not result:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
-            return msg
+            return {"message": msg}
         else:
-            msg = f"Couldn't find user."
+            msg = {"message": f"Couldn't find user."}
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 

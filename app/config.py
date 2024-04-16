@@ -4,11 +4,12 @@ class Settings:
 
     # Project
     PROJECT_NAME = "RPGapi | Development"
-    VERSION = "0.1109"
+    VERSION = "0.1110"
 
     # Security
     SECRET_KEY = secrets.token_urlsafe(32)
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
+    ITEMS_SECRET_KEY = "itemsmmmyesitemsilovethose"
 
     # FastAPI
     TOKEN_URL = "/user/login"

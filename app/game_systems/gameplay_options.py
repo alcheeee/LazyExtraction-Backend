@@ -4,7 +4,6 @@ from typing import Optional
 
 
 JOB_TYPES = ['General', 'Law', 'Crime']
-ALL_MARKETS = ['General Market', 'Blackmarket']
 
 # USER DEFAULTS
 default_stats_data = {
@@ -55,7 +54,6 @@ item_quality_mapper = {
     'Special': (3, 1.15),
     'Unique': (1, 1.2)
 }
-
 
 class CORPORATION_TYPES(enum.Enum):
     Industrial = 'Industrial'
