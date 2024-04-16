@@ -16,7 +16,7 @@ class ItemStatsHandler:
         self.user_id = user_id
         self.item_id = item_id
 
-    def user_equipped_item(self):
+    def user_equip_unequip_item(self):
         with Session(engine) as session:
             transaction = session.begin()
             try:
@@ -47,18 +47,19 @@ class ItemStatsHandler:
                 if not item_slot:
                     raise ValueError("No valid item slot found for the category")
 
-                current_equipped = getattr(user.inventory, item_slot)
-                if current_equipped and int(current_equipped) != item.hash:
-                    raise ValueError("You must unequip the current item first")
+                current_equipped_hash = getattr(user.inventory, item_slot)
+                if current_equipped_hash and current_equipped_hash != item.hash:
+                    current_item = session.execute(select(Items).where(Items.hash == current_equipped_hash)).scalar()
+                    if not current_item:
+                        raise ValueError(f"Couldnt find item with hash {current_equipped_hash}")
 
-                if current_equipped:
-                    inventory_items[item_hash]["equipped"] = False
-
-                inventory_items[item_hash]["equipped"] = True
-                user.inventory.inventory_items = json.dumps(inventory_items)
-
+                    self.adjust_user_stats_item(session, user, current_item, equipping=False)
+                    inventory_items[current_equipped_hash]["equipped"] = False
 
                 setattr(user.inventory, item_slot, item_hash)
+                inventory_items[item_hash]["equipped"] = True
+                self.adjust_user_stats_item(session, user, item, equipping=True)
+                user.inventory.inventory_items = json.dumps(inventory_items)
                 session.commit()
 
 
@@ -68,9 +69,19 @@ class ItemStatsHandler:
                 return False
 
 
-    def adjust_user_stats_item(self, session: Session, user, item):
-        if item.category == "Weapon":
-            user.stats.damage += Weapon.damage
-            user.stats.evasiveness += Weapon.evasiveness_bonus
-            user.stats.strength += Weapon.strength_bonus
+    def adjust_user_stats_item(self, session: Session, user, item, equipping=True):
+        for stat_key, bonus_attr in item_bonus_mapper.items():
+            item_bonus = getattr(item, bonus_attr, 0)
+            if item_bonus != 0:
+                current_value = getattr(user.stats, stat_key)
+                new_value = current_value + (item_bonus if equipping else -item_bonus)
+                setattr(user.stats, stat_key, new_value)
+        user.stats.round_stats()
+
+
+
+
+
+
+
 

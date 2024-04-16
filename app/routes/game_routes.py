@@ -28,6 +28,14 @@ Routes to add:
 
 
 
-@game_router.post("/get-generalmarket-items")
+@game_router.post("/get-user-inventory")
 async def get_all_generalmarket_items(user: User = Depends(get_current_user)):
-    pass
+    with Session(engine) as session:
+        try:
+            pass
+
+
+        except Exception as e:
+            session.rollback()
+            admin_log.error(str(e))
+            return False, {"message": "Error getting inventory"}
