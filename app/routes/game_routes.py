@@ -1,8 +1,10 @@
+from pydantic import BaseModel
 from sqlmodel import Session, select
 from fastapi import APIRouter, HTTPException, Depends
 from ..models.models import User, Inventory, InventoryItem
 from ..auth.auth_handler import get_current_user
 from app.game_systems.markets.MarketHandlerCRUD import engine
+from app.game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
 from app.utils.logger import MyLogger
 user_log = MyLogger.user()
 admin_log = MyLogger.admin()
@@ -25,7 +27,7 @@ Routes to add:
 
 
 @game_router.post("/get-user-inventory")
-async def get_all_generalmarket_items(user: User = Depends(get_current_user)):
+async def get_users_items(user: User = Depends(get_current_user)):
     with Session(engine) as session:
         try:
             session.add(user)
@@ -38,8 +40,7 @@ async def get_all_generalmarket_items(user: User = Depends(get_current_user)):
                 "item_name": item.item.item_name,
                 "item_quality": item.item.quality,
                 "quantity": item.quantity,
-                "category": item.item.category,
-                "equipped": item.equipped
+                "category": item.item.category
             } for item in inventory_items]
             return item_details
 
@@ -48,3 +49,20 @@ async def get_all_generalmarket_items(user: User = Depends(get_current_user)):
         except Exception as e:
             admin_log.error(f"Error getting user inventory: {str(e)}")
             raise HTTPException(status_code=500, detail="Error getting inventory")
+
+class UserItemActionRequest(BaseModel):
+    item_id: int
+
+@game_router.post("/equip-item")
+async def equip_unequip_inventory_item(request: UserItemActionRequest, user: User = Depends(get_current_user)):
+    try:
+        result = ItemStatsHandler(user.id, request.item_id).user_equip_unequip_item()
+        if isinstance(result, dict) and 'message' in result:
+            return result
+        else:
+            return {"message": f"Item {result} successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+

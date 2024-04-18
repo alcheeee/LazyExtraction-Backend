@@ -22,7 +22,12 @@ default_inventory_data = {
     'bank': 1000,
     'energy': 100
 }
-
+equipment_slots = [
+    'equipped_weapon_id',
+    'equipped_mask_id',
+    'equipped_body_id',
+    'equipped_legs_id'
+]
 
 # ITEM DEFAULTS
 import enum
@@ -59,14 +64,8 @@ item_bonus_mapper = {
     "health": "health_bonus",
     "luck": "luck_bonus",
     "strength": "strength_bonus",
-    "knowledge": "knowledge_bonus"
+    "knowledge": "knowledge_bonus",
 }
-
-
-class ClothingTypes(enum.Enum):
-    Mask = "Mask"
-    Body = "Body"
-    Legs = "Legs"
 
 class CORPORATION_TYPES(enum.Enum):
     Industrial = 'Industrial'

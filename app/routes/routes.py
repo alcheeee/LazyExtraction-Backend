@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Form, status
 from pydantic import BaseModel
 from ..models.models import User
 from ..auth.auth_handler import oauth2_scheme, get_current_user, UserAuthenticator
-from .router_ids  import user_crud, RouteIDs
+from .router_ids import user_crud, RouteIDs
 
 authenticator = UserAuthenticator(user_data_manager=user_crud)
 

@@ -1,8 +1,6 @@
-import json
 from sqlmodel import Session, select
-from typing import Optional, Dict, Type
 from app.game_systems.gameplay_options import ItemType, item_bonus_mapper
-from app.models.item_models import Items, Weapon, FoodItems
+from app.models.item_models import Items
 from app.models.models import User, InventoryItem
 from app.database.db import engine
 from app.utils.logger import MyLogger
@@ -27,39 +25,48 @@ class ItemStatsHandler:
                 if not user or not item:
                     raise ValueError("User or item not found")
 
-                if item.category not in ['Clothing', 'Weapon']:
+                if item.category not in [ItemType.Clothing, ItemType.Weapon]:
                     raise ValueError("Incorrect item type")
 
+                item_slot_type = item.clothing_details.clothing_type if item.category == ItemType.Clothing else "Weapon"
                 equipment_map = {
-                    "Mask": "equipped_mask",
-                    "Body": "equipped_body",
-                    "Legs": "equipped_legs",
-                    "Weapon": "equipped_weapon"
+                    "Weapon": "equipped_weapon_id",
+                    "Mask": "equipped_mask_id",
+                    "Body": "equipped_body_id",
+                    "Legs": "equipped_legs_id"
                 }
 
-                item_slot = equipment_map.get(item.category)
-                inventory_item = session.query(
+                item_slot_attr = equipment_map.get(item_slot_type)
+                current_equipped_item_id = getattr(user.inventory, item_slot_attr)
+                target_inventory_item = session.query(
                     InventoryItem).filter_by(
                     inventory_id=user.inventory.id,
                     item_id=item.id).first()
 
-                if not inventory_item or inventory_item.quantity == 0:
+
+                if not target_inventory_item or target_inventory_item.quantity == 0:
                     raise ValueError("You do not have that item")
 
-                # Manage currently equipped item
-                current_equipped_item = session.query(
-                    InventoryItem).filter_by(
-                    inventory_id=user.inventory.id,
-                    equipped=True).first()
+                equipping_new_item = current_equipped_item_id != item.id
 
-                if current_equipped_item and current_equipped_item.item_id != item.id:
-                    current_equipped_item.equipped = False
-                    self.adjust_user_stats_item(session, user, current_equipped_item.item, equipping=False)
+                if equipping_new_item:
+                    setattr(user.inventory, item_slot_attr, item.id)
+                    self.adjust_user_stats_item(session, user, item, equipping=True)
 
-                inventory_item.equipped = True
-                self.adjust_user_stats_item(session, user, item, equipping=True)
+                    if current_equipped_item_id:
+                        previous_item = session.query(Items).get(current_equipped_item_id)
+                        self.adjust_user_stats_item(session, user, previous_item, equipping=False)
+                else:
+                    setattr(user.inventory, item_slot_attr, None)
+                    self.adjust_user_stats_item(session, user, item, equipping=False)
+
                 session.commit()
+                action = "equipped" if equipping_new_item else "unequipped"
+                user_log.info(f"User {user.username} {action} {item.item_name}")
+                return action
 
+            except ValueError as e:
+                return {"message": str(e)}
             except Exception as e:
                 session.rollback()
                 user_log.error(f"User {self.user_id} failed to equip item: {e}")
@@ -67,12 +74,21 @@ class ItemStatsHandler:
 
 
     def adjust_user_stats_item(self, session: Session, user, item, equipping=True):
+        category_bonus_mapping = {
+            "Clothing": item.clothing_details,
+            "Weapon": item.weapon_details
+        }
+        item_stats_source = category_bonus_mapping.get(item.category.value)
+        if not item_stats_source:
+            admin_log.error(f"No bonus stats available for category: {item.category}")
+            return
         for stat_key, bonus_attr in item_bonus_mapper.items():
-            item_bonus = getattr(item, bonus_attr, 0)
+            item_bonus = getattr(item_stats_source, bonus_attr, 0)
             if item_bonus != 0:
-                current_value = getattr(user.stats, stat_key)
-                new_value = current_value + (item_bonus if equipping else -item_bonus)
+                current_value = getattr(user.stats, stat_key, 0)
+                new_value = current_value + (item_bonus if equipping else - item_bonus)
                 setattr(user.stats, stat_key, new_value)
+
         user.stats.round_stats()
 
 
