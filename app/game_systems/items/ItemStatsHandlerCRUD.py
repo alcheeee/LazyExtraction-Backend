@@ -14,6 +14,31 @@ class ItemStatsHandler:
         self.user_id = user_id
         self.item_id = item_id
 
+
+    def check_item_category_map(self, session: Session, item):
+        category_bonus_mapping = {
+            "Clothing": item.clothing_details,
+            "Weapon": item.weapon_details
+        }
+        item_stats_source = category_bonus_mapping.get(item.category.value)
+        if item_stats_source:
+            return item_stats_source
+
+
+    def get_item_stats_json(self, session: Session, item):
+        item_stats_source = self.check_item_category_map(session, item)
+        if not item_stats_source:
+            return None
+
+        item_stats_results = {}
+        for stat_key, bonus_attr in item_bonus_mapper.items():
+            item_bonus = getattr(item_stats_source, bonus_attr, 0)
+            if item_bonus != 0:
+                item_stats_results[bonus_attr] = str(item_bonus)
+
+        return item_stats_results
+
+
     def user_equip_unequip_item(self):
         with Session(engine) as session:
             transaction = session.begin()
@@ -60,7 +85,7 @@ class ItemStatsHandler:
                 return f"{action}"
 
             except ValueError as e:
-                return {"message": str(e)}
+                return str(e)
             except Exception as e:
                 session.rollback()
                 user_log.error(f"User {self.user_id} failed to equip item: {e}")
@@ -68,11 +93,8 @@ class ItemStatsHandler:
 
 
     def adjust_user_stats_item(self, session: Session, user, item, equipping=True):
-        category_bonus_mapping = {
-            "Clothing": item.clothing_details,
-            "Weapon": item.weapon_details
-        }
-        item_stats_source = category_bonus_mapping.get(item.category.value)
+
+        item_stats_source = self.check_item_category_map(session, item)
         if not item_stats_source:
             admin_log.error(f"No bonus stats available for category: {item.category}")
             return
@@ -84,8 +106,6 @@ class ItemStatsHandler:
                 setattr(user.stats, stat_key, new_value)
 
         user.stats.round_stats()
-
-
 
 
 

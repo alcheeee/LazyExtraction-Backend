@@ -1,8 +1,7 @@
-from fastapi import APIRouter, HTTPException, Depends, Form, status
+from fastapi import APIRouter, HTTPException, Form
 from pydantic import BaseModel
-from ..models.models import User
-from ..auth.auth_handler import oauth2_scheme, get_current_user, UserAuthenticator
-from .router_ids import user_crud, RouteIDs
+from ..auth.auth_handler import UserAuthenticator
+from .router_ids import user_crud
 
 authenticator = UserAuthenticator(user_data_manager=user_crud)
 
@@ -36,20 +35,6 @@ def login_for_access_token(username: str = Form(...), password: str = Form(...))
 
     access_token = authenticator.create_access_token(user_id=user.id)
     return {"access_token": access_token, "token_type": "bearer"}
-
-
-
-class UserActionRequest(BaseModel):
-    button_id: str
-
-@user_router.post("/user-action")
-async def user_action_buttons(request: UserActionRequest, user: User = Depends(get_current_user)):
-    route_id = RouteIDs(request.button_id, user)
-    result, msg = route_id.find_id()
-    if result:
-        return {"message": msg}
-    else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": msg})
 
 
 

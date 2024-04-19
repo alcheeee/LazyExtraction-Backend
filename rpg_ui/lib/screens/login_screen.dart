@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:rpg_ui/widgets/app_theme.dart';
 import 'dart:convert';
 import '../common_imports.dart';
-import '../api_calls/user_manager.dart';
+import '../api_calls/user_auth_api.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

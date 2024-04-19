@@ -9,5 +9,9 @@ export 'api_calls/routes.dart';
 export 'widgets/appbar_widget.dart';
 export 'widgets/app_theme.dart';
 
+// Models
+export 'models/item_model.dart';
+
+
 
 

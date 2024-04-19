@@ -7,5 +7,5 @@ class SessionManager {
 }
 
 class APIUrl {
-  static const String apiURL = 'http://10.0.2.2:8001';
+  static const String apiURL = 'http://10.0.2.2:8002';
 }

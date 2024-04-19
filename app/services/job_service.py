@@ -1,5 +1,4 @@
-from sqlmodel import Session
-from sqlalchemy.orm import joinedload
+from sqlmodel import Session, select
 from app.models.models import User
 from app.models.other_models import Jobs
 from app.database.db import engine
@@ -14,8 +13,33 @@ user_log = MyLogger.user()
 
 class JobService:
 
+    def get_all_jobs(self, session: Session):
+        try:
+            query = select(Jobs)
+            all_jobs = session.exec(query).all()
+
+            job_details = []
+            for job in all_jobs:
+                job_info = {
+                    "job_name": job.job_name,
+                    "job_type": job.job_type,
+                    "income": job.income,
+                    "energy_required": job.energy_required,
+                    "description": job.description,
+                    "required_stats": job.required_stats,
+                    "stat_changes": job.stat_changes
+                }
+
+                job_details.append(job_info)
+            return job_details
+
+        except Exception as e:
+            session.rollback()
+            admin_log.error(str(e))
+            return False
+
     def fetch_user(self, user_id: int, session):
-        user = session.query(User).options(joinedload(User.stats)).filter_by(id=user_id).first()
+        user = session.get(User, user_id)
         if not user:
             logger.error(f"User {user_id} not found.")
             return None

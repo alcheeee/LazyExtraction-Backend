@@ -5,6 +5,7 @@ from ..models.models import User, InventoryItem
 from ..auth.auth_handler import get_current_user
 from app.models.item_models import GeneralMarket, Items
 from app.game_systems.markets.MarketHandlerCRUD import engine
+from app.game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
 from app.database.UserCRUD import user_crud
 from app.utils.logger import MyLogger
 user_log = MyLogger.user()
@@ -23,19 +24,30 @@ async def get_all_generalmarket_items(user: User = Depends(get_current_user)):
     with Session(engine) as session:
         try:
             items = session.exec(select(GeneralMarket)).all()
-            result = []
+            item_details = []
             for item in items:
-                item_data = {
+                main_item = session.get(Items, item.item_id)
+                item_info = {
                     "item_id": item.item_id,
-                    "item_name": item.item.item_name,
-                    "item_quality": item.item_quality,
+                    "item_name": main_item.item_name,
+                    "item_quality": main_item.quality,
                     "quantity": item.item_quantity,
+                    "illegal": main_item.illegal,
+                    "category": main_item.category.value,
+                    "slot_type": None,
+                    "equipped_slot": None,
                     "item_cost": item.item_cost,
                     "sell_price": item.sell_price,
-                    "category": item.item.category.value
                 }
-                result.append(item_data)
-            return result
+                if main_item.category.value in ['Clothing', 'Weapon']:
+                    item_info["slot_type"] = (main_item.clothing_details.clothing_type if
+                                              main_item.category.value == 'Clothing' else 'Weapon')
+                check_for_stats = ItemStatsHandler(user.id, main_item.id).get_item_stats_json(session, main_item)
+                if check_for_stats:
+                    item_info["stats"] = check_for_stats
+
+                item_details.append(item_info)
+            return item_details
 
         except Exception as e:
             admin_log.error(str(e))
