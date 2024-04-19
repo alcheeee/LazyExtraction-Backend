@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_ui/colors.dart';
+import 'package:rpg_ui/widgets/button_widgets.dart';
 
 class AppTheme {
   static InputDecoration inputDecoration(String label) {
@@ -15,13 +16,27 @@ class AppTheme {
     );
   }
 
-  static ButtonStyle elevatedButtonStyle() {
-    return ElevatedButton.styleFrom(
-      backgroundColor: ButtonColors.primaryColor,
-      foregroundColor: ButtonColors.primaryTextColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(4.0),
+  static Widget customButton({
+    required String label,
+    required VoidCallback onPressed,
+    Color? backgroundColor,
+    TextStyle? textStyle,
+  }) {
+    return CustomButton(
+      label: label,
+      onPressed: onPressed,
+      backgroundColor: backgroundColor ?? ButtonColors.primaryColor,
+      textStyle: textStyle ?? const TextStyle(
+        color: ButtonColors.primaryTextColor,
+        fontSize: 16,
       ),
+    );
+  }
+    static TextStyle linkTextStyle() {
+    return const TextStyle(
+      color: UIColors.secondaryTextColor,
+      fontSize: 14,
+      fontWeight: FontWeight.bold,
     );
   }
 }

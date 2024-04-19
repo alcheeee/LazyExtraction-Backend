@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:rpg_ui/colors.dart';
-
-import 'button_widgets.dart';
+import '../common_imports.dart';
 
 class ItemTile extends StatelessWidget {
   final Map<String, dynamic> item;
@@ -152,18 +150,18 @@ class _ItemDetailsDialogState extends State<ItemDetailsDialog> with SingleTicker
           ),
           actions: <Widget>[
             if (widget.showEquipButton)
-              CustomButton(
+              AppTheme.customButton(
                   label: 'Equip',
                   onPressed: widget.onEquip ?? () => Navigator.of(context).pop()),
             if (widget.showBuyButton)
-              CustomButton(
+              AppTheme.customButton(
                   label: 'Buy',
                   onPressed: widget.onBuy ?? () => Navigator.of(context).pop()),
             if (widget.showSellButton)
-              CustomButton(
+              AppTheme.customButton(
                   label: 'Sell',
                   onPressed: widget.onSell ?? () => Navigator.of(context).pop()),
-            CustomButton(
+            AppTheme.customButton(
               label: 'Close',
               onPressed: () => Navigator.of(context).pop(),
             ),
