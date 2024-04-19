@@ -4,7 +4,7 @@ class Settings:
 
     # Project
     PROJECT_NAME = "RPGapi | Development"
-    VERSION = "0.1201"
+    VERSION = "0.1203"
 
     # Security
     SECRET_KEY = "nyasawesomehonestlyidontthinktheresanyonebetter"
