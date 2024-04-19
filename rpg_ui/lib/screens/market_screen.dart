@@ -1,12 +1,8 @@
-// ignore_for_file: unused_import
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:rpg_ui/colors.dart';
-import 'dart:convert';
-import '../config.dart';
-import '../widgets/app_theme.dart';
-import '../widgets/button_widgets.dart';
+import '../common_imports.dart';
+import '../api_calls/items_api.dart';
+import '../widgets/item_tile.dart';
+import '../widgets/item_details_dialogue.dart';
 
 class MarketScreen extends StatefulWidget {
   const MarketScreen({super.key});
@@ -16,28 +12,45 @@ class MarketScreen extends StatefulWidget {
 }
 
 class _MarketScreenState extends State<MarketScreen> {
-  List<dynamic> _marketItems = [];
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  List<Item> _marketItems = [];
   String _message = '';
 
   Future<void> fetchMarketItems() async {
-    final response = await http.post(
-      Uri.parse('${APIUrl.apiURL}/market/get-generalmarket-items'),
-      headers: <String, String>{
-        'Authorization': 'Bearer ${SessionManager.accessToken}',
-      },
-    );
-
-    if (response.statusCode == 200) {
+    try {
+      List<Item> marketItems = await ItemManager.fetchMarketItems(); // This should return a List<Item>
       setState(() {
-        _marketItems = jsonDecode(response.body) as List<dynamic>;
-        _message = 'Market items fetched successfully';
+        _marketItems = marketItems;
       });
-    } else {
-      var data = jsonDecode(response.body);
+    } catch (e) {
       setState(() {
-        _message = 'Failed to fetch market items: ${data['detail']['message']}';
+        _message = e.toString();
       });
     }
+  }
+
+  void buyItem(Item item) async {
+    try {
+      String result = await ItemManager.buyItem(item.itemId, 1);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result)));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  void _showItemDetails(Item item) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ItemDetailsDialog(
+          item: item,
+          showBuyButton: true,
+          onBuy: () => buyItem(item),
+        );
+      },
+    );
   }
 
   @override
@@ -49,25 +62,26 @@ class _MarketScreenState extends State<MarketScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('General Market')),
+            key: _scaffoldKey,
+      appBar: commonAppBar('Market', _scaffoldKey, context),
+      drawer: commonDrawer(context, 'MarketScreen'),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: _marketItems.length,
-                itemBuilder: (context, index) {
-                  var item = _marketItems[index];
-                  return ListTile(
-                    title: Text(item['item_name'], style: const TextStyle(color: UIColors.primaryTextColor)),
-                    subtitle: Text('Price: \$${item['item_cost']} Quantity: ${item['quantity']}', style: const TextStyle(color: UIColors.secondaryTextColor)),
-                  );
-                },
-              ),
-            ),
-            Text(_message),
-          ],
+        child: GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            childAspectRatio: 1,
+            crossAxisSpacing: 4,
+            mainAxisSpacing: 4,
+          ),
+          itemCount: _marketItems.length,
+          itemBuilder: (context, index) {
+            return ItemTile(
+              item: _marketItems[index],
+              onTap: () => _showItemDetails(_marketItems[index]),
+              bottomInfoKeys: const ['quantity', 'item_cost'],
+            );
+          },
         ),
       ),
     );

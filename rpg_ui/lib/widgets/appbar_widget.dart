@@ -35,7 +35,7 @@ Widget commonDrawer(BuildContext context, String currentRoute) {
         children: [
           const UserAccountsDrawerHeader(
             decoration: BoxDecoration(color: UIColors.secondaryBackgroundColor),
-            accountName: Text("User Name", style: TextStyle(color: UIColors.primaryTextColor)),
+            accountName: Text("UserExample", style: TextStyle(color: UIColors.primaryTextColor)),
             accountEmail: Text("email@example.com", style: TextStyle(color: UIColors.primaryTextColor)),
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.grey,
@@ -43,8 +43,8 @@ Widget commonDrawer(BuildContext context, String currentRoute) {
             ),
           ),
           _buildDrawerItem(Icons.home, 'Home', AppRoutes.home, context, currentRoute),
-          _buildDrawerItem(Icons.inventory, 'View Inventory', AppRoutes.inventory, context, currentRoute),
-          _buildDrawerItem(Icons.shopping_cart, 'Market Operations', AppRoutes.market, context, currentRoute),
+          _buildDrawerItem(Icons.inventory, 'Inventory', AppRoutes.inventory, context, currentRoute),
+          _buildDrawerItem(Icons.shopping_cart, 'Market', AppRoutes.market, context, currentRoute),
           _buildDrawerItem(Icons.exit_to_app, 'Logout', '', context, currentRoute, logout: true),
         ],
       ),
@@ -57,7 +57,7 @@ Widget _buildDrawerItem(IconData icon, String title, String routeName, BuildCont
     leading: Icon(icon, color: UIColors.primaryTextColor),
     title: Text(title, style: const TextStyle(color: UIColors.primaryTextColor)),
     onTap: () {
-      Navigator.of(context).pop(); // Close the drawer
+      Navigator.of(context).pop();
       if (logout) {
         SessionManager.logout();
         Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (Route<dynamic> route) => false);
