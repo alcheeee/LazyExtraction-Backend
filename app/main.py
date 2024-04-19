@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.config import settings
-from app.database.db import initialize_db, engine
+from app.database.db import initialize_db
 from app.routes.routes import user_router
 from app.routes.admin_routes import admin_router
 from app.routes.corporation_routes import corporation_router
@@ -26,4 +26,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-

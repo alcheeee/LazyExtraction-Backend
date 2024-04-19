@@ -1,5 +1,5 @@
 from sqlmodel import Session, select
-from app.game_systems.gameplay_options import ItemType, item_bonus_mapper
+from app.game_systems.gameplay_options import ItemType, item_bonus_mapper, equipment_map
 from app.models.item_models import Items
 from app.models.models import User, InventoryItem
 from app.database.db import engine
@@ -29,15 +29,9 @@ class ItemStatsHandler:
                     raise ValueError("Incorrect item type")
 
                 item_slot_type = item.clothing_details.clothing_type if item.category == ItemType.Clothing else "Weapon"
-                equipment_map = {
-                    "Weapon": "equipped_weapon_id",
-                    "Mask": "equipped_mask_id",
-                    "Body": "equipped_body_id",
-                    "Legs": "equipped_legs_id"
-                }
-
                 item_slot_attr = equipment_map.get(item_slot_type)
                 current_equipped_item_id = getattr(user.inventory, item_slot_attr)
+
                 target_inventory_item = session.query(
                     InventoryItem).filter_by(
                     inventory_id=user.inventory.id,
@@ -63,7 +57,7 @@ class ItemStatsHandler:
                 session.commit()
                 action = "equipped" if equipping_new_item else "unequipped"
                 user_log.info(f"User {user.username} {action} {item.item_name}")
-                return action
+                return f"{action}"
 
             except ValueError as e:
                 return {"message": str(e)}

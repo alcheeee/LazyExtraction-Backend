@@ -18,16 +18,18 @@ default_stats_data = {
     'strength': 1.00,
     'knowledge': 1.00
 }
+
 default_inventory_data = {
     'bank': 1000,
     'energy': 100
 }
-equipment_slots = [
-    'equipped_weapon_id',
-    'equipped_mask_id',
-    'equipped_body_id',
-    'equipped_legs_id'
-]
+
+equipment_map = {
+    "Weapon": "equipped_weapon_id",
+    "Mask": "equipped_mask_id",
+    "Body": "equipped_body_id",
+    "Legs": "equipped_legs_id"
+}
 
 # ITEM DEFAULTS
 import enum

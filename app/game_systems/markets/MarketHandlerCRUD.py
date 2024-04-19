@@ -30,6 +30,7 @@ class BackendMarketHandler:
                     admin_log.error(f"{item.item_name} is already in the market")
                     raise ValueError(f"{item.item_name} is already in the market")
 
+
                 market_item = {
                     "item_cost": self.item_cost,
                     "sell_price": self.sell_price,

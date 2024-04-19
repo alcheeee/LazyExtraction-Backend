@@ -34,14 +34,14 @@ async def create_job_endpoint(
     user: User = Depends(get_current_user)):
     if not user.is_admin:
         admin_log.warning(f"{user} made an admin request!")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={"message": "Insufficient permissions"})
 
     with Session(engine) as session:
         transaction = session.begin()
         try:
             db_job = session.exec(select(Jobs).where(Jobs.job_name == job_name)).first()
             if db_job:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Job already created!")
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": "Job already created!"})
 
             job_data = {
                 "job_name": job_name,
@@ -63,26 +63,22 @@ async def create_job_endpoint(
         except Exception as e:
             session.rollback()
             admin_log.error(str(e))
-            return False
-
-
-class ItemCreateRequest(BaseModel):
-    general: ItemCreate
-    details: Union[WeaponDetailCreate, FoodDetailCreate, IndustrialCraftingCreate]
+            return {"message": "An error occured"}
 
 
 @admin_router.post("/create-item/weapon")
 async def create_weapon_endpoint(request: WeaponDetailCreate, item_name: str, illegal: bool, random_generate_quality: bool, quality: ItemQuality, quantity: int, user: User = Depends(get_current_user)):
     if not user.is_admin:
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
+        raise HTTPException(status_code=403, detail={"message": "Insufficient permissions"})
 
     item_type = "Weapon"
     result, msg = create_item(item_type, user.id, request, item_name, illegal,
                               random_generate_quality,
                               quality, quantity)
+    msg = {"message": msg}
     if result:
         admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
-        return {"message": msg}
+        return msg
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
@@ -90,15 +86,16 @@ async def create_weapon_endpoint(request: WeaponDetailCreate, item_name: str, il
 @admin_router.post("/create-item/food")
 async def create_food_endpoint(request: FoodDetailCreate, item_name: str, illegal: bool, random_generate_quality: bool, quality: ItemQuality, quantity: int, user: User = Depends(get_current_user)):
     if not user.is_admin:
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
+        raise HTTPException(status_code=403, detail={"message": "Insufficient permissions"})
 
     item_type = "Food"
     result, msg = create_item(item_type, user.id, request, item_name, illegal,
                               random_generate_quality,
                               quality, quantity)
+    msg = {"message": msg}
     if result:
         admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
-        return {"message": msg}
+        return msg
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
@@ -106,15 +103,16 @@ async def create_food_endpoint(request: FoodDetailCreate, item_name: str, illega
 @admin_router.post("/create-item/clothing")
 async def create_clothing_endpoint(request: ClothingDetailCreate, item_name: str, illegal: bool, random_generate_quality: bool, quality: ItemQuality, quantity: int, user: User = Depends(get_current_user)):
     if not user.is_admin:
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
+        raise HTTPException(status_code=403, detail={"message": "Insufficient permissions"})
 
     item_type = "Clothing"
     result, msg = create_item(item_type, user.id, request, item_name, illegal,
                               random_generate_quality,
                               quality, quantity)
+    msg = {"message": msg}
     if result:
         admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
-        return {"message": msg}
+        return msg
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
@@ -122,17 +120,17 @@ async def create_clothing_endpoint(request: ClothingDetailCreate, item_name: str
 @admin_router.post("/create-item/industrial-crafting")
 async def create_industrial_crafting_endpoint(request: IndustrialCraftingCreate, user: User = Depends(get_current_user)):
     if not user.is_admin:
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
+        raise HTTPException(status_code=403, detail={"message": "Insufficient permissions"})
 
     item_type = "IndustrialCrafting"
     result = False
     """
     TODO - ADD CRAFTING LOGIC
     """
+    msg = {"message": ""}
 
     if result:
-        admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
-        return {"message": ""}
+        return msg
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
@@ -140,17 +138,17 @@ async def create_industrial_crafting_endpoint(request: IndustrialCraftingCreate,
 @admin_router.post("/add-item-to-market")
 async def add_item_to_market(item_id: int, market_name: str, item_cost: int, sell_price: int, user: User = Depends(get_current_user)):
     if not user.is_admin:
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
+        raise HTTPException(status_code=403, detail={"message": "Insufficient permissions"})
     result = BackendMarketHandler(item_id, market_name, item_cost, sell_price).add_item_to_market()
     if not result:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": "Invalid Request"})
     return {"message": f"Added {item_id} to {market_name}"}
 
 
 @admin_router.post("/add-item-to-user")
 async def add_an_item_to_user(username: str, item_id: int, quantity: int, user: User = Depends(get_current_user)):
     if not user.is_admin:
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
+        raise HTTPException(status_code=403, detail={"message": "Insufficient permissions"})
 
     with Session(engine) as session:
         user_sending = session.exec(select(User).where(User.username == username)).first()

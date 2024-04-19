@@ -24,7 +24,7 @@ def register_new_user(user_request: UserCreateRequest):
     if result:
         return {"message": msg}
     else:
-        raise HTTPException(status_code=400, detail=msg)
+        raise HTTPException(status_code=400, detail={"message": msg})
 
 
 
@@ -32,11 +32,8 @@ def register_new_user(user_request: UserCreateRequest):
 def login_for_access_token(username: str = Form(...), password: str = Form(...)):
     user = authenticator.authenticate_user(username, password)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise HTTPException(status_code=400, detail={"message": "Incorrect username or password"})
+
     access_token = authenticator.create_access_token(user_id=user.id)
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -52,7 +49,7 @@ async def user_action_buttons(request: UserActionRequest, user: User = Depends(g
     if result:
         return {"message": msg}
     else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": msg})
 
 
 

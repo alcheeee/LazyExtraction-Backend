@@ -17,6 +17,6 @@ class RouteIDs:
 
         if self.route_name_id in actions:
             results, msg = actions[self.route_name_id]()
-            return results, msg
+            return {"message": msg}
         else:
-            return None, "Unknown action"
+            return {"message": "Unknown action"}

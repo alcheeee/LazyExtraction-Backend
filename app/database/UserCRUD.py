@@ -3,9 +3,8 @@ from ..models.models import User, Stats, Inventory, InventoryItem
 from ..models.item_models import Items
 from ..database.db import engine
 import bcrypt
-import logging
 from ..utils.logger import MyLogger
-from app.game_systems.gameplay_options import default_stats_data, default_inventory_data, equipment_slots
+from app.game_systems.gameplay_options import default_stats_data, default_inventory_data, equipment_map
 user_log = MyLogger.user()
 admin_log = MyLogger.admin()
 game_log = MyLogger.game()
@@ -105,7 +104,7 @@ class UserCRUD:
             session.add(inventory_item)
         else:
             if selling:
-                equipped_item_ids = [getattr(user.inventory, slot) for slot in equipment_slots]
+                equipped_item_ids = [getattr(user.inventory, slot) for slot in equipment_map.values()]
                 if item.id in equipped_item_ids and inventory_item.quantity <= quantity:
                     raise ValueError("Cannot sell an equipped item.")
                 new_quantity = inventory_item.quantity - quantity
