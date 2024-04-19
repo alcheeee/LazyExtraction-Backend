@@ -4,10 +4,10 @@ class Settings:
 
     # Project
     PROJECT_NAME = "RPGapi | Development"
-    VERSION = "0.12"
+    VERSION = "0.1201"
 
     # Security
-    SECRET_KEY = "nyasawesomehonestlyidontthinktheresanyonebetter" # secrets.token_urlsafe(32)
+    SECRET_KEY = "nyasawesomehonestlyidontthinktheresanyonebetter"
     ACCESS_TOKEN_EXPIRE_MINUTES = 3000000
     ITEMS_SECRET_KEY = "itemsmmmyesitemsilovethose"
 

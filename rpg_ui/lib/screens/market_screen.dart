@@ -3,10 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:rpg_ui/colors.dart';
-import 'widgets/button_widgets.dart';
 import 'dart:convert';
-import 'config.dart';
-import 'widgets/app_theme.dart';
+import '../config.dart';
+import '../widgets/app_theme.dart';
+import '../widgets/button_widgets.dart';
 
 class MarketScreen extends StatefulWidget {
   const MarketScreen({super.key});

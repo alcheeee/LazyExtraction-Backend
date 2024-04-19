@@ -1,12 +1,9 @@
 // ignore_for_file: unused_import
+import '../api_calls/item_manager.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:rpg_ui/colors.dart';
-import 'dart:convert';
-import 'config.dart';
-import 'widgets/button_widgets.dart';
-import 'widgets/app_theme.dart';
-import 'widgets/inventory_item_widget.dart';
+import '../widgets/inventory_item_widget.dart';
+import '../common_imports.dart';
+
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -16,56 +13,32 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   List<dynamic> _inventoryItems = [];
   String _message = '';
 
-  Future<void> fetchInventory() async {
-    final response = await http.post(
-      Uri.parse('${APIUrl.apiURL}/game/get-user-inventory'),
-      headers: <String, String>{
-        'Authorization': 'Bearer ${SessionManager.accessToken}',
-      },
-    );
-
-    if (response.statusCode == 200) {
+  void fetchInventory() async {
+    try {
+      var inventoryItems = await ItemManager.fetchInventory();
       setState(() {
-        _inventoryItems = jsonDecode(response.body) as List<dynamic>;
+        _inventoryItems = inventoryItems;
         _message = 'Inventory fetched successfully';
       });
-    } else {
-      var data = jsonDecode(response.body);
+    } catch (e) {
       setState(() {
-        _message = 'Failed to fetch inventory: ${data['detail']['message']}';
+        _message = e.toString();
       });
     }
   }
 
-  Future<void> equipItem(int itemId) async {
+ void equipItem(int itemId) async {
     try {
-      var url = Uri.parse('${APIUrl.apiURL}/game/equip-item');
-      var response = await http.post(
-        url,
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${SessionManager.accessToken}',
-        },
-        body: jsonEncode({'item_id': itemId}),
-      );
-
+      String message = await ItemManager.equipItem(itemId);
       if (!mounted) return;
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(data['message'] ?? 'Item equipped successfully'))
-        );
-      } else {
-        throw Exception('Failed to equip item');
-      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()))
-      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -75,7 +48,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     fetchInventory();
   }
 
-    void _showItemDetails(BuildContext context, Map<String, dynamic> item) {
+  void _showItemDetails(BuildContext context, Map<String, dynamic> item) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -92,7 +65,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Inventory')),
+      key: _scaffoldKey,
+      appBar: commonAppBar('Inventory', _scaffoldKey, context),
+      drawer: commonDrawer(context, 'InventoryScreen'),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -115,8 +90,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 },
               ),
             ),
-            Text(_message, style: const TextStyle(color: UIColors.secondaryTextColor),
-            ),
+            Text(_message, style: const TextStyle(color: UIColors.secondaryTextColor)),
           ],
         ),
       ),

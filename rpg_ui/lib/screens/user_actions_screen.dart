@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:rpg_ui/colors.dart';
-import 'widgets/button_widgets.dart';
-import 'widgets/app_theme.dart';
+import '../widgets/button_widgets.dart';
+import '../widgets/app_theme.dart';
 
 class UserActionsScreen extends StatelessWidget {
   const UserActionsScreen({super.key});

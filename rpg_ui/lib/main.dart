@@ -1,13 +1,6 @@
 // ignore_for_file: unused_import
 import 'package:flutter/material.dart';
-import 'package:rpg_ui/colors.dart';
-import 'widgets/button_widgets.dart';
-import 'login_screen.dart';
-import 'register_screen.dart';
-import 'user_actions_screen.dart';
-import 'inventory_screen.dart';
-import 'market_screen.dart';
-import 'config.dart';
+import 'common_imports.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,17 +14,16 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'API Tester',
       theme: ThemeData(
-        scaffoldBackgroundColor: UIColors.primaryBackgroundColor, // Default background color
-
+        scaffoldBackgroundColor: UIColors.primaryBackgroundColor,
         primaryTextTheme: Typography(platform: TargetPlatform.iOS).white,
         textTheme: Typography(platform: TargetPlatform.iOS).white,
-
         appBarTheme: const AppBarTheme(
           backgroundColor: UIColors.primaryBackgroundColor,
           foregroundColor: UIColors.primaryTextColor
         ),
       ),
-      home: const MainScreen(),
+      initialRoute: SessionManager.isAuthenticated ? AppRoutes.home : AppRoutes.login,
+      routes: AppRoutes.getRoutes(),
     );
   }
 }
@@ -44,68 +36,19 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('API Testing'),
-      ),
+      key: _scaffoldKey,
+      appBar: commonAppBar('API Testing', _scaffoldKey, context, showMenuIcon: true),
+      drawer: commonDrawer(context, 'HomeScreenRoute'),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            // Show login and register only if NOT authenticated
-            if (!SessionManager.isAuthenticated)
-              CustomButton(
-                label: 'Login',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
-                  ).then((_) => setState(() {}));
-                },
-              ),
-            if (!SessionManager.isAuthenticated)
-              CustomButton(
-                label: 'Register',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                  ).then((_) => setState(() {}));
-                },
-              ),
-            if (SessionManager.isAuthenticated)
-              CustomButton(
-                label: 'User Actions',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const UserActionsScreen()),
-                  );
-                },
-              ),
-            if (SessionManager.isAuthenticated)
-              CustomButton(
-                label: 'View Inventory',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const InventoryScreen()),
-                  );
-                },
-              ),
-            if (SessionManager.isAuthenticated)
-              CustomButton(
-                label: 'Market Operations',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MarketScreen()),
-                  );
-                },
-              ),
-          ],
+        child: Text(
+          SessionManager.isAuthenticated ? "Welcome" : "Log in",
+          style: const TextStyle(color: UIColors.primaryTextColor, fontSize: 24),
         ),
       ),
     );
