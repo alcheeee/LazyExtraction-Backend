@@ -7,7 +7,7 @@ class ItemManager {
 
   // Fetch Users Inventory
   static Future<List<Item>> fetchInventory() async {
-    var response = await http.post(Uri.parse('${APIUrl.apiURL}/game/get-user-inventory'),
+    var response = await http.post(Uri.parse('${APIUrl.apiURL}/user-info/get-user-inventory'),
       headers: {
         'Authorization': 'Bearer ${SessionManager.accessToken}',
       },
