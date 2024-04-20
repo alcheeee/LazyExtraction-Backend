@@ -47,24 +47,27 @@ class UserCRUD:
                 user = session.get(User, user_id)
                 if not user:
                     admin_log.error(f"User {user_id} not found.")
-                    return False, "User not found"
+                    raise ValueError("User not found")
 
                 user.inventory.energy
                 if user.inventory.energy + energy_delta < 0:
                     game_log.info(f"User {user.id} does not have enough energy.")
-                    return False, "Not Enough Energy!"
+                    raise ValueError("Not Enough Energy!")
 
                 elif (user.inventory.energy + energy_delta) > user.stats.max_energy:
                     user.inventory.energy = user.stats.max_energy
                     session.commit()
                     game_log.info(f"User {user.id} has max energy.")
-                    return True, "Energy reached max!"
+                    raise ValueError("Energy reached max!")
 
                 user.inventory.energy += energy_delta
                 session.commit()
                 game_log.info(f"User {user.id}: Energy Adjusted by {energy_delta}. New Energy: {user.inventory.energy}.")
-                return True, str(user.inventory.energy)
+                return str(user.inventory.energy)
 
+            except ValueError as e:
+                session.rollback()
+                return str(e)
             except Exception as e:
                 session.rollback()
                 admin_log.error(str(e))

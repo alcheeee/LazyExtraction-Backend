@@ -39,7 +39,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 }
 
-  void toggleEquipItem(Item item) async {
+void toggleEquipItem(Item item) async {
   String message = await ItemManager.equipItem(item.itemId);
   if (!mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));

@@ -45,6 +45,7 @@ Widget commonDrawer(BuildContext context, String currentRoute) {
           _buildDrawerItem(Icons.home, 'Home', AppRoutes.home, context, currentRoute),
           _buildDrawerItem(Icons.inventory, 'Inventory', AppRoutes.inventory, context, currentRoute),
           _buildDrawerItem(Icons.shopping_cart, 'Market', AppRoutes.market, context, currentRoute),
+          _buildDrawerItem(Icons.work, 'Jobs', AppRoutes.jobs, context, currentRoute),
           _buildDrawerItem(Icons.exit_to_app, 'Logout', '', context, currentRoute, logout: true),
         ],
       ),

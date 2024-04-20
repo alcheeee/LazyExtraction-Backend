@@ -4,6 +4,7 @@ import '../screens/register_screen.dart';
 import '../screens/user_actions_screen.dart';
 import '../screens/inventory_screen.dart';
 import '../screens/market_screen.dart';
+import '../screens/jobs_screen.dart';
 import '../main.dart';
 
 class AppRoutes {
@@ -13,6 +14,7 @@ class AppRoutes {
   static const String userActions = '/userActions';
   static const String inventory = '/inventory';
   static const String market = '/market';
+  static const String jobs = '/jobs';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -22,6 +24,7 @@ class AppRoutes {
       userActions: (context) => const UserActionsScreen(),
       inventory: (context) => const InventoryScreen(),
       market: (context) => const MarketScreen(),
+      jobs: (context) => const JobsScreen(),
     };
   }
 }

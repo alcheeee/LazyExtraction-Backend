@@ -23,14 +23,6 @@ game_router = APIRouter(
     responses={404: {"description": "Not Found"}}
 )
 
-"""
-Routes to add:
-1 - User Equipping
-    - Inventory checks
-2 - Selling items
-    - Inventory checks
-"""
-
 
 @game_router.post("/get-user-inventory")
 async def get_users_items(user: User = Depends(get_current_user)):
@@ -108,15 +100,14 @@ async def equip_unequip_inventory_item(request: UserItemActionRequest, user: Use
 class UserActionRequest(BaseModel):
     button_id: str
 
-@game_router.post("/user-action")
+@game_router.post("/specific-user-action")
 async def user_action_buttons(request: UserActionRequest, user: User = Depends(get_current_user)):
-    route_id = RouteIDs(request.button_id, user)
-    result, msg = route_id.find_id()
-    if result:
+    try:
+        route_id = RouteIDs(request.button_id, user)
+        msg = route_id.find_id()
         return {"message": msg}
-    else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": msg})
-
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail={"message": str(e)})
 
 
 @game_router.post("/get-all-jobs")
@@ -131,6 +122,18 @@ async def get_all_job_info(user: User = Depends(get_current_user)):
         except Exception as e:
             raise HTTPException(status_code=400, detail={"message": str(e)})
 
+
+class UserApplyJobRequest(BaseModel):
+    job_name: str
+
+@game_router.post("/apply-to-job")
+async def apply_to_job(request: UserApplyJobRequest, user: User = Depends(get_current_user)):
+    try:
+        result = job_service.update_user_job(user.id, request.job_name),
+        return {"message": result}
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail={"message": str(e)})
 
 
 

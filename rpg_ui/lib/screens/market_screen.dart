@@ -18,7 +18,7 @@ class _MarketScreenState extends State<MarketScreen> {
 
   Future<void> fetchMarketItems() async {
     try {
-      List<Item> marketItems = await ItemManager.fetchMarketItems(); // This should return a List<Item>
+      List<Item> marketItems = await ItemManager.fetchMarketItems();
       setState(() {
         _marketItems = marketItems;
       });

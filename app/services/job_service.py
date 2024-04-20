@@ -54,11 +54,11 @@ class JobService:
                 job = session.query(Jobs).filter(Jobs.job_name == job_name).first()
                 if not job or user.job != job.job_name:
                     admin_log.info(f"Job not found or not assigned to user {user_id}.")
-                    return False, "Job not found or not assigned to user."
+                    raise ValueError("Job not found or not assigned to user.")
 
                 energy_required = job.energy_required
                 if user.inventory.energy < energy_required:
-                    return False, "Not enough energy."
+                    raise ValueError("Not enough energy.")
 
                 stat_changes = json.loads(job.stat_changes)
                 for stat, change in stat_changes.items():
@@ -70,8 +70,11 @@ class JobService:
                 user.inventory.energy -= energy_required
                 session.commit()
                 game_log.info(f"{user_id} worked their job!")
-                return True, "Job completed successfully."
+                return "Job completed successfully."
 
+            except ValueError as e:
+                session.rollback()
+                return str(e)
             except Exception as e:
                 session.rollback()
                 admin_log.error(str(e))
@@ -99,24 +102,31 @@ class JobService:
                 user = self.fetch_user(user_id, session)
                 if not user:
                     admin_log.error(f"User {user_id} not found.")
-                    return False, "User not found."
+                    raise ValueError("User not found.")
+
                 elif job_name == 'quit':
                     user.job = None
                     session.commit()
                     game_log.info(f"User {user_id} quit their job.")
-                    return True, "You quit your job"
+                    return "You quit your job"
+
                 elif self.check_qualifications(user_id, job_name):
                     job = session.query(Jobs).filter(Jobs.job_name == job_name).first()
                     if not job:
                         admin_log.info(f"Job not found. By user {user_id}")
-                        return False, "Job not found."
+                        raise ValueError("Job not found.")
+
                     user.job = job.job_name
                     session.commit()
                     game_log.info(f"Updated user {user.id} job to {user.job}.")
-                    return True, f"Congrats! You are now a {job.job_name}!"
+                    return f"Congrats! You are now a {job.job_name}!"
                 else:
                     game_log.info(f"{user_id} didn't meet the requirements for {job_name}.")
-                    return False, "You don't meet the required qualifications."
+                    raise ValueError("You don't meet the required qualifications.")
+
+            except ValueError as e:
+                session.rollback()
+                return str(e)
 
             except Exception as e:
                 session.rollback()

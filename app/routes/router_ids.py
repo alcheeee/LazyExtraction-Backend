@@ -7,16 +7,18 @@ class RouteIDs:
         self.user = user
 
     def find_id(self):
+        try:
+            actions = {
+                "play-game-button": lambda: user_crud.adjust_energy(self.user.id, -5),
+                "work-job": lambda: job_service.do_user_job(self.user.id, self.user.job),
+                "quit-job": lambda: job_service.update_user_job(self.user.id, 'quit'),
+            }
 
-        actions = {
-            "play-game-button": lambda: user_crud.adjust_energy(self.user.id, -5),
-            "quit-job": lambda: job_service.update_user_job(self.user.id, 'quit'),
-            "work-job-button": lambda: job_service.do_user_job(self.user.id, self.user.job),
-            "store-bagger-job": lambda: job_service.update_user_job(self.user.id, 'Store Bagger'),
-        }
+            if self.route_name_id in actions:
+                msg = actions[self.route_name_id]()
+                return {"message": msg}
+            else:
+                raise ValueError("Invalid request")
 
-        if self.route_name_id in actions:
-            results, msg = actions[self.route_name_id]()
-            return {"message": msg}
-        else:
-            return {"message": "Unknown action"}
+        except ValueError as e:
+            return {"message": str(e)}
