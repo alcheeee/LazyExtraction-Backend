@@ -1,0 +1,16 @@
+
+
+
+        - To run app -
+
+uvicorn app.main:app --port 8002 --reload
+
+
+        - Migrate Database -
+
+python -m alembic revision --autogenerate -m "Revision 10"
+
+--> change 'server_default' in migration version.py if needed <--
+
+python -m alembic upgrade head
+
