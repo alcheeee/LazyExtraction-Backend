@@ -2,13 +2,13 @@ from pydantic import BaseModel
 from sqlmodel import Session, select
 from fastapi import APIRouter, HTTPException, Depends, status
 
+from ..database.db import get_session
 from .router_ids import RouteIDs
 from .routes import user_router
 from ..models.models import User, Inventory, InventoryItem
 from ..models.item_models import Items
 from ..auth.auth_handler import get_current_user
 from ..services.job_service import job_service
-from app.game_systems.markets.MarketHandlerCRUD import engine
 from app.game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
 from app.game_systems.gameplay_options import equipment_map
 from app.utils.logger import MyLogger
@@ -53,17 +53,16 @@ async def user_action_buttons(request: UserActionRequest, user: User = Depends(g
         raise HTTPException(status_code=400, detail={"message": str(e)})
 
 
-@game_router.post("/get-all-jobs")
-async def get_all_job_info(user: User = Depends(get_current_user)):
-    with Session(engine) as session:
-        try:
-            result = job_service.get_all_jobs(session)
-            if result:
-                return result
-            else:
-                return HTTPException(status_code=400, detail={"message": "Internal error occured"})
-        except Exception as e:
-            raise HTTPException(status_code=400, detail={"message": str(e)})
+@game_router.get("/get-all-jobs")
+async def get_all_job_info(session: Session = Depends(get_session), user: User = Depends(get_current_user)):
+    try:
+        result = job_service.get_all_jobs(session)
+        if result:
+            return result
+        else:
+            return HTTPException(status_code=400, detail={"message": "Internal error occured"})
+    except Exception as e:
+        raise HTTPException(status_code=400, detail={"message": str(e)})
 
 
 class UserApplyJobRequest(BaseModel):

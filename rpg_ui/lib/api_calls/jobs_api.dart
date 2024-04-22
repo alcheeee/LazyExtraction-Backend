@@ -7,7 +7,7 @@ import '../models/job_model.dart';
 class JobManager {
 
   static Future<List<Job>> fetchAllJobs() async {
-    var response = await http.post(Uri.parse('${APIUrl.apiURL}/game/get-all-jobs'),
+    var response = await http.get(Uri.parse('${APIUrl.apiURL}/game/get-all-jobs'),
       headers: {
         'Accept': 'application/json',
         'Authorization': 'Bearer ${SessionManager.accessToken}',

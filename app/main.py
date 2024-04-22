@@ -7,6 +7,7 @@ from app.routes.corporation_routes import corporation_router
 from app.routes.market_routes import market_router
 from app.routes.game_routes import game_router
 from app.routes.user_info_routes import user_info_router
+from app.routes.social_routes import social_router
 
 
 def create_app() -> FastAPI:
@@ -20,8 +21,9 @@ def create_app() -> FastAPI:
 
     app.include_router(user_router)
     app.include_router(user_info_router)
-    app.include_router(game_router)
     app.include_router(corporation_router)
+    app.include_router(social_router)
+    app.include_router(game_router)
     app.include_router(market_router)
     app.include_router(admin_router)
     return app

@@ -9,7 +9,6 @@ JOB_TYPES = ['General', 'Law', 'Crime']
 default_stats_data = {
     'level': 1.00,
     'reputation': 0,
-    'education': 'none',
     'max_energy': 100,
     'damage': 1,
     'evasiveness': 1.00,
@@ -35,7 +34,6 @@ equipment_map = {
 import enum
 
 class ItemType(enum.Enum):
-    Food = "Food"
     Drug = "Drug"
     Weapon = "Weapon"
     Clothing = "Clothing"

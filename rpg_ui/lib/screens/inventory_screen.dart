@@ -1,6 +1,7 @@
 import '../common_imports.dart';
 import '../api_calls/items_api.dart';
 import 'package:flutter/material.dart';
+import '../providers/user_info_provider.dart';
 import '../widgets/item_tile.dart';
 import '../widgets/item_details_dialogue.dart';
 
@@ -44,6 +45,7 @@ void toggleEquipItem(Item item) async {
   if (!mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   fetchInventory();
+  Provider.of<UserStatsProvider>(context, listen: false).fetchUserInfo();
 }
 
   void _showItemDetails(Item item) {

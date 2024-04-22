@@ -133,6 +133,7 @@ class _JobsScreenState extends State<JobsScreen> {
               onPressed: () async {
                 Navigator.of(context).pop();
                 String resultMessage = await JobManager.applyToJob(job.jobName);
+                // ignore: use_build_context_synchronously
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(resultMessage)));
               },
               backgroundColor: UIColors.secondaryBackgroundColor,

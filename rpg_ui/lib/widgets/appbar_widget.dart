@@ -1,13 +1,29 @@
 import 'package:flutter/material.dart';
 import '../common_imports.dart';
+import '../providers/user_info_provider.dart';
 
 // Common AppBar
 AppBar commonAppBar(String title, GlobalKey<ScaffoldState> scaffoldKey, BuildContext context, {bool showMenuIcon = true}) {
+  final stats = Provider.of<UserStatsProvider>(context);
   return AppBar(
-    title: Text(title),
+    title: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(title),
+        if (SessionManager.isAuthenticated)
+          stats.isLoading ? const CircularProgressIndicator() : Row(
+            children: [
+              const Icon(Icons.flash_on),
+              Text("${stats.energy}/${stats.maxEnergy}"),
+              const SizedBox(width: 10),
+              Text("\$${stats.bank}"),
+            ],
+          ),
+      ],
+    ),
     backgroundColor: UIColors.primaryBackgroundColor,
     foregroundColor: UIColors.primaryTextColor,
-    leading: IconButton(
+    leading: showMenuIcon ? IconButton(
       icon: const Icon(Icons.menu),
       onPressed: () {
         if (SessionManager.isAuthenticated) {
@@ -21,28 +37,26 @@ AppBar commonAppBar(String title, GlobalKey<ScaffoldState> scaffoldKey, BuildCon
           );
         }
       },
-    ),
+    ) : null,
   );
 }
 
 // Common Drawer
 Widget commonDrawer(BuildContext context, String currentRoute) {
+  final stats = Provider.of<UserStatsProvider>(context, listen: false);
   return Drawer(
     child: Container(
       color: UIColors.secondaryBackgroundColor,
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const UserAccountsDrawerHeader(
-            decoration: BoxDecoration(color: UIColors.secondaryBackgroundColor),
-            accountName: Text("UserExample", style: TextStyle(color: UIColors.primaryTextColor)),
-            accountEmail: Text("email@example.com", style: TextStyle(color: UIColors.primaryTextColor)),
-            currentAccountPicture: CircleAvatar(
-              backgroundColor: Colors.grey,
-              child: Text("U", style: TextStyle(fontSize: 40.0, color: UIColors.primaryTextColor)),
-            ),
+          ListTile(
+            title: Text('Level: ${stats.level}', style: const TextStyle(color: UIColors.primaryTextColor, fontWeight: FontWeight.bold)),
+            subtitle: Text('Reputation: ${stats.reputation}', style: const TextStyle(color: UIColors.secondaryTextColor)),
           ),
+          const Divider(color: UIColors.primaryOutlineColor),
           _buildDrawerItem(Icons.home, 'Home', AppRoutes.home, context, currentRoute),
+          _buildDrawerItem(Icons.person, 'Profile', AppRoutes.userProfile, context, currentRoute),
           _buildDrawerItem(Icons.inventory, 'Inventory', AppRoutes.inventory, context, currentRoute),
           _buildDrawerItem(Icons.shopping_cart, 'Market', AppRoutes.market, context, currentRoute),
           _buildDrawerItem(Icons.work, 'Jobs', AppRoutes.jobs, context, currentRoute),

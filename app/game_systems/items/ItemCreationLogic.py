@@ -55,10 +55,6 @@ class WeaponDetailCreate(BaseModel):
     strength_bonus: Optional[float]
 
 
-class FoodDetailCreate(BaseModel):
-    health_increase: int
-
-
 class ClothingDetailCreate(BaseModel):
     clothing_type: str
     reputation_bonus: Optional[int]

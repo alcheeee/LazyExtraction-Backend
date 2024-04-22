@@ -5,7 +5,7 @@ from sqlmodel import Session
 from typing import Optional, Dict, Type
 from app.game_systems.gameplay_options import ItemType, ItemQuality, item_quality_mapper
 from app.game_systems.items.ItemCreationLogic import GenerateItemQuality
-from app.models.item_models import Items, Weapon, FoodItems, Clothing
+from app.models.item_models import Items, Weapon, Clothing
 from app.models.models import User
 from app.database.db import engine
 from app.config import settings
@@ -15,7 +15,6 @@ admin_log = MyLogger.admin()
 
 
 item_class_map: Dict[ItemType, Type[Items]] = {
-    ItemType.Food: FoodItems,
     ItemType.Drug: None,     # No class yet
     ItemType.Weapon: Weapon,
     ItemType.Clothing: Clothing,

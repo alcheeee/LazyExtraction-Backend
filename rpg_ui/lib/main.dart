@@ -1,9 +1,15 @@
 // ignore_for_file: unused_import
 import 'package:flutter/material.dart';
 import 'common_imports.dart';
+import 'providers/user_info_provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => UserStatsProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -22,7 +28,7 @@ class MyApp extends StatelessWidget {
           foregroundColor: UIColors.primaryTextColor
         ),
       ),
-      initialRoute: SessionManager.isAuthenticated ? AppRoutes.home : AppRoutes.login,
+      initialRoute: SessionManager.isAuthenticated ? AppRoutes.userProfile : AppRoutes.login,
       routes: AppRoutes.getRoutes(),
     );
   }
@@ -37,6 +43,14 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() =>
+      Provider.of<UserStatsProvider>(context, listen: false).fetchUserInfo()
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

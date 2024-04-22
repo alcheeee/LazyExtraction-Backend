@@ -12,7 +12,7 @@ class Item {
   final Map<String, dynamic>? stats;
   final String itemAsset;
   final int? itemCost;
-  final int? itemSell;
+  final int? sellPrice;
 
   Item({
     required this.itemId,
@@ -26,7 +26,7 @@ class Item {
     this.equippedSlot,
     this.stats,
     this.itemCost,
-    this.itemSell,
+    this.sellPrice,
   });
 
   Map<String, dynamic> toMap() {
@@ -36,7 +36,7 @@ class Item {
       'item_quality': itemQuality,
       'quantity': quantity,
       'item_cost': itemCost,
-      'sell_price': itemSell,
+      'sell_price': sellPrice,
       'illegal': illegal,
       'category': category,
       'slot_type': slotType,
@@ -58,7 +58,7 @@ class Item {
       stats: json['stats'],
       itemAsset: 'assets/placeholder_item.png', // Placeholder
       itemCost: json['item_cost'],
-      itemSell: json['item_price'],
+      sellPrice: json['item_price'],
     );
   }
 
@@ -84,7 +84,7 @@ class Item {
         case 'item_cost':
           return itemCost;
         case 'item_price':
-          return itemSell;
+          return sellPrice;
         default:
           return additionalDetails?[key];
       }

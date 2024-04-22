@@ -19,11 +19,12 @@ class ItemTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(2),
+        margin: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           color: UIColors.secondaryBackgroundColor.withOpacity(0.85),
           border: Border.all(color: UIColors.primaryOutlineColor, width: 2),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.2),
@@ -41,7 +42,7 @@ class ItemTile extends StatelessWidget {
               item.itemName,
               style: TextStyle(
                 color: item.qualityColor,
-                fontWeight: FontWeight.w400,
+                fontWeight: FontWeight.w500,
                 fontSize: 14,
               ),
             ),

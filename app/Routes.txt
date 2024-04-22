@@ -47,11 +47,6 @@ POST 127.0.0.1:8000/admin/create-item/weapon
     Body: WeaponDetailCreate (damage_bonus, evasiveness_bonus, strength_bonus)
     Requires: OAuth2PasswordBearer
 
-POST 127.0.0.1:8000/admin/create-item/food
-    Query: item_name, illegal, random_generate_quality, quality, quantity
-    Body: FoodDetailCreate (health_increase)
-    Requires: OAuth2PasswordBearer
-
 POST 127.0.0.1:8000/admin/create-item/clothing
     Query: item_name, illegal, random_generate_quality, quality, quantity
     Body: ClothingDetailCreate (clothing_type, reputation_bonus, max_energy_bonus, evasiveness_bonus, health_bonus, luck_bonus, strength_bonus, knowledge_bonus)

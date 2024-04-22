@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from pydantic import BaseModel
 from typing import Union
 from ..game_systems.items.ItemCRUD import create_item
-from ..game_systems.items.ItemCreationLogic import WeaponDetailCreate, ClothingDetailCreate, FoodDetailCreate, IndustrialCraftingCreate, ItemCreate
+from ..game_systems.items.ItemCreationLogic import WeaponDetailCreate, ClothingDetailCreate, IndustrialCraftingCreate, ItemCreate
 from ..game_systems.markets.MarketHandlerCRUD import BackendMarketHandler
 from ..models.models import User
 from ..models.other_models import Jobs
@@ -72,23 +72,6 @@ async def create_weapon_endpoint(request: WeaponDetailCreate, item_name: str, il
         raise HTTPException(status_code=403, detail={"message": "Insufficient permissions"})
 
     item_type = "Weapon"
-    result, msg = create_item(item_type, user.id, request, item_name, illegal,
-                              random_generate_quality,
-                              quality, quantity)
-    msg = {"message": msg}
-    if result:
-        admin_log.info(f"ADMIN {user.id} - Created {item_name}.")
-        return msg
-    else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
-
-
-@admin_router.post("/create-item/food")
-async def create_food_endpoint(request: FoodDetailCreate, item_name: str, illegal: bool, random_generate_quality: bool, quality: ItemQuality, quantity: int, user: User = Depends(get_current_user)):
-    if not user.is_admin:
-        raise HTTPException(status_code=403, detail={"message": "Insufficient permissions"})
-
-    item_type = "Food"
     result, msg = create_item(item_type, user.id, request, item_name, illegal,
                               random_generate_quality,
                               quality, quantity)

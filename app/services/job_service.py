@@ -48,7 +48,7 @@ class JobService:
 
     def do_user_job(self, user_id: int, job_name: str):
         with Session(engine) as session:
-            transaction = session.begin()
+            session.begin()
             try:
                 user = self.fetch_user(user_id, session)
                 job = session.query(Jobs).filter(Jobs.job_name == job_name).first()
@@ -97,7 +97,7 @@ class JobService:
 
     def update_user_job(self, user_id: int, job_name: str):
         with Session(engine) as session:
-            transaction = session.begin()
+            session.begin()
             try:
                 user = self.fetch_user(user_id, session)
                 if not user:

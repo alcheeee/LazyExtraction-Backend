@@ -12,19 +12,11 @@ class Items(SQLModel, table=True):
     quantity: Optional[int] = Field(default=0)
     category: ItemType = Field(sa_column=Column(Enum(ItemType)))
     # Relationships
-    food_items: Optional["FoodItems"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
     weapon_details: Optional["Weapon"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
     clothing_details: Optional["Clothing"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
     produced_by_recipes: List["IndustrialCraftingRecipes"] = Relationship(back_populates="produced_item")
     black_market_posts: Optional["BlackMarket"] = Relationship(back_populates="item")
     general_market_items: Optional["GeneralMarket"] = Relationship(back_populates="item")
-
-
-class FoodItems(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
-    health_increase: int
-    item_id: int = Field(default=None, foreign_key="items.id")
-    item: Optional[Items] = Relationship(back_populates="food_items")
 
 
 class Weapon(SQLModel, table=True):

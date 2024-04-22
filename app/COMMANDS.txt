@@ -3,12 +3,12 @@
 
         - To run app -
 
-uvicorn app.main:app --port 8002 --reload
+uvicorn app.main:app --port 8001 --reload
 
 
         - Migrate Database -
 
-python -m alembic revision --autogenerate -m "Revision 10"
+python -m alembic revision --autogenerate -m "Revision friends"
 
 --> change 'server_default' in migration version.py if needed <--
 

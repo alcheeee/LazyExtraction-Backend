@@ -1,7 +1,6 @@
 // ignore_for_file: unused_import
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:rpg_ui/widgets/app_theme.dart';
 import 'dart:convert';
 import '../common_imports.dart';
 import '../api_calls/user_auth_api.dart';
