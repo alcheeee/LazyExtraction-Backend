@@ -18,7 +18,10 @@ class UserSocialRequest(BaseModel):
     username: str
 
 @social_router.post("/send-friend-request/")
-def send_friend_request(request: UserSocialRequest, session: Session = Depends(get_session), user: User = Depends(get_current_user)):
+def send_friend_request(request: UserSocialRequest,
+                        session: Session = Depends(get_session),
+                        user: User = Depends(get_current_user)):
+
     target_user = session.exec(select(User).where(User.username == request.username)).first()
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -39,8 +42,33 @@ def send_friend_request(request: UserSocialRequest, session: Session = Depends(g
         session.rollback()
         raise HTTPException(status_code=400, detail={"message": "Failed to send friend request"})
 
+
+@social_router.delete("/remove-friend/{friend_id}")
+def remove_friend(friend_id: int,
+                  session: Session = Depends(get_session),
+                  user: User = Depends(get_current_user)):
+
+    friendship = session.exec(select(FriendsLink).where(
+        ((FriendsLink.user1_id == user.id) & (FriendsLink.user2_id == friend_id)) |
+        ((FriendsLink.user1_id == friend_id) & (FriendsLink.user2_id == user.id))
+    )).first()
+
+    if not friendship:
+        raise HTTPException(status_code=404, detail="Friendship not found")
+    try:
+        session.delete(friendship)
+        session.commit()
+        return {"message": "Friend successfully removed"}
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @social_router.post("/respond-friend-request/")
-def respond_friend_request(request_user_id: int, response: str, session: Session = Depends(get_session), user: User = Depends(get_current_user)):
+def respond_friend_request(request_user_id: int,
+                           response: str,
+                           session: Session = Depends(get_session),
+                           user: User = Depends(get_current_user)):
     try:
         friend_request = session.get(FriendRequest, request_user_id)
         if not friend_request or friend_request.requestee_id != user.id:
@@ -93,7 +121,8 @@ def send_message(receiver_id: int, content: str,
 
 
 @social_router.get("/friend-requests/")
-def get_friend_requests(session: Session = Depends(get_session), user: User = Depends(get_current_user)):
+def get_friend_requests(session: Session = Depends(get_session),
+                        user: User = Depends(get_current_user)):
     try:
         friend_requests = session.exec(select(FriendRequest)
                                        .where(FriendRequest.requestee_id == user.id)
@@ -110,7 +139,8 @@ def get_friend_requests(session: Session = Depends(get_session), user: User = De
 
 
 @social_router.get("/friends/")
-def get_friends(session: Session = Depends(get_session), user: User = Depends(get_current_user)):
+def get_friends(session: Session = Depends(get_session),
+                user: User = Depends(get_current_user)):
     try:
         friend_links = session.exec(select(FriendsLink)
                                     .where((FriendsLink.user1_id == user.id) | (FriendsLink.user2_id == user.id))).all()
@@ -126,7 +156,8 @@ def get_friends(session: Session = Depends(get_session), user: User = Depends(ge
 
 
 @social_router.get("/messages/")
-def get_messages(session: Session = Depends(get_session), user: User = Depends(get_current_user)):
+def get_messages(session: Session = Depends(get_session),
+                 user: User = Depends(get_current_user)):
     try:
         messages = session.exec(select(PrivateMessage)
                                 .where((PrivateMessage.sender_id == user.id) | (PrivateMessage.receiver_id == user.id))
