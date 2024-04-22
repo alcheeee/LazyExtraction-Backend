@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 
 from ..database.db import get_session
 from .router_ids import RouteIDs
-from .routes import user_router
+from .auth_routes import user_router
 from ..models.models import User, Inventory, InventoryItem
 from ..models.item_models import Items
 from ..auth.auth_handler import get_current_user

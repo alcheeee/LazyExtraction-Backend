@@ -1,14 +1,11 @@
-import datetime
-import time
-
+from pydantic import BaseModel
 from sqlmodel import Session
-from typing import Optional, Dict, Type
-from app.game_systems.gameplay_options import ItemType, ItemQuality, item_quality_mapper
+from typing import Dict, Type
+from app.game_systems.gameplay_options import ItemType, ItemQuality
 from app.game_systems.items.ItemCreationLogic import GenerateItemQuality
 from app.models.item_models import Items, Weapon, Clothing
 from app.models.models import User
 from app.database.db import engine
-from app.config import settings
 from app.utils.logger import MyLogger
 game_log = MyLogger.game()
 admin_log = MyLogger.admin()
@@ -22,33 +19,6 @@ item_class_map: Dict[ItemType, Type[Items]] = {
 }
 
 
-def is_item_type(item_type_str):
-    try:
-        item_type = ItemType(item_type_str)
-        return True
-    except ValueError:
-        return False
-
-
-def item_data_json(item_name: str, illegal: bool, category: str,
-                   random_generate_quality: bool, quality: str,
-                   quantity: int, user_luck):
-
-    if random_generate_quality:
-        generator = GenerateItemQuality(user_luck=user_luck)
-        quality = generator.generate_item_quality()
-
-    item_data = {
-         "item_name": item_name,
-         "illegal": illegal,
-         "category": category,
-         "quality": quality,
-         "quantity": quantity
-        }
-
-    return item_data
-
-
 def create_general_item(session: Session, item_data: dict) -> Items:
     item = Items(**item_data)
     session.add(item)
@@ -57,39 +27,44 @@ def create_general_item(session: Session, item_data: dict) -> Items:
     return item
 
 
-def create_item(item_type_str: str, user_id: int, item_details,
-                item_name: str, illegal: bool, random_generate_quality: bool,
-                quality: ItemQuality, quantity: int):
-
-    if not is_item_type(item_type_str):
-        game_log.error(f"Invalid item type attempted: {item_type_str}")
-        return False, "Not a valid item type."
-
-    item_type_enum = ItemType[item_type_str]
-    item_class = item_class_map.get(item_type_enum)
-
+def create_item(item_type_str: str, user_id: int, item_details: BaseModel, session: Session):
+    item_class = item_class_map.get(ItemType[item_type_str])
     if not item_class:
-        game_log.error(f"No class defined for item type {item_type_str}")
-        return False, {"message": f"No class defined for item type {item_type_str}"}
+        return False, f"No class defined for item type {item_type_str}"
 
-    with Session(engine) as session:
-        transaction = session.begin()
-        try:
-            user = session.get(User, user_id)
-            if not user:
-                game_log.error(f"User not found: User ID {user_id}")
-                return False, "User not found"
+    try:
+        user = session.get(User, user_id)
+        if not user:
+            return False, "User not found"
 
+        if item_details.RNG_quality:
             user_luck = user.stats.luck
-            item_data = item_data_json(item_name, illegal, item_type_enum, random_generate_quality, quality, quantity, user_luck)
-            item_create = create_general_item(session, item_data)
-            item_detail = item_class(item_id=item_create.id, **item_details.dict())
-            session.add(item_detail)
-            session.commit()
-            game_log.info(f"{user_id} created {item_name}, Quantity: {quantity}")
-            return True, {"message": f"Item created successfully.", "item_name": item_name}
+            generator = GenerateItemQuality(user_luck)
+            quality = generator.generate_item_quality()
 
-        except Exception as e:
-            session.rollback()
-            admin_log.error(str(e))
-            return False, {"message": "Error creating item"}
+        item_data = {
+            "item_name": item_details.item_name,
+            "illegal": item_details.illegal,
+            "category": ItemType[item_type_str],
+            "quality": item_details.quality,
+            "quantity": item_details.quantity
+        }
+
+        item_create = create_general_item(session, item_data)
+        additional_details = item_details.dict(exclude_unset=True,
+                                               exclude={"item_name", "illegal", "quality", "quantity", "RNG_quality"})
+
+        item_detail_instance = item_class(item_id=item_create.id, **additional_details)
+
+        session.add(item_detail_instance)
+        session.commit()
+        game_log.info(f"{user_id} created {item_details.item_name}, Quantity: {item_details.quantity}")
+        return True, f"Item created successfully."
+
+    except Exception as e:
+        session.rollback()
+        admin_log.error(str(e))
+        return False, e
+
+
+

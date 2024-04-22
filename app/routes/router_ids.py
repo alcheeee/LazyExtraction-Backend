@@ -9,7 +9,6 @@ class RouteIDs:
     def find_id(self):
         try:
             actions = {
-                "play-game-button": lambda: user_crud.adjust_energy(self.user.id, -5),
                 "work-job": lambda: job_service.do_user_job(self.user.id, self.user.job),
                 "quit-job": lambda: job_service.update_user_job(self.user.id, 'quit'),
             }

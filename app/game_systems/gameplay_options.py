@@ -31,15 +31,15 @@ equipment_map = {
 }
 
 # ITEM DEFAULTS
-import enum
+from enum import Enum
 
-class ItemType(enum.Enum):
+class ItemType(Enum):
     Drug = "Drug"
     Weapon = "Weapon"
     Clothing = "Clothing"
     Other = "Other"
 
-class ItemQuality(enum.Enum):
+class ItemQuality(Enum):
     Junk = 'Junk'
     Common = 'Common'
     Uncommon = 'Uncommon'
@@ -67,7 +67,7 @@ item_bonus_mapper = {
     "knowledge": "knowledge_bonus",
 }
 
-class CORPORATION_TYPES(enum.Enum):
+class CORPORATION_TYPES(Enum):
     Industrial = 'Industrial'
     Law = 'Law'
     Criminal = 'Criminal'

@@ -121,30 +121,12 @@ class User(SQLModel, table=True):
 
     corp_id: Optional[int] = Field(default=None, foreign_key="corporations.id")
     corporation: Optional["Corporations"] = Relationship(back_populates="employees")
-
     stats_id: Optional[int] = Field(default=None, foreign_key="stats.id")
     stats: Optional[Stats] = Relationship(back_populates="user")
-
     inv_id: Optional[int] = Field(default=None, foreign_key="inventory.id")
     inventory: Optional[Inventory] = Relationship(back_populates="user")
-
-    sent_messages: List["PrivateMessage"] = Relationship(back_populates="sender",
-                                                         sa_relationship_kwargs={
-                                                             "primaryjoin": "User.id == PrivateMessage.sender_id"})
-    received_messages: List["PrivateMessage"] = Relationship(back_populates="receiver",
-                                                             sa_relationship_kwargs={
-                                                                 "primaryjoin": "User.id == PrivateMessage.receiver_id"})
-
-    friend_requests_sent: List["FriendRequest"] = Relationship(back_populates="requester",
-                                                               sa_relationship_kwargs={
-                                                                   "primaryjoin": "User.id == FriendRequest.requester_id"})
-    friend_requests_received: List["FriendRequest"] = Relationship(back_populates="requestee",
-                                                                   sa_relationship_kwargs={
-                                                                       "primaryjoin": "User.id == FriendRequest.requestee_id"})
-
-
-    friends: List["User"] = Relationship(back_populates="friends",
-                                         link_model=FriendsLink,
-                                         sa_relationship_kwargs={
-                                            "primaryjoin": "User.id == FriendsLink.user2_id",
-                                            "secondaryjoin": "User.id == FriendsLink.user1_id"})
+    sent_messages: List["PrivateMessage"] = Relationship(back_populates="sender",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.sender_id"})
+    received_messages: List["PrivateMessage"] = Relationship(back_populates="receiver",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.receiver_id"})
+    friend_requests_sent: List["FriendRequest"] = Relationship(back_populates="requester",sa_relationship_kwargs={"primaryjoin": "User.id == FriendRequest.requester_id"})
+    friend_requests_received: List["FriendRequest"] = Relationship(back_populates="requestee",sa_relationship_kwargs={"primaryjoin": "User.id == FriendRequest.requestee_id"})
+    friends: List["User"] = Relationship(back_populates="friends",link_model=FriendsLink,sa_relationship_kwargs={"primaryjoin": "User.id == FriendsLink.user2_id","secondaryjoin": "User.id == FriendsLink.user1_id"})

@@ -13,6 +13,18 @@ class UserCRUD:
     def __init__(self, engine):
         self.engine = engine
 
+    def get_user_by_id(self, user_id: int):
+        with Session(self.engine) as session:
+            user = session.exec(select(User).where(User.id == user_id)).first()
+            return user
+
+
+    def get_user_by_username(self, username: str):
+        with Session(self.engine) as session:
+            user = session.exec(select(User).where(User.username == username)).first()
+            return user
+
+
     def create_user(self, username: str, password: str, email: str):
         with Session(self.engine) as session:
             try:
@@ -40,50 +52,39 @@ class UserCRUD:
                 return False, "Failed to create account due to a server error."
 
 
-    def adjust_energy(self, user_id: int, energy_delta: int):
-        with Session(self.engine) as session:
-            transaction = session.begin()
-            try:
-                user = session.get(User, user_id)
-                if not user:
-                    admin_log.error(f"User {user_id} not found.")
-                    raise ValueError("User not found")
+    def adjust_energy(self, user_id: int, energy_delta: int, session: Session):
+        try:
+            user = session.get(User, user_id)
+            if not user:
+                admin_log.error(f"User {user_id} not found.")
+                raise ValueError("User not found")
 
-                user.inventory.energy
-                if user.inventory.energy + energy_delta < 0:
-                    game_log.info(f"User {user.id} does not have enough energy.")
-                    raise ValueError("Not Enough Energy!")
+            if not user.inventory or not user.stats:
+                admin_log.error(f"User {user_id} inventory or stats not properly configured.")
+                raise ValueError("User inventory or stats missing")
 
-                elif (user.inventory.energy + energy_delta) > user.stats.max_energy:
-                    user.inventory.energy = user.stats.max_energy
-                    session.commit()
-                    game_log.info(f"User {user.id} has max energy.")
-                    raise ValueError("Energy reached max!")
+            new_energy = user.inventory.energy + energy_delta
 
-                user.inventory.energy += energy_delta
-                session.commit()
-                game_log.info(f"User {user.id}: Energy Adjusted by {energy_delta}. New Energy: {user.inventory.energy}.")
-                return str(user.inventory.energy)
+            if new_energy < 0:
+                game_log.info(f"User {user.id} does not have enough energy.")
+                raise ValueError("Not Enough Energy!")
 
-            except ValueError as e:
-                session.rollback()
-                return str(e)
-            except Exception as e:
-                session.rollback()
-                admin_log.error(str(e))
-                return False
+            if new_energy > user.stats.max_energy:
+                user.inventory.energy = user.stats.max_energy
+            else:
+                user.inventory.energy = new_energy
 
+            session.commit()
+            game_log.info(f"User {user.id}: Energy Adjusted by {energy_delta}. New Energy: {user.inventory.energy}.")
+            return str(user.inventory.energy)
 
-    def get_user_by_id(self, user_id: int):
-        with Session(self.engine) as session:
-            user = session.exec(select(User).where(User.id == user_id)).first()
-            return user
-
-
-    def get_user_by_username(self, username: str):
-        with Session(self.engine) as session:
-            user = session.exec(select(User).where(User.username == username)).first()
-            return user
+        except ValueError as e:
+            session.rollback()
+            return e
+        except Exception as e:
+            session.rollback()
+            admin_log.error(f"Error adjusting energy for user {user_id}: {str(e)}")
+            raise
 
 
     def update_user_inventory(self, user_id: int, item_id: int, quantity: int = 1, selling=False, session=None):

@@ -3,3 +3,22 @@
 2024-04-22 13:11:06,642 - ERROR - {corp_name} created successfully!
 2024-04-22 13:12:09,342 - ERROR - A corporation with that name already exists.
 2024-04-22 13:12:42,491 - ERROR - {corp_name} created successfully!
+2024-04-22 15:45:03,109 - INFO - User 1 logged in successfully.
+2024-04-22 15:55:32,312 - INFO - User 1 logged in successfully.
+2024-04-22 15:59:21,885 - INFO - User 1 logged in successfully.
+2024-04-22 16:59:00,423 - INFO - User 1 logged in successfully.
+2024-04-22 17:11:07,239 - INFO - User 1 logged in successfully.
+2024-04-22 17:15:41,436 - INFO - User 1 logged in successfully.
+2024-04-22 17:20:03,950 - INFO - User 1 logged in successfully.
+2024-04-22 17:20:42,579 - ERROR - (pymysql.err.IntegrityError) (1048, "Column 'item_name' cannot be null")
+[SQL: INSERT INTO items (item_name, quality, illegal, quantity, category) VALUES (%(item_name)s, %(quality)s, %(illegal)s, %(quantity)s, %(category)s)]
+[parameters: {'item_name': None, 'quality': 'Junk', 'illegal': 1, 'quantity': 1, 'category': None}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2024-04-22 17:21:42,053 - ERROR - (pymysql.err.IntegrityError) (1048, "Column 'item_name' cannot be null")
+[SQL: INSERT INTO items (item_name, quality, illegal, quantity, category) VALUES (%(item_name)s, %(quality)s, %(illegal)s, %(quantity)s, %(category)s)]
+[parameters: {'item_name': None, 'quality': 'Junk', 'illegal': 1, 'quantity': 1, 'category': None}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2024-04-22 17:22:48,908 - ERROR - name 'item_name' is not defined
+2024-04-22 17:23:02,546 - INFO - User 1 logged in successfully.
+2024-04-22 17:23:12,106 - ERROR - name 'item_name' is not defined
+2024-04-22 17:29:24,701 - INFO - ADMIN 2 - Created Hat.

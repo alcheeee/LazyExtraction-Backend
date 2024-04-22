@@ -47,15 +47,16 @@ class ItemCreate(BaseModel):
     illegal: bool
     category: ItemType
     quality: ItemQuality
+    RNG_quality: bool
 
 
-class WeaponDetailCreate(BaseModel):
+class WeaponDetailCreate(ItemCreate):
     damage_bonus: int
     evasiveness_bonus: Optional[float]
     strength_bonus: Optional[float]
 
 
-class ClothingDetailCreate(BaseModel):
+class ClothingDetailCreate(ItemCreate):
     clothing_type: str
     reputation_bonus: Optional[int]
     max_energy_bonus: Optional[int]
