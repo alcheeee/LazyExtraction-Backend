@@ -1,0 +1,5 @@
+2024-04-22 12:35:34,485 - INFO - User 1 logged in successfully.
+2024-04-22 13:10:06,745 - INFO - User 1 logged in successfully.
+2024-04-22 13:11:06,642 - ERROR - {corp_name} created successfully!
+2024-04-22 13:12:09,342 - ERROR - A corporation with that name already exists.
+2024-04-22 13:12:42,491 - ERROR - {corp_name} created successfully!

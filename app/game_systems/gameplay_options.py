@@ -70,7 +70,6 @@ item_bonus_mapper = {
 class CORPORATION_TYPES(enum.Enum):
     Industrial = 'Industrial'
     Law = 'Law'
-    Restaurant = 'Restaurant'
     Criminal = 'Criminal'
 
 

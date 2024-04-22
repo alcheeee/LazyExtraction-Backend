@@ -1,7 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends, Form, status
-from ..models.models import User
+from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Depends
+from ..models.models import User, Corporations
 from ..auth.auth_handler import get_current_user
-from app.game_systems.corporations.CorporationCRUD import corporation_manager as corp_manager
+from ..database.db import get_session
+from ..database.UserCRUD import user_crud
+from app.game_systems.corporations.CorporationCRUD import CorpManager
 
 corporation_router = APIRouter(
     prefix="/corporations",
@@ -10,39 +13,64 @@ corporation_router = APIRouter(
 )
 
 
+@corporation_router.post("/create-corporation/{name}/{type}")
+def create_corporation(name: str, type: str,
+                       session: Session = Depends(get_session),
+                       user: User = Depends(get_current_user)):
 
-@corporation_router.post("/create-corporation")
-def create_corporation(corporation_name: str = Form(...), corporation_type: str = Form(...), user: User = Depends(get_current_user)):
-    result, msg = corp_manager.create_corporation(corporation_name, corporation_type, user.id)
-    if result:
+    corp_manager = CorpManager(session)
+    msg = corp_manager.create_corporation(name, type, user.id)
+
+    if "successfully" in msg:
         return {"message": msg}
     else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": msg})
+        raise HTTPException(status_code=400, detail={"message": msg})
 
 
+@corporation_router.post("/add-user/{user_id_to_add:int}")
+def add_user_to_corporation(user_id_to_add: int,
+                            session: Session = Depends(get_session),
+                            user: User = Depends(get_current_user)):
 
-@corporation_router.post("/add-user")
-def add_user_to_corporation(username_to_add: str = Form(...), user: User = Depends(get_current_user)):
-    corporation = corp_manager.get_corp_from_user(user.id)
+    corp_manager = CorpManager(session)
+    corporation = session.get(Corporations, user.corp_id)
+
     if not corporation:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": "Invalid Request"})
-    if str(corporation.leader) == user.username:
-        result, msg = corp_manager.add_user_to_corporation(username_to_add, user.corp_id)
-        return {"message": msg}
-    else:
-        msg = "You are not high enough in the Corporation to do that!"
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": msg})
+        raise HTTPException(status_code=404, detail="No associated corporation found.")
+    if user.username != corporation.leader:
+        raise HTTPException(status_code=403, detail="You are not authorized to add users.")
+
+    target_user = session.get(User, user_id_to_add)
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    success, msg = corp_manager.add_user_to_corporation(user_id_to_add, user.corp_id)
+    if not success:
+        raise HTTPException(status_code=400, detail=msg)
+
+    return {"message": msg}
 
 
-
-@corporation_router.post("/remove-user")
-def remove_user_from_corporation(username_to_remove: str = Form(...), user: User = Depends(get_current_user)):
-    corporation = corp_manager.get_corp_from_user(user.id)
+@corporation_router.post("/remove-user/{username_to_remove}")
+def remove_user_from_corporation(user_id_to_remove: int,
+                                 session: Session = Depends(get_session),
+                                 user: User = Depends(get_current_user)):
+    corp_manage = CorpManager
+    corporation = session.get(Corporations, user.corp_id)
     if not corporation:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": "Invalid Request"})
-    if str(corporation.leader) == user.username:
-        result, msg = corp_manager.remove_user_from_corporation(username_to_remove, user.corp_id)
-        return {"message": msg}
-    else:
-        msg = "You are not high enough in the Corporation to do that!"
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": msg})
+        raise HTTPException(status_code=400, detail={"message": "Invalid Request"})
+
+    if not user.username == corporation.leader:
+        raise HTTPException(status_code=403, detail="You are not authorized to remove users.")
+
+    target_user = user_crud.get_user_by_id(user_id_to_remove)
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    success, msg = corp_manage.remove_user_from_corporation(user_id_to_remove, user.corp_id)
+    if not success:
+        raise HTTPException(status_code=400, detail=msg)
+
+    return {"message": msg}
+
+

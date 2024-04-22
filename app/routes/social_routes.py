@@ -2,7 +2,7 @@ from datetime import datetime
 from pydantic import BaseModel
 from typing import List, Optional
 from sqlmodel import SQLModel, Session, select, Field, Relationship
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from ..models.models import User, FriendsLink, FriendRequest, PrivateMessage
 from ..auth.auth_handler import get_current_user
 from ..database.db import get_session
@@ -14,17 +14,17 @@ social_router = APIRouter(
 )
 
 
-class UserSocialRequest(BaseModel):
-    username: str
-
-@social_router.post("/send-friend-request/")
-def send_friend_request(request: UserSocialRequest,
+@social_router.post("/send-friend-request/{target_user_id}")
+def send_friend_request(target_user_id: int,
                         session: Session = Depends(get_session),
                         user: User = Depends(get_current_user)):
 
-    target_user = session.exec(select(User).where(User.username == request.username)).first()
+    target_user = session.get(User, target_user_id)
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    if user.id == target_user_id:
+        raise HTTPException(status_code=400, detail="Cannot send friend request to yourself")
 
     if session.exec(select(FriendRequest).where(
         (FriendRequest.requester_id == user.id) &
@@ -54,43 +54,35 @@ def remove_friend(friend_id: int,
     )).first()
 
     if not friendship:
-        raise HTTPException(status_code=404, detail="Friendship not found")
+        raise HTTPException(status_code=404, detail="Friend not found")
     try:
         session.delete(friendship)
         session.commit()
         return {"message": "Friend successfully removed"}
     except Exception as e:
         session.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Error removing friend")
 
 
-@social_router.post("/respond-friend-request/")
+@social_router.post("/respond-friend-request/{request_user_id}")
 def respond_friend_request(request_user_id: int,
-                           response: str,
+                           response: str = Query(..., regex="^(accept|decline)$"),
                            session: Session = Depends(get_session),
                            user: User = Depends(get_current_user)):
     try:
         friend_request = session.get(FriendRequest, request_user_id)
-        if not friend_request or friend_request.requestee_id != user.id:
-            raise HTTPException(status_code=404, detail="Friend request not found or access denied")
+        if not friend_request:
+            raise HTTPException(status_code=404, detail="Friend request not found")
 
-        if response not in ["accept", "decline"]:
-            raise HTTPException(status_code=400, detail="Invalid response type")
+        if friend_request.requestee_id != user.id:
+            raise HTTPException(status_code=403, detail="Unauthorized to respond to this friend request")
 
-        if response == "accept":
-            friend_request.status = "accepted"
-            existing_link = session.exec(select(FriendsLink).where(
-                ((FriendsLink.user1_id == user.id) & (FriendsLink.user2_id == friend_request.requester_id)) |
-                ((FriendsLink.user1_id == friend_request.requester_id) & (FriendsLink.user2_id == user.id))
-            )).first()
-
-            if not existing_link:
-                new_link = FriendsLink(user1_id=user.id, user2_id=friend_request.requester_id)
-                session.add(new_link)
-            else:
-                raise HTTPException(status_code=409, detail="Friendship already exists")
+        if response == 'accept':
+            friend_request.status = 'accepted'
+        elif response == 'decline':
+            friend_request.status = 'declined'
         else:
-            friend_request.status = "declined"
+            raise HTTPException(status_code=400, detail="Invalid response. Choose 'accept' or 'decline'.")
 
         session.commit()
         return {"message": f"Friend request {response}"}
@@ -99,8 +91,12 @@ def respond_friend_request(request_user_id: int,
         session.rollback()
         raise HTTPException(status_code=400, detail={"message": "Failed to respond to friend request"})
 
-@social_router.post("/send-message/")
-def send_message(receiver_id: int, content: str,
+class MessageCreate(BaseModel):
+    content: str
+
+@social_router.post("/send-message/{receiver_id}")
+def send_message(receiver_id: int,
+                 message_data: MessageCreate,
                  session: Session = Depends(get_session),
                  user: User = Depends(get_current_user)):
 
@@ -111,7 +107,7 @@ def send_message(receiver_id: int, content: str,
         raise HTTPException(status_code=403, detail="Users are not friends")
 
     try:
-        new_message = PrivateMessage(sender_id=user.id, receiver_id=receiver_id, content=content)
+        new_message = PrivateMessage(sender_id=user.id, receiver_id=receiver_id, content=message_data.content)
         session.add(new_message)
         session.commit()
         return {"message": "Message sent successfully"}
