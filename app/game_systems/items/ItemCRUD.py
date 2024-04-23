@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from sqlmodel import Session
 from typing import Dict, Type
 from app.game_systems.gameplay_options import ItemType, ItemQuality
-from app.game_systems.items.ItemCreationLogic import GenerateItemQuality
+from app.game_systems.items.ItemCreationLogic import GenerateItemQuality, GenerateItemStats
 from app.models.item_models import Items, Weapon, Clothing
 from app.models.models import User
 from app.database.db import engine
@@ -39,23 +39,29 @@ def create_item(item_type_str: str, user_id: int, item_details: BaseModel, sessi
 
         if item_details.RNG_quality:
             user_luck = user.stats.luck
-            generator = GenerateItemQuality(user_luck)
-            quality = generator.generate_item_quality()
+            quality_generator = GenerateItemQuality(user_luck)
+            quality = quality_generator.generate_item_quality()
+        else:
+            quality = item_details.quality
 
         item_data = {
             "item_name": item_details.item_name,
             "illegal": item_details.illegal,
             "category": ItemType[item_type_str],
-            "quality": item_details.quality,
+            "quality": quality,
             "quantity": item_details.quantity
         }
 
+        if item_details.RNG_quality:
+            stats_generator = GenerateItemStats(item_type_str, quality, user.stats.luck)
+            additional_details = stats_generator.generate_stats()
+        else:
+            additional_details = item_details.dict(exclude_unset=True,
+                                                   exclude={"item_name","illegal","quality",
+                                                            "quantity","RNG_quality"})
+
         item_create = create_general_item(session, item_data)
-        additional_details = item_details.dict(exclude_unset=True,
-                                               exclude={"item_name", "illegal", "quality", "quantity", "RNG_quality"})
-
         item_detail_instance = item_class(item_id=item_create.id, **additional_details)
-
         session.add(item_detail_instance)
         session.commit()
         game_log.info(f"{user_id} created {item_details.item_name}, Quantity: {item_details.quantity}")

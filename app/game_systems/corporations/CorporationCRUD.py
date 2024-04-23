@@ -1,8 +1,11 @@
 from sqlmodel import Session, select
-from app.game_systems.gameplay_options import CORPORATION_TYPES, industrial_corp_defaults, other_corp_defaults
-from app.models.models import User, Corporations
+from app.game_systems.gameplay_options import CORPORATION_TYPES
+from .corp_inventory import CorpDefaults
+from app.models.models import User
+from app.models.corp_models import Corporations, CorpInventory, CorpInventoryItem
 from app.utils.logger import MyLogger
 game_log = MyLogger.game()
+admin_log = MyLogger.admin()
 
 
 class CorpManager:
@@ -26,17 +29,23 @@ class CorpManager:
                 return "You must leave your current corporation first!"
 
             #Create corporation
+            default_inventory = CorpDefaults.get_default_inventory(corp_type).to_dict()
             new_corporation = Corporations(corporation_name=corp_name, corporation_type=corp_type, leader=user.username)
-            new_corporation.corp_inventory = str(industrial_corp_defaults if corp_type == "Industrial" else other_corp_defaults)
-
+            new_inventory = CorpInventory(corporation=new_corporation)
             self.session.add(new_corporation)
-            self.session.commit()
+            self.session.add(new_inventory)
 
+            for item_name, quantity in default_inventory.items():
+                new_item = CorpInventoryItem(item_name=item_name, quantity=quantity, corp_inventory=new_inventory)
+                self.session.add(new_item)
+
+            self.session.commit()
             self.add_user_to_corporation(user.id, new_corporation.id)
             game_log.info(f"New corporation '{corp_name}' created by {user.username}.")
             return f"{corp_name} created successfully!"
         except Exception as e:
             self.session.rollback()
+            admin_log.error(e)
             return str(e)
 
 

@@ -47,15 +47,6 @@ class ItemQuality(Enum):
     Special = 'Special'
     Unique = 'Unique'
 
-item_quality_mapper = {
-    'Junk': (60, 0.15),
-    'Common': (40, 0.1),
-    'Uncommon': (35, 0.05),
-    'Rare': (10, 1.1),
-    'Special': (3, 1.15),
-    'Unique': (1, 1.2)
-}
-
 item_bonus_mapper = {
     "reputation": "reputation_bonus",
     "max_energy": "max_energy_bonus",
@@ -73,11 +64,6 @@ class CORPORATION_TYPES(Enum):
     Criminal = 'Criminal'
 
 
-industrial_corp_defaults = {
-    "Metal Scrap": 0,
-    "Electronic Components": 0,
-    "Polymer": 0
-}
-other_corp_defaults = {
 
-}
+
+

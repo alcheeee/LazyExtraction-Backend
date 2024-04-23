@@ -1,11 +1,13 @@
 from sqlmodel import Session, select
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Depends
-from ..models.models import User, Corporations
+from ..models.models import User
+from ..models.corp_models import Corporations
 from ..auth.auth_handler import get_current_user
 from ..database.db import get_session
 from ..database.UserCRUD import user_crud
 from app.game_systems.corporations.CorporationCRUD import CorpManager
+
 
 corporation_router = APIRouter(
     prefix="/corporations",

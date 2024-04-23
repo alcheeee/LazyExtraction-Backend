@@ -53,23 +53,6 @@ class InventoryItem(SQLModel, table=True):
     item: Optional["Items"] = Relationship()
 
 
-class Corporations(SQLModel, table=True):
-    """
-    Corporations Table | One-to-many
-    id: Unique Corporation Identifier
-    corp_type: [Crime, Industrial, Criminal Justice, ..?]
-    employees: [user_id list]
-    """
-    id: Optional[int] = Field(default=None, primary_key=True)
-    corporation_name: str
-    corporation_type: str
-    leader: str
-    capital: Optional[int] = Field(default=0, nullable=False)
-    reputation: Optional[int] = Field(default=0, nullable=False)
-    corp_inventory: str
-    employees: List["User"] = Relationship(back_populates="corporation")
-
-
 class FriendsLink(SQLModel, table=True):
     user1_id: Optional[int] = Field(default=None, foreign_key="user.id", primary_key=True)
     user2_id: Optional[int] = Field(default=None, foreign_key="user.id", primary_key=True)
