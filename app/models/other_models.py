@@ -11,4 +11,3 @@ class Jobs(SQLModel, table=True):
     required_stats: str  # Json
     stat_changes: str
 
-

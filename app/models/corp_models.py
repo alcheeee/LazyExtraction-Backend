@@ -17,6 +17,24 @@ class CorpInventory(SQLModel, table=True):
     items: List[CorpInventoryItem] = Relationship(back_populates="corp_inventory")
     corporation: Optional["Corporations"] = Relationship(back_populates="corp_inventory")
 
+class CorpUpgrades(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    industrial_production: Optional[int] # Increase Production Amount
+    industrial_level: Optional[int]      # Unlocks better items to craft
+    criminal_networks: Optional[int]          # Increase success rate of crime
+    criminal_money_laundering: Optional[int]  # Increase chance to get away with capital
+    law_forensics: Optional[int]        # Increases evidence gathering
+    law_legal_frameworks: Optional[int] # Increase chance to win in legal battles
+    corporation_id: Optional[int] = Field(default=None, foreign_key="corporations.id")
+    corporation: Optional["Corporations"] = Relationship(back_populates="corp_upgrades")
+
+class CorpChallenges(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    finished: bool = Field(default=False)
+    frequency: str = Field(default="Daily")
+    progress: int = Field(default=0)
+    corporation_id: Optional[int] = Field(default=None, foreign_key="corporations.id")
+    corporation: Optional["Corporations"] = Relationship(back_populates="corp_challenges")
 
 class Corporations(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -28,3 +46,7 @@ class Corporations(SQLModel, table=True):
     reputation: int = Field(default=0)
     employees: List["User"] = Relationship(back_populates="corporation")
     corp_inventory: Optional[CorpInventory] = Relationship(back_populates="corporation")
+    corp_upgrades: Optional[CorpUpgrades] = Relationship(back_populates="corporation")
+    corp_challenges: Optional[CorpChallenges] = Relationship(back_populates="corporation")
+
+
