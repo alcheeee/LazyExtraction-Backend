@@ -28,13 +28,17 @@ class CorpUpgrades(SQLModel, table=True):
     corporation_id: Optional[int] = Field(default=None, foreign_key="corporations.id")
     corporation: Optional["Corporations"] = Relationship(back_populates="corp_upgrades")
 
-class CorpChallenges(SQLModel, table=True):
+class CorpActivities(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    finished: bool = Field(default=False)
-    frequency: str = Field(default="Daily")
+    name: str = Field(default=None)
+    cost: int = Field(default=None)
+    reward: str = Field(default=None)
+    preperation: int = Field(default=0)
     progress: int = Field(default=0)
+    progress_required: int = Field(default=100)
+    required_rep: int = Field(default=0)
     corporation_id: Optional[int] = Field(default=None, foreign_key="corporations.id")
-    corporation: Optional["Corporations"] = Relationship(back_populates="corp_challenges")
+    corporation: Optional["Corporations"] = Relationship(back_populates="corp_activities")
 
 class Corporations(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -47,6 +51,6 @@ class Corporations(SQLModel, table=True):
     employees: List["User"] = Relationship(back_populates="corporation")
     corp_inventory: Optional[CorpInventory] = Relationship(back_populates="corporation")
     corp_upgrades: Optional[CorpUpgrades] = Relationship(back_populates="corporation")
-    corp_challenges: Optional[CorpChallenges] = Relationship(back_populates="corporation")
+    corp_activities: Optional[CorpActivities] = Relationship(back_populates="corporation")
 
 

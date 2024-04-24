@@ -17,16 +17,16 @@ class CorpManager:
         try:
             user = self.session.get(User, user_id)
             if not user:
-                return "User not found."
+                raise ValueError("User not found.")
             if corp_type not in self.corp_types:
-                return "Invalid Corporation type."
+                raise ValueError("Invalid Corporation type.")
 
             existing_corporation = self.session.exec(select(Corporations)
                                                      .where(Corporations.corporation_name == corp_name)).first()
             if existing_corporation:
-                return "A corporation with that name already exists."
+                raise ValueError("A corporation with that name already exists.")
             if user.corp_id:
-                return "You must leave your current corporation first!"
+                raise ValueError("You must leave your current corporation first!")
 
             #Create corporation
             default_inventory = CorpDefaults.get_default_inventory(corp_type).to_dict()
@@ -46,10 +46,13 @@ class CorpManager:
             self.add_user_to_corporation(user.id, new_corporation.id)
             game_log.info(f"New corporation '{corp_name}' created by {user.username}.")
             return f"{corp_name} created successfully!"
+        except ValueError as e:
+            self.session.rollback()
+            raise
         except Exception as e:
             self.session.rollback()
-            admin_log.error(e)
-            return str(e)
+            admin_log.error(str(e))
+            raise
 
 
     def add_user_to_corporation(self, user_id: int, corporation_id: int):

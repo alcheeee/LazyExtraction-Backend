@@ -20,14 +20,17 @@ corporation_router = APIRouter(
 def create_corporation(name: str, type: str,
                        session: Session = Depends(get_session),
                        user: User = Depends(get_current_user)):
+    try:
+        corp_manager = CorpManager(session)
+        result = corp_manager.create_corporation(name, type, user.id)
+        return {"message": result}
 
-    corp_manager = CorpManager(session)
-    msg = corp_manager.create_corporation(name, type, user.id)
-
-    if "successfully" in msg:
-        return {"message": msg}
-    else:
-        raise HTTPException(status_code=400, detail={"message": msg})
+    except ValueError as e:
+        session.rollback()
+        raise HTTPException(status_code=400, detail={"message": str(e)})
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail={"message": "Error creating Corporation"})
 
 
 @corporation_router.post("/add-user/{user_id_to_add:int}")
@@ -58,7 +61,7 @@ def add_user_to_corporation(user_id_to_add: int,
 def remove_user_from_corporation(user_id_to_remove: int,
                                  session: Session = Depends(get_session),
                                  user: User = Depends(get_current_user)):
-    corp_manage = CorpManager
+    corp_manage = CorpManager(session)
     corporation = session.get(Corporations, user.corp_id)
     if not corporation:
         raise HTTPException(status_code=400, detail={"message": "Invalid Request"})
