@@ -1,4 +1,5 @@
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.game_systems.gameplay_options import CORPORATION_TYPES
 from .corp_inventory import CorpDefaults
 from app.models.models import User
@@ -9,20 +10,23 @@ admin_log = MyLogger.admin()
 
 
 class CorpManager:
-    def __init__(self, session):
+    def __init__(self, session: AsyncSession):
         self.session = session
         self.corp_types = {ctype.value for ctype in CORPORATION_TYPES}
 
-    def create_corporation(self, corp_name: str, corp_type: str, user_id: int):
+    async def create_corporation(self, corp_name: str, corp_type: str, user_id: int):
         try:
-            user = self.session.get(User, user_id)
+            user = await self.session.get(User, user_id)
             if not user:
                 raise ValueError("User not found.")
             if corp_type not in self.corp_types:
                 raise ValueError("Invalid Corporation type.")
 
-            existing_corporation = self.session.exec(select(Corporations)
-                                                     .where(Corporations.corporation_name == corp_name)).first()
+            existing_corporation = (await self.session.execute(
+                select(Corporations)
+                .where(
+                    Corporations.corporation_name == corp_name)
+            )).scalars().first()
             if existing_corporation:
                 raise ValueError("A corporation with that name already exists.")
             if user.corp_id:
@@ -42,26 +46,25 @@ class CorpManager:
                                              corp_inventory=new_inventory, corp_upgrades=new_upgrades)
                 self.session.add(new_item)
 
-            self.session.commit()
-            self.add_user_to_corporation(user.id, new_corporation.id)
+            await self.session.commit()
+            await self.add_user_to_corporation(user.id, new_corporation.id)
             game_log.info(f"New corporation '{corp_name}' created by {user.username}.")
             return f"{corp_name} created successfully!"
         except ValueError as e:
-            self.session.rollback()
+            await self.session.rollback()
             raise
         except Exception as e:
-            self.session.rollback()
+            await self.session.rollback()
             admin_log.error(str(e))
             raise
 
 
-    def add_user_to_corporation(self, user_id: int, corporation_id: int):
+    async def add_user_to_corporation(self, user_id: int, corporation_id: int):
         try:
-            user = self.session.get(User, user_id)
-            corporation = self.session.get(Corporations, corporation_id)
+            user = await self.session.get(User, user_id)
+            corporation = await self.session.get(Corporations, corporation_id)
             if user is None or corporation is None:
                 return False, "User or Corporation not found"
-
             if user.corp_id is not None:
                 if user.corp_id == corporation.id:
                     return False, f"{user.username} is already in that corporation."
@@ -70,30 +73,29 @@ class CorpManager:
 
 
             user.corp_id = corporation.id
-            self.session.commit()
+            await self.session.commit()
             return True, f"{user.username} has been added to {corporation.corporation_name}."
         except Exception as e:
-            self.session.rollback()
+            await self.session.rollback()
             return False, str(e)
 
 
-    def remove_user_from_corporation(self, user_id: int, corporation_id: int):
+    async def remove_user_from_corporation(self, user_id: int, corporation_id: int):
         try:
-            user = self.session.get(User, user_id)
+            user = await self.session.get(User, user_id)
             if user is None or user.corp_id != corporation_id:
                 return False, "User is not part of that corporation"
 
-            corporation = self.session.get(Corporations, corporation_id)
+            corporation = await self.session.get(Corporations, corporation_id)
             if corporation.leader == user.username:
                 return False, "Leader cannot leave the corporation"
 
             user.corp_id = None
-            self.session.add(user)
-            self.session.commit()
+            await self.session.commit()
             game_log.info(f"User {user_id} has been removed from corporation {corporation_id}.")
             return True, f"User removed from {corporation.corporation_name}"
         except Exception as e:
-            self.session.rollback()
+            await self.session.rollback()
             return False, str(e)
 
 

@@ -17,7 +17,7 @@ class Stats(SQLModel, table=True):
     luck: float
     strength: float
     knowledge: float
-    user: Optional["User"] = Relationship(back_populates="stats")
+    user: Optional["User"] = Relationship(back_populates="stats", sa_relationship_kwargs={"lazy": "selectin"})
     def round_stats(self):
         float_attributes = ['level', 'evasiveness', 'strength', 'knowledge', 'luck']
         for attr in float_attributes:
@@ -37,8 +37,8 @@ class Inventory(SQLModel, table=True):
     equipped_mask_id: Optional[int]
     equipped_body_id: Optional[int]
     equipped_legs_id: Optional[int]
-    items: List["InventoryItem"] = Relationship(back_populates="inventory")
-    user: Optional["User"] = Relationship(back_populates="inventory")
+    items: List["InventoryItem"] = Relationship(back_populates="inventory", sa_relationship_kwargs={"lazy": "selectin"})
+    user: Optional["User"] = Relationship(back_populates="inventory", sa_relationship_kwargs={"lazy": "selectin"})
 
 
 class InventoryItem(SQLModel, table=True):
@@ -49,8 +49,8 @@ class InventoryItem(SQLModel, table=True):
     inventory_id: int = Field(default=None, foreign_key="inventory.id")
     item_id: int = Field(default=None, foreign_key="items.id")
     quantity: int
-    inventory: Optional["Inventory"] = Relationship(back_populates="items")
-    item: Optional["Items"] = Relationship()
+    inventory: Optional["Inventory"] = Relationship(back_populates="items", sa_relationship_kwargs={"lazy": "selectin"})
+    item: Optional["Items"] = Relationship(sa_relationship_kwargs={"lazy": "selectin"})
 
 
 class FriendsLink(SQLModel, table=True):
@@ -103,13 +103,14 @@ class User(SQLModel, table=True):
     job: Optional[str] = Field(default=None)
 
     corp_id: Optional[int] = Field(default=None, foreign_key="corporations.id")
-    corporation: Optional["Corporations"] = Relationship(back_populates="employees")
+    corporation: Optional["Corporations"] = Relationship(back_populates="employees", sa_relationship_kwargs={"lazy": "selectin"})
     stats_id: Optional[int] = Field(default=None, foreign_key="stats.id")
-    stats: Optional[Stats] = Relationship(back_populates="user")
+    stats: Optional[Stats] = Relationship(back_populates="user", sa_relationship_kwargs={"lazy": "selectin"})
     inv_id: Optional[int] = Field(default=None, foreign_key="inventory.id")
-    inventory: Optional[Inventory] = Relationship(back_populates="user")
+    inventory: Optional[Inventory] = Relationship(back_populates="user", sa_relationship_kwargs={"lazy": "selectin"})
     sent_messages: List["PrivateMessage"] = Relationship(back_populates="sender",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.sender_id"})
     received_messages: List["PrivateMessage"] = Relationship(back_populates="receiver",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.receiver_id"})
     friend_requests_sent: List["FriendRequest"] = Relationship(back_populates="requester",sa_relationship_kwargs={"primaryjoin": "User.id == FriendRequest.requester_id"})
     friend_requests_received: List["FriendRequest"] = Relationship(back_populates="requestee",sa_relationship_kwargs={"primaryjoin": "User.id == FriendRequest.requestee_id"})
     friends: List["User"] = Relationship(back_populates="friends",link_model=FriendsLink,sa_relationship_kwargs={"primaryjoin": "User.id == FriendsLink.user2_id","secondaryjoin": "User.id == FriendsLink.user1_id"})
+

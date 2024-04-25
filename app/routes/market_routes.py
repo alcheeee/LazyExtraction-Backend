@@ -1,12 +1,13 @@
-from sqlmodel import Session, select
+from sqlmodel import select
 from fastapi import APIRouter, HTTPException, Depends, Form, status
 from pydantic import BaseModel
 from ..models.models import User, InventoryItem
 from ..auth.auth_handler import get_current_user
 from app.models.item_models import GeneralMarket, Items
-from app.game_systems.markets.MarketHandlerCRUD import engine
+from app.game_systems.markets.MarketHandlerCRUD import MarketItems
 from app.game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
-from app.database.UserCRUD import user_crud
+from app.database.UserHandler import user_crud
+from app.database.db import get_session
 from app.utils.logger import MyLogger
 user_log = MyLogger.user()
 admin_log = MyLogger.admin()
@@ -19,51 +20,28 @@ market_router = APIRouter(
 )
 
 
-@market_router.post("/get-generalmarket-items")
+@market_router.post("/get-market-items")
 async def get_all_generalmarket_items(user: User = Depends(get_current_user)):
-    with Session(engine) as session:
+    async with get_session() as session:
+        market_items = MarketItems(session)
         try:
-            items = session.exec(select(GeneralMarket)).all()
-            item_details = []
-            for item in items:
-                main_item = session.get(Items, item.item_id)
-                item_info = {
-                    "item_id": item.item_id,
-                    "item_name": main_item.item_name,
-                    "item_quality": main_item.quality,
-                    "quantity": item.item_quantity,
-                    "illegal": main_item.illegal,
-                    "category": main_item.category.value,
-                    "slot_type": None,
-                    "equipped_slot": None,
-                    "item_cost": item.item_cost,
-                    "sell_price": item.sell_price,
-                }
-                if main_item.category.value in ['Clothing', 'Weapon']:
-                    item_info["slot_type"] = (main_item.clothing_details.clothing_type if
-                                              main_item.category.value == 'Clothing' else 'Weapon')
-                check_for_stats = ItemStatsHandler(user.id, main_item.id).get_item_stats_json(session, main_item)
-                if check_for_stats:
-                    item_info["stats"] = check_for_stats
-
-                item_details.append(item_info)
-            return item_details
-
+            items = await market_items.get_items()
+            return items
         except Exception as e:
             admin_log.error(str(e))
-            return {"message": "Error getting inventory"}
+            raise HTTPException(status_code=500, detail={"message": "Internal error"})
+
 
 class MarketTransactionRequest(BaseModel):
     item_id: int
     quantity: int
 
 @market_router.post("/buy-market-item")
-async def buy_market_items(request: MarketTransactionRequest, user: User = Depends(get_current_user)):
-    with Session(engine) as session:
-        transaction = session.begin()
+async def buy_market_items(request: MarketTransactionRequest,
+                           user: User = Depends(get_current_user)):
+    async with get_session() as session:
         try:
-            session.add(user)
-            item = session.get(Items, request.item_id)
+            item = await session.get(Items, request.item_id)
             if not item:
                 raise HTTPException(status_code=404, detail={"message": "Item not found"})
 
@@ -81,31 +59,32 @@ async def buy_market_items(request: MarketTransactionRequest, user: User = Depen
                 raise HTTPException(status_code=400, detail={"message": "Not enough stock available"})
 
             user.inventory.bank -= total_cost
+            flag_modified(user.inventory, "bank")
             item.general_market_items.item_quantity -= request.quantity
-            result = user_crud.update_user_inventory(user.id, item.id, request.quantity, selling=False, session=session)
+
+            result = await user_crud.update_user_inventory(user.id, item.id, request.quantity, selling=False, session=session)
             if not result:
                 raise HTTPException(status_code=400, detail={"message": "Failed to update inventory properly."})
 
-            session.commit()
+            await session.commit()
             user_log.info(f"{user.username} purchased {request.quantity} of {item.item_name}.")
             return {"message": f"Bought {request.quantity} of {item.item_name}, for {total_cost}."}
 
-        except HTTPException as he:
-            session.rollback()
-            raise
+        except HTTPException as e:
+            await session.rollback()
+            raise e
         except Exception as e:
-            session.rollback()
-            admin_log.error(f"{user.username} - Error purchasing item due to: {e}")
-            return {"message": "Error purchasing item"}
+            await session.rollback()
+            admin_log.error(f"{user.username} - Error purchasing item due to: {str(e)}")
+            raise HTTPException(status_code=500, detail={"message": "Internal Error"})
 
 
 @market_router.post("/sell-market-item")
-async def sell_market_items(request: MarketTransactionRequest, user: User = Depends(get_current_user)):
-    with Session(engine) as session:
-        transaction = session.begin()
+async def sell_market_items(request: MarketTransactionRequest,
+                            user: User = Depends(get_current_user)):
+    async with get_session() as session:
         try:
-            session.add(user)
-            item = session.get(Items, request.item_id)
+            item = await session.get(Items, request.item_id)
             if not item:
                 raise HTTPException(status_code=404, detail={"message": "Item not found"})
 
@@ -117,27 +96,27 @@ async def sell_market_items(request: MarketTransactionRequest, user: User = Depe
 
             total_earning = item.general_market_items.sell_price * request.quantity
 
-            inventory_item = session.query(InventoryItem).filter_by(
-                inventory_id=user.inventory.id, item_id=item.id).first()
+            inventory_item = await session.query(InventoryItem).filter_by(
+                inventory_id=user.inventory.id, item_id=item.id).scalars().first()
 
             if inventory_item is None or inventory_item.quantity < request.quantity:
                 raise HTTPException(status_code=400, detail={"message": "Not enough items to sell"})
 
             user.inventory.bank += total_earning
             item.general_market_items.item_quantity += request.quantity
-            result = user_crud.update_user_inventory(user.id, item.id, request.quantity, selling=True, session=session)
+            result = await user_crud.update_user_inventory(user.id, item.id, request.quantity, selling=True, session=session)
             if not result:
                 raise HTTPException(status_code=400, detail={"message": "Failed to update inventory properly."})
 
-            session.commit()
+            await session.commit()
             user_log.info(f"{user.username} sold {request.quantity} of {item.item_name}.")
             return {"message": f"Sold {request.quantity} of {item.item_name}, earning {total_earning}."}
 
         except HTTPException as he:
-            session.rollback()
-            raise
-        except Exception as e:
-            session.rollback()
-            admin_log.error(f"{user.username} - Error selling item due to: {e}")
+            await session.rollback()
             return {"message": str(e)}
+        except Exception as e:
+            await session.rollback()
+            admin_log.error(f"{user.username} - Error selling item due to: {str(e)}")
+            raise HTTPException(status_code=500, detail={"message": "Server error"})
 

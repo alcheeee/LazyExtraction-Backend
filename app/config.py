@@ -4,7 +4,7 @@ class Settings:
 
     # Project
     PROJECT_NAME = "RPGapi | Development"
-    VERSION = "0.1210"
+    VERSION = "0.1211"
 
     # Security
     SECRET_KEY = "nyasawesomehonestlyidontthinktheresanyonebetter"
@@ -14,11 +14,15 @@ class Settings:
     # FastAPI
     TOKEN_URL = "/user/login"
 
+    # Univorn
+    HOST = "127.0.0.1"
+    PORT = 8000
+
     # Database
-    DB_NAME = "rpg_api"
-    DB_USERNAME = "root"
+    DB_NAME = "GameAPI"
+    DB_USERNAME = "postgres"
     DB_PASSWORD = "root"
-    DATABASE_URL = f"mysql+pymysql://{DB_USERNAME}:{DB_PASSWORD}@localhost/{DB_NAME}"
+    DATABASE_URL = f"postgresql+asyncpg://{DB_USERNAME}:{DB_PASSWORD}@localhost/{DB_NAME}"
 
 
 settings = Settings()

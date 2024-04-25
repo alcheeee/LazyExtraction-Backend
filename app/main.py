@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.config import settings
-from app.database.db import initialize_db
+from app.database.db import init_db
 from app.routes.auth_routes import user_router
 from app.routes.admin_routes import admin_router
 from app.routes.corporation_routes import corporation_router
@@ -12,12 +12,7 @@ from app.routes.social_routes import social_router
 
 def create_app() -> FastAPI:
     app = FastAPI(title=settings.PROJECT_NAME,
-                  version=settings.VERSION
-            )
-
-    @app.on_event("startup")
-    async def startup_event():
-        initialize_db()
+                  version=settings.VERSION)
 
     app.include_router(user_router)
     app.include_router(user_info_router)
@@ -29,4 +24,13 @@ def create_app() -> FastAPI:
     return app
 
 
+async def startup():
+    await init_db()
+
 app = create_app()
+app.router.on_startup.append(startup)
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("app.main:app", host=settings.HOST, port=settings.PORT, reload=True)

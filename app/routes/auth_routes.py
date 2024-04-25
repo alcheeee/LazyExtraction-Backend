@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Form
-from pydantic import BaseModel
-from ..auth.auth_handler import UserAuthenticator
-from .router_ids import user_crud
+from fastapi import APIRouter, HTTPException, Form, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel, EmailStr
+from ..auth.auth_handler import user_auth
+from ..database.db import get_session
+from ..database.UserHandler import user_crud
 
-authenticator = UserAuthenticator(user_data_manager=user_crud)
 
 user_router = APIRouter(
     prefix="/user",
@@ -15,25 +16,25 @@ user_router = APIRouter(
 class UserCreateRequest(BaseModel):
     username: str
     password: str
-    email: str
+    email: EmailStr
 
 @user_router.post("/register")
-def register_new_user(user_request: UserCreateRequest):
-    result, msg = user_crud.create_user(user_request.username, user_request.password, user_request.email)
+async def register_new_user(request: UserCreateRequest):
+    result, msg = await user_crud.create_user(request.username, request.password, request.email)
     if result:
         return {"message": msg}
     else:
         raise HTTPException(status_code=400, detail={"message": msg})
 
 
-
 @user_router.post("/login")
-def login_for_access_token(username: str = Form(...), password: str = Form(...)):
-    user = authenticator.authenticate_user(username, password)
+async def login_for_access_token(username: str = Form(...),
+                                 password: str = Form(...)):
+    user = await user_auth.authenticate_user(username, password)
     if not user:
         raise HTTPException(status_code=400, detail={"message": "Incorrect username or password"})
 
-    access_token = authenticator.create_access_token(user_id=user.id)
+    access_token = user_auth.create_access_token(user_id=user.id)
     return {"access_token": access_token, "token_type": "bearer"}
 
 

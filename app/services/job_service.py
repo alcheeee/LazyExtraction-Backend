@@ -1,7 +1,7 @@
-from sqlmodel import Session, select
+from sqlmodel import select
 from app.models.models import User
 from app.models.other_models import Jobs
-from app.database.db import engine
+from app.database.db import get_session
 from ..game_systems.gameplay_options import JOB_TYPES
 import json
 import logging
@@ -13,11 +13,9 @@ user_log = MyLogger.user()
 
 class JobService:
 
-    def get_all_jobs(self, session: Session):
+    async def get_all_jobs(self, session):
         try:
-            query = select(Jobs)
-            all_jobs = session.exec(query).all()
-
+            all_jobs = (await session.execute(select(Jobs))).scalars().all()
             job_details = []
             for job in all_jobs:
                 job_info = {
@@ -34,27 +32,16 @@ class JobService:
             return job_details
 
         except Exception as e:
-            session.rollback()
-            admin_log.error(str(e))
-            return False
-
-    def fetch_user(self, user_id: int, session):
-        user = session.get(User, user_id)
-        if not user:
-            logger.error(f"User {user_id} not found.")
-            return None
-        return user
+            raise
 
 
-    def do_user_job(self, user_id: int, job_name: str):
-        with Session(engine) as session:
-            session.begin()
+    async def do_user_job(self, user_id: int, job_name: str):
+        async with get_session() as session:
             try:
-                user = self.fetch_user(user_id, session)
-                job = session.query(Jobs).filter(Jobs.job_name == job_name).first()
+                user = await session.get(User, user_id)
+                job = (await session.execute(select(Jobs).where(Jobs.job_name == job_name))).scalars().first()
                 if not job or user.job != job.job_name:
-                    admin_log.info(f"Job not found or not assigned to user {user_id}.")
-                    raise ValueError("Job not found or not assigned to user.")
+                    raise Exception("Job not found or not assigned to user.")
 
                 energy_required = job.energy_required
                 if user.inventory.energy < energy_required:
@@ -68,56 +55,55 @@ class JobService:
                 user.stats.round_stats()
                 user.inventory.bank += job.income
                 user.inventory.energy -= energy_required
-                session.commit()
+                await session.commit()
                 game_log.info(f"{user_id} worked their job!")
                 return "Job completed successfully."
 
             except ValueError as e:
-                session.rollback()
-                return str(e)
+                await session.rollback()
+                raise
             except Exception as e:
-                session.rollback()
+                await session.rollback()
                 admin_log.error(str(e))
-                return False
+                raise
 
 
 
-    def check_qualifications(self, user_id: int, job_name: str):
-        with Session(engine) as session:
-            user = self.fetch_user(user_id, session)
-            job = session.query(Jobs).filter(Jobs.job_name == job_name).first()
+    async def check_qualifications(self, user_id: int, job_name: str):
+        async with get_session() as session:
+            user = await session.get(User, user_id)
+            job = (await session.execute(select(Jobs).where(Jobs.job_name == job_name))).scalars().first()
             if job:
                 required_stats = json.loads(job.required_stats)
                 for stat, required_value in required_stats.items():
                     if getattr(user.stats, stat, 0) < required_value:
                         return False
                 return True
-            return False
+            raise Exception("No job found")
 
 
-    def update_user_job(self, user_id: int, job_name: str):
-        with Session(engine) as session:
-            session.begin()
+    async def update_user_job(self, user_id: int, job_name: str):
+        async with get_session() as session:
             try:
-                user = self.fetch_user(user_id, session)
+                user = await session.get(User, user_id)
                 if not user:
-                    admin_log.error(f"User {user_id} not found.")
-                    raise ValueError("User not found.")
+                    raise Exception("User not found.")
 
                 elif job_name == 'quit':
                     user.job = None
-                    session.commit()
-                    game_log.info(f"User {user_id} quit their job.")
+                    await session.commit()
                     return "You quit your job"
 
-                elif self.check_qualifications(user_id, job_name):
-                    job = session.query(Jobs).filter(Jobs.job_name == job_name).first()
+                elif await self.check_qualifications(user_id, job_name):
+                    job = (await session.execute(
+                        select(Jobs).where(Jobs.job_name == job_name)
+                    )).scalars().first()
+
                     if not job:
-                        admin_log.info(f"Job not found. By user {user_id}")
-                        raise ValueError("Job not found.")
+                        raise Exception("Job not found.")
 
                     user.job = job.job_name
-                    session.commit()
+                    await session.commit()
                     game_log.info(f"Updated user {user.id} job to {user.job}.")
                     return f"Congrats! You are now a {job.job_name}!"
                 else:
@@ -125,22 +111,20 @@ class JobService:
                     raise ValueError("You don't meet the required qualifications.")
 
             except ValueError as e:
-                session.rollback()
-                return str(e)
+                await session.rollback()
+                raise
 
             except Exception as e:
-                session.rollback()
-                admin_log.error(str(e))
-                return False
-
-
-def create_job(job_data: dict):
-    with Session(engine) as session:
-        new_job = Jobs(**job_data)
-        session.add(new_job)
-        session.commit()
-        session.refresh(new_job)
-        return new_job
-
+                await session.rollback()
+                admin_log.error(f"{str(e)}")
+                raise
 
 job_service = JobService()
+
+async def create_job(job_data: dict):
+    async with get_session() as session:
+        new_job = Jobs(**job_data)
+        session.add(new_job)
+        await session.commit()
+        await session.refresh(new_job)
+        return new_job

@@ -1,4 +1,3 @@
-from ..database.UserCRUD import user_crud
 from ..services.job_service import job_service
 
 class RouteIDs:
@@ -6,7 +5,7 @@ class RouteIDs:
         self.route_name_id = route_name_id
         self.user = user
 
-    def find_id(self):
+    async def find_id(self):
         try:
             actions = {
                 "work-job": lambda: job_service.do_user_job(self.user.id, self.user.job),
@@ -20,4 +19,4 @@ class RouteIDs:
                 raise ValueError("Invalid request")
 
         except ValueError as e:
-            return {"message": str(e)}
+            raise

@@ -1,16 +1,11 @@
-from pydantic import BaseModel
-from sqlmodel import Session, select
-from fastapi import APIRouter, HTTPException, Depends, status
-
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, HTTPException, Depends
 from ..database.db import get_session
 from .router_ids import RouteIDs
-from .auth_routes import user_router
-from ..models.models import User, Inventory, InventoryItem
-from ..models.item_models import Items
+from ..models.models import User
 from ..auth.auth_handler import get_current_user
 from ..services.job_service import job_service
 from app.game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
-from app.game_systems.gameplay_options import equipment_map
 from app.utils.logger import MyLogger
 user_log = MyLogger.user()
 admin_log = MyLogger.admin()
@@ -24,56 +19,50 @@ game_router = APIRouter(
 )
 
 
-class UserItemActionRequest(BaseModel):
-    item_id: int
-
-@game_router.post("/equip-item")
-async def equip_unequip_inventory_item(request: UserItemActionRequest, user: User = Depends(get_current_user)):
-    try:
-        result = ItemStatsHandler(user.id, request.item_id).user_equip_unequip_item()
-        if result in ["equipped", "unequipped"]:
+@game_router.post("/equip-item/{item_id:int}")
+async def equip_unequip_inventory_item(item_id: int,
+                                       user: User = Depends(get_current_user)):
+    async with get_session() as session:
+        try:
+            result = await ItemStatsHandler(user.id, item_id, session).user_equip_unequip_item()
+            await session.commit()
             return {"message": f"Item {result}"}
-        else:
-            return HTTPException(status_code=400, detail={"message": str(e)})
-    except Exception as e:
-        raise HTTPException(status_code=400, detail={"message": str(e)})
+        except ValueError as e:
+            await session.rollback()
+            raise HTTPException(status_code=400, detail={"message": str(e)})
+        except Exception as e:
+            await session.rollback()
+            admin_log.error(str(e))
+            raise HTTPException(status_code=500, detail={"message": "Internal error"})
 
 
-
-class UserActionRequest(BaseModel):
-    button_id: str
-
-@game_router.post("/specific-user-action")
-async def user_action_buttons(request: UserActionRequest, user: User = Depends(get_current_user)):
+@game_router.post("/specific-user-action/{button_name}")
+async def user_action_buttons(button_name: str, user: User = Depends(get_current_user)):
     try:
-        route_id = RouteIDs(request.button_id, user)
-        msg = route_id.find_id()
+        route_id = RouteIDs(button_name, user)
+        msg = await route_id.find_id()
         return {"message": msg}
     except ValueError as e:
         raise HTTPException(status_code=400, detail={"message": str(e)})
 
 
 @game_router.get("/get-all-jobs")
-async def get_all_job_info(session: Session = Depends(get_session), user: User = Depends(get_current_user)):
-    try:
-        result = job_service.get_all_jobs(session)
-        if result:
+async def get_all_job_info(user: User = Depends(get_current_user)):
+    async with get_session() as session:
+        try:
+            result = await job_service.get_all_jobs(session)
             return result
-        else:
-            return HTTPException(status_code=400, detail={"message": "Internal error occured"})
-    except Exception as e:
-        raise HTTPException(status_code=400, detail={"message": str(e)})
+
+        except Exception as e:
+            admin_log.error(str(e))
+            raise HTTPException(status_code=500, detail={"message": "Internal error"})
 
 
-class UserApplyJobRequest(BaseModel):
-    job_name: str
-
-@game_router.post("/apply-to-job")
-async def apply_to_job(request: UserApplyJobRequest, user: User = Depends(get_current_user)):
+@game_router.post("/apply-to-job/{job_name}")
+async def apply_to_job(job_name: str, user: User = Depends(get_current_user)):
     try:
-        result = job_service.update_user_job(user.id, request.job_name),
+        result = await job_service.update_user_job(user.id, job_name),
         return {"message": result}
-
     except ValueError as e:
         raise HTTPException(status_code=400, detail={"message": str(e)})
 
