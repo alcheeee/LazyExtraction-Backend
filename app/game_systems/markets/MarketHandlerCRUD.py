@@ -76,7 +76,8 @@ class MarketItems:
                 if main_item.category.value in ['Clothing', 'Weapon']:
                     item_info["slot_type"] = (main_item.clothing_details.clothing_type if
                                               main_item.category.value == 'Clothing' else 'Weapon')
-                check_for_stats = ItemStatsHandler(0, main_item.id, self.session).get_item_stats_json(main_item)
+                item_stats_handler = ItemStatsHandler(0, main_item.id, self.session)
+                check_for_stats = item_stats_handler.get_item_stats_json(main_item)
                 if check_for_stats:
                     item_info["stats"] = check_for_stats
 

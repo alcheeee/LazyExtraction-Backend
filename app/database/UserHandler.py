@@ -90,7 +90,16 @@ class UserHandler:
 
     async def update_user_inventory(self, user_id: int, item_id: int, quantity: int = 1, selling=False, session=None):
         try:
-            user = await session.get(User, user_id)
+            user = await session.execute(select(User).where(User.id == user_id))
+            user = user.scalars().first()
+            if user:
+                user = await session.merge(user)
+
+            item = await session.execute(select(Items).where(Items.id == item_id))
+            item = item.scalars().first()
+            if item:
+                item = await session.merge(item)
+
             item = await session.get(Items, item_id)
             if not user or not item:
                 raise ValueError(f"Couldn't add {item_id} to {user_id}")

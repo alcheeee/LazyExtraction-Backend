@@ -5,7 +5,6 @@ from ..models.models import User, InventoryItem
 from ..auth.auth_handler import get_current_user
 from app.models.item_models import GeneralMarket, Items
 from app.game_systems.markets.MarketHandlerCRUD import MarketItems
-from app.game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
 from app.database.UserHandler import user_crud
 from app.database.db import get_session
 from app.utils.logger import MyLogger
@@ -41,7 +40,12 @@ async def buy_market_items(request: MarketTransactionRequest,
                            user: User = Depends(get_current_user)):
     async with get_session() as session:
         try:
-            item = await session.get(Items, request.item_id)
+            session.add(user)
+            item = await session.execute(select(Items).where(Items.id == request.item_id))
+            item = item.scalars().first()
+            if item:
+                item = await session.merge(item)
+
             if not item:
                 raise HTTPException(status_code=404, detail={"message": "Item not found"})
 
@@ -50,8 +54,8 @@ async def buy_market_items(request: MarketTransactionRequest,
 
             if not hasattr(item, 'general_market_items') or item.general_market_items is None:
                 raise HTTPException(status_code=404, detail={"message": "Market item not found"})
-
             total_cost = item.general_market_items.item_cost * request.quantity
+
             if user.inventory.bank < total_cost:
                 raise HTTPException(status_code=403, detail={"message": "Insufficient funds"})
 
@@ -59,12 +63,12 @@ async def buy_market_items(request: MarketTransactionRequest,
                 raise HTTPException(status_code=400, detail={"message": "Not enough stock available"})
 
             user.inventory.bank -= total_cost
-            flag_modified(user.inventory, "bank")
             item.general_market_items.item_quantity -= request.quantity
 
             result = await user_crud.update_user_inventory(user.id, item.id, request.quantity, selling=False, session=session)
             if not result:
                 raise HTTPException(status_code=400, detail={"message": "Failed to update inventory properly."})
+
 
             await session.commit()
             user_log.info(f"{user.username} purchased {request.quantity} of {item.item_name}.")
@@ -84,6 +88,7 @@ async def sell_market_items(request: MarketTransactionRequest,
                             user: User = Depends(get_current_user)):
     async with get_session() as session:
         try:
+            session.add(user)
             item = await session.get(Items, request.item_id)
             if not item:
                 raise HTTPException(status_code=404, detail={"message": "Item not found"})
@@ -96,8 +101,12 @@ async def sell_market_items(request: MarketTransactionRequest,
 
             total_earning = item.general_market_items.sell_price * request.quantity
 
-            inventory_item = await session.query(InventoryItem).filter_by(
-                inventory_id=user.inventory.id, item_id=item.id).scalars().first()
+            inventory_item = (await session.execute(
+                select(InventoryItem).where(
+                    InventoryItem.inventory_id == user.inventory.id,
+                    InventoryItem.item_id == item.id
+                )
+            )).scalars().first()
 
             if inventory_item is None or inventory_item.quantity < request.quantity:
                 raise HTTPException(status_code=400, detail={"message": "Not enough items to sell"})

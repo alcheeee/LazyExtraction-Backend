@@ -66,6 +66,7 @@ async def get_user_stats(user: User = Depends(get_current_user)):
 async def get_user_items(user: User = Depends(get_current_user)):
     async with get_session() as session:
         try:
+            session.add(user)
             if not user.inventory:
                 raise HTTPException(status_code=404, detail={"message": "No inventory found for the user."})
 
@@ -107,7 +108,8 @@ async def get_user_items(user: User = Depends(get_current_user)):
                             item_info["equipped_slot"] = slot_name
                             break
 
-                    check_for_stats = await ItemStatsHandler(user.id, main_item.id, session).get_item_stats_json(main_item)
+                    item_handler = ItemStatsHandler(user, main_item.id, session)
+                    check_for_stats = item_handler.get_item_stats_json(main_item)
                     if check_for_stats:
                         item_info["stats"] = check_for_stats
 
@@ -115,7 +117,7 @@ async def get_user_items(user: User = Depends(get_current_user)):
             return item_details
 
         except ValueError as e:
-            return {"message": f"{str(e)}"}
+            return {"message": str(e)}
         except Exception as e:
             admin_log.error(f"Error getting user inventory: {str(e)}")
             raise HTTPException(status_code=500, detail={"message": "Error getting inventory"})

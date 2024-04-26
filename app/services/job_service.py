@@ -13,6 +13,17 @@ user_log = MyLogger.user()
 
 class JobService:
 
+    async def get_job(self, job_name, session):
+        try:
+            job = (await session.execute(
+                select(Jobs).where(
+                    Jobs.job_name == job_name)
+            )).scalars().first()
+            return job
+
+        except Exception as e:
+            raise e
+
     async def get_all_jobs(self, session):
         try:
             all_jobs = (await session.execute(select(Jobs))).scalars().all()
@@ -35,89 +46,75 @@ class JobService:
             raise
 
 
-    async def do_user_job(self, user_id: int, job_name: str):
-        async with get_session() as session:
-            try:
-                user = await session.get(User, user_id)
-                job = (await session.execute(select(Jobs).where(Jobs.job_name == job_name))).scalars().first()
-                if not job or user.job != job.job_name:
-                    raise Exception("Job not found or not assigned to user.")
+    async def do_user_job(self, user: int, job_name: str, session):
+        try:
+            job = await self.get_job(job_name, session=session)
 
-                energy_required = job.energy_required
-                if user.inventory.energy < energy_required:
-                    raise ValueError("Not enough energy.")
+            if not job or user.job != job.job_name:
+                raise ValueError("Not currently employed.")
 
-                stat_changes = json.loads(job.stat_changes)
-                for stat, change in stat_changes.items():
-                    if hasattr(user.stats, stat):
-                        setattr(user.stats, stat, getattr(user.stats, stat) + change)
+            energy_required = job.energy_required
+            if user.inventory.energy < energy_required:
+                raise ValueError("Not enough energy.")
 
-                user.stats.round_stats()
-                user.inventory.bank += job.income
-                user.inventory.energy -= energy_required
-                await session.commit()
-                game_log.info(f"{user_id} worked their job!")
-                return "Job completed successfully."
+            stat_changes = json.loads(job.stat_changes)
+            for stat, change in stat_changes.items():
+                if hasattr(user.stats, stat):
+                    setattr(user.stats, stat, getattr(user.stats, stat) + change)
 
-            except ValueError as e:
-                await session.rollback()
-                raise
-            except Exception as e:
-                await session.rollback()
-                admin_log.error(str(e))
-                raise
+            user.stats.round_stats()
+            user.inventory.bank += job.income
+            user.inventory.energy -= energy_required
+            await session.commit()
+            return "Job completed successfully."
+
+        except ValueError as e:
+            raise e
+        except Exception as e:
+            raise e
 
 
 
-    async def check_qualifications(self, user_id: int, job_name: str):
-        async with get_session() as session:
-            user = await session.get(User, user_id)
-            job = (await session.execute(select(Jobs).where(Jobs.job_name == job_name))).scalars().first()
+    async def check_qualifications(self, user, job):
+        try:
             if job:
                 required_stats = json.loads(job.required_stats)
                 for stat, required_value in required_stats.items():
                     if getattr(user.stats, stat, 0) < required_value:
                         return False
                 return True
-            raise Exception("No job found")
+        except Exception as e:
+            raise e
 
 
-    async def update_user_job(self, user_id: int, job_name: str):
-        async with get_session() as session:
-            try:
-                user = await session.get(User, user_id)
-                if not user:
-                    raise Exception("User not found.")
+    async def update_user_job(self, user: int, job_name: str, session):
+        try:
+            if not user:
+                raise Exception("User not found.")
 
-                elif job_name == 'quit':
-                    user.job = None
-                    await session.commit()
-                    return "You quit your job"
+            elif job_name == 'quit':
+                user.job = None
+                await session.commit()
+                return "You quit your job"
 
-                elif await self.check_qualifications(user_id, job_name):
-                    job = (await session.execute(
-                        select(Jobs).where(Jobs.job_name == job_name)
-                    )).scalars().first()
+            job = await self.get_job(job_name, session=session)
+            if not job:
+                raise Exception("Job not found.")
 
-                    if not job:
-                        raise Exception("Job not found.")
+            elif await self.check_qualifications(user, job):
+                user.job = job.job_name
+                await session.commit()
+                game_log.info(f"Updated user {user.id} job to {user.job}.")
+                return f"Congrats! You are now a {job.job_name}!"
+            else:
+                game_log.info(f"{user.id} didn't meet the requirements for {job_name}.")
+                raise ValueError("You don't meet the required qualifications.")
 
-                    user.job = job.job_name
-                    await session.commit()
-                    game_log.info(f"Updated user {user.id} job to {user.job}.")
-                    return f"Congrats! You are now a {job.job_name}!"
-                else:
-                    game_log.info(f"{user_id} didn't meet the requirements for {job_name}.")
-                    raise ValueError("You don't meet the required qualifications.")
+        except ValueError as e:
+            raise e
 
-            except ValueError as e:
-                await session.rollback()
-                raise
-
-            except Exception as e:
-                await session.rollback()
-                admin_log.error(f"{str(e)}")
-                raise
+        except Exception as e:
+            raise e
 
 job_service = JobService()
 
