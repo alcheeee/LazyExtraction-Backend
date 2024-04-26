@@ -3,6 +3,7 @@ from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.models import User, Stats, Inventory, InventoryItem
 from ..models.item_models import Items
+from app.database.CRUD.BaseCRUD import EnhancedCRUD
 from .db import get_session
 import bcrypt
 from ..utils.logger import MyLogger
@@ -11,22 +12,22 @@ user_log = MyLogger.user()
 admin_log = MyLogger.admin()
 game_log = MyLogger.game()
 
-class UserHandler:
+class UserService:
+    def __init__(self, session):
+        self.session = session
+        self.user_crud = EnhancedCRUD(User, session)
 
     async def get_user_by_id(self, user_id: int):
-        async with get_session() as session:
-            user = await session.get(User, user_id)
-            return user
-
+        """Fetch a user by their ID using CRUD operations."""
+        return await self.user_crud.get_by_id(user_id)
 
     async def get_user_by_username(self, username: str):
-        async with get_session() as session:
-            result = await session.execute(select(User).where(
-                    User.username == username
-                ))
-            user = result.scalars().first()
-            return user
+        """Fetch a user by their username using explicit query."""
+        result = await self.session.execute(select(User).where(User.username == username))
+        return result.scalars().first()
 
+
+class UserHandler:
 
     async def create_user(self, username: str, password: str, email: str):
         async with get_session() as session:

@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, Form, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr
-from ..auth.auth_handler import user_auth
+from ..auth.auth_handler import UserService
+from ..auth.auth_handler import UserAuthenticator
+from app.database.CRUD.BaseCRUD import EnhancedCRUD
 from ..database.db import get_session
 from ..database.UserHandler import user_crud
 
@@ -30,12 +32,14 @@ async def register_new_user(request: UserCreateRequest):
 @user_router.post("/login")
 async def login_for_access_token(username: str = Form(...),
                                  password: str = Form(...)):
-    user = await user_auth.authenticate_user(username, password)
-    if not user:
-        raise HTTPException(status_code=400, detail={"message": "Incorrect username or password"})
+    async with get_session() as session:
+        user_auth = UserAuthenticator()
+        user = await user_auth.authenticate_user(username, password, session=session)
+        if not user:
+            raise HTTPException(status_code=400, detail={"message": "Incorrect username or password"})
 
-    access_token = user_auth.create_access_token(user_id=user.id)
-    return {"access_token": access_token, "token_type": "bearer"}
+        access_token = user_auth.create_access_token(user_id=user.id)
+        return {"access_token": access_token, "token_type": "bearer"}
 
 
 

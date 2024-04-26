@@ -8,7 +8,7 @@ class Settings:
 
     # Security
     SECRET_KEY = "nyasawesomehonestlyidontthinktheresanyonebetter"
-    ACCESS_TOKEN_EXPIRE_MINUTES = 3000000
+    ACCESS_TOKEN_EXPIRE_MINUTES = 3000*60 # Hours
     ITEMS_SECRET_KEY = "itemsmmmyesitemsilovethose"
 
     # FastAPI

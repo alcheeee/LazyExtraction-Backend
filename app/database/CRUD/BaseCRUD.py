@@ -41,3 +41,28 @@ class BaseCRUD:
         instance = await self.get_by_id(id)
         await self.session.delete(instance)
         await self.session.commit()
+
+class EnhancedCRUD(BaseCRUD):
+    async def get_by_id(self, id, options=None):
+        query = select(self.model).where(self.model.id == id)
+        if options:
+            query = query.options(*options)
+        result = await self.session.execute(query)
+        instance = result.scalar_one_or_none()
+        return instance
+
+    async def get_inventory_item_by_conditions(self, inventory_id, item_id):
+        result = await self.session.execute(
+            select(InventoryItem)
+            .where(
+                InventoryItem.inventory_id == inventory_id,
+                InventoryItem.item_id == item_id
+            )
+        )
+        return result.scalars().first()
+
+    async def get_one(self, *criterion):
+        """Fetch a single instance based on criteria."""
+        query = select(self.model).where(*criterion)
+        result = await self.session.execute(query)
+        return result.scalars().first()

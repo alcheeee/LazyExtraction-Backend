@@ -12,10 +12,10 @@ class Items(SQLModel, table=True):
     quantity: int = Field(default=0)
     category: ItemType = Field(sa_column=Column(Enum(ItemType)))
     # Relationships
-    weapon_details: Optional["Weapon"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False, "lazy": "selectin"})
-    clothing_details: Optional["Clothing"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False, "lazy": "selectin"})
-    black_market_posts: Optional["BlackMarket"] = Relationship(back_populates="item", sa_relationship_kwargs={"lazy": "selectin"})
-    general_market_items: Optional["GeneralMarket"] = Relationship(back_populates="item", sa_relationship_kwargs={"lazy": "selectin"})
+    weapon_details: Optional["Weapon"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
+    clothing_details: Optional["Clothing"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
+    black_market_posts: Optional["BlackMarket"] = Relationship(back_populates="item")
+    general_market_items: Optional["GeneralMarket"] = Relationship(back_populates="item")
 
 
 class Weapon(SQLModel, table=True):
@@ -24,7 +24,7 @@ class Weapon(SQLModel, table=True):
     evasiveness_bonus: int = Field(default=None, nullable=True)
     strength_bonus: int = Field(default=None, nullable=True)
     item_id: int = Field(default=None, foreign_key="items.id")
-    item: Optional[Items] = Relationship(back_populates="weapon_details", sa_relationship_kwargs={"lazy": "selectin"})
+    item: Optional[Items] = Relationship(back_populates="weapon_details")
 
 
 class Clothing(SQLModel, table=True):
@@ -38,7 +38,7 @@ class Clothing(SQLModel, table=True):
     strength_bonus: Optional[float] = Field(default=None, nullable=True)
     knowledge_bonus: Optional[float] = Field(default=None, nullable=True)
     item_id: int = Field(default=None, foreign_key="items.id")
-    item: Optional[Items] = Relationship(back_populates="clothing_details", sa_relationship_kwargs={"lazy": "selectin"})
+    item: Optional[Items] = Relationship(back_populates="clothing_details")
 
 
 class GeneralMarket(SQLModel, table=True):
@@ -48,7 +48,7 @@ class GeneralMarket(SQLModel, table=True):
     item_quantity: int
     item_quality: str
     item_id: int = Field(default=None, foreign_key="items.id")
-    item: Optional[Items] = Relationship(back_populates="general_market_items", sa_relationship_kwargs={"lazy": "selectin"})
+    item: Optional[Items] = Relationship(back_populates="general_market_items")
 
 
 class BlackMarket(SQLModel, table=True):
@@ -59,4 +59,4 @@ class BlackMarket(SQLModel, table=True):
     by_user: str
     time_posted: str
     item_id: int = Field(default=None, foreign_key="items.id")
-    item: Optional[Items] = Relationship(back_populates="black_market_posts", sa_relationship_kwargs={"lazy": "selectin"})
+    item: Optional[Items] = Relationship(back_populates="black_market_posts")

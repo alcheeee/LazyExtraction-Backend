@@ -23,9 +23,9 @@ async def equip_unequip_inventory_item(item_id: int,
                                        user: User = Depends(get_current_user)):
     async with get_session() as session:
         try:
-            session.add(user)
-            item_stats_handler = ItemStatsHandler(user, item_id, session)
+            item_stats_handler = ItemStatsHandler(user.id, item_id, session)
             result = await item_stats_handler.user_equip_unequip_item()
+
             await session.commit()
             return {"message": f"Item {result}"}
         except ValueError as e:
