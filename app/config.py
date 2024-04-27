@@ -5,6 +5,7 @@ class Settings:
     # Project
     PROJECT_NAME = "RPGapi | Development"
     VERSION = "0.1216"
+    MODE = "testing" # "production"
 
     # Security
     SECRET_KEY = "nyasawesomehonestlyidontthinktheresanyonebetter"
