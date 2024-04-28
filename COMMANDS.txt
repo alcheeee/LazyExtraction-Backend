@@ -1,0 +1,29 @@
+
+
+
+        - To run app -
+
+uvicorn backend.app.main:app --port 8000 --reload
+
+
+        - Migrate Database -
+
+Alembic Create Revision -> python -m alembic revision --autogenerate -m "Init"
+
+Alembic Migration -> python -m alembic upgrade head
+
+
+
+        - Docker -
+
+docker-compose up --build
+
+docker-compose down -v
+
+
+
+docker-compose exec gameapi_server alembic revision --autogenerate -m "Version "
+
+docker-compose exec gameapi_server alembic upgrade head
+
+
