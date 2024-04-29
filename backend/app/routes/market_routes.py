@@ -5,7 +5,7 @@ from ..models.models import User, InventoryItem
 from ..auth.auth_handler import get_current_user
 from ..models.item_models import GeneralMarket, Items
 from ..game_systems.markets.MarketHandlerCRUD import MarketItems
-from ..database.UserHandler import user_crud
+from ..database.UserHandler import UserHandler
 from ..database.db import get_session
 from ..utils.logger import MyLogger
 user_log = MyLogger.user()
@@ -65,7 +65,7 @@ async def buy_market_items(request: MarketTransactionRequest,
             user.inventory.bank -= total_cost
             item.general_market_items.item_quantity -= request.quantity
 
-            result = await user_crud.update_user_inventory(user.id, item.id, request.quantity, selling=False, session=session)
+            result = await UserHandler().update_user_inventory(user.id, item.id, request.quantity, selling=False, session=session)
             if not result:
                 raise HTTPException(status_code=400, detail={"message": "Failed to update inventory properly."})
 
@@ -113,7 +113,7 @@ async def sell_market_items(request: MarketTransactionRequest,
 
             user.inventory.bank += total_earning
             item.general_market_items.item_quantity += request.quantity
-            result = await user_crud.update_user_inventory(user.id, item.id, request.quantity, selling=True, session=session)
+            result = await UserHandler().update_user_inventory(user.id, item.id, request.quantity, selling=True, session=session)
             if not result:
                 raise HTTPException(status_code=400, detail={"message": "Failed to update inventory properly."})
 

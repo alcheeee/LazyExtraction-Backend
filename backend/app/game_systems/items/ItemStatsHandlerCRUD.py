@@ -1,10 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
-from ...database.CRUD.BaseCRUD import EnhancedCRUD
-from sqlalchemy.future import select
+from ...crud.BaseCRUD import EnhancedCRUD
 from ...schemas.item_schema import ItemType
 from ..gameplay_options import item_bonus_mapper, equipment_map
-from ...models.item_models import Items, Clothing, Weapon
+from ...models.item_models import Items, Clothing
 from ...models.models import User, InventoryItem
 from ...utils.logger import MyLogger
 game_log = MyLogger.game()

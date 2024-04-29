@@ -5,7 +5,6 @@ from ..models.models import User
 from ..models.corp_models import Corporations
 from ..auth.auth_handler import get_current_user
 from ..database.db import get_session
-from ..database.UserHandler import user_crud
 from ..game_systems.corporations.CorporationCRUD import CorpManager
 from ..utils.logger import MyLogger
 admin_log = MyLogger.admin()

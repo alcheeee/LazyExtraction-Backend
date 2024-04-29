@@ -10,7 +10,7 @@ from ..models.other_models import Jobs
 from ..schemas.item_schema import ItemQuality
 from ..auth.auth_handler import get_current_user
 from ..services.job_service import create_job, JOB_TYPES
-from ..database.UserHandler import user_crud
+from ..database.UserHandler import UserHandler
 from ..database.db import get_session
 from ..utils.logger import MyLogger
 
@@ -152,7 +152,7 @@ async def add_an_item_to_user(username: str,item_id: int,quantity: int,
             raise HTTPException(status_code=400, detail={"message": f"Couldn't find user."})
         try:
             session.add(user_sending)
-            await user_crud.update_user_inventory(user_sending.id, item_id,
+            await UserHandler().update_user_inventory(user_sending.id, item_id,
                                                   quantity, selling=False, session=session)
             await session.commit()
             return {"message": f"Added {quantity} of item {item_id} to {user_sending.username}"}

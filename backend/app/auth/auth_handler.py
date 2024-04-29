@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException, status
 from jose import jwt, JWTError
 from .auth_bearer import SECRET_KEY, ALGORITHM, oauth2_scheme, ACCESS_TOKEN_EXPIRE_MINUTES
 from ..database.UserHandler import UserService
-from ..database.CRUD.BaseCRUD import EnhancedCRUD
+from ..crud.BaseCRUD import EnhancedCRUD
 from ..models.models import User
 from ..database.db import get_session
 from ..utils.logger import MyLogger

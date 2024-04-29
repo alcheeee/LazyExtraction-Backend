@@ -8,7 +8,7 @@ class Items(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     item_name: str
     quality: ItemQuality = Field(sa_column=Column(Enum(ItemQuality)))
-    illegal: bool
+    illegal: bool = Field(default=False)
     quantity: int = Field(default=0)
     category: ItemType = Field(sa_column=Column(Enum(ItemType)))
     # Relationships
@@ -43,8 +43,8 @@ class Clothing(SQLModel, table=True):
 
 class GeneralMarket(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    item_cost: int
-    sell_price: int
+    item_cost: int = Field(default=0)
+    sell_price: int = Field(default=0)
     item_quantity: int
     item_quality: str
     item_id: int = Field(default=None, foreign_key="items.id")
@@ -53,7 +53,7 @@ class GeneralMarket(SQLModel, table=True):
 
 class BlackMarket(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    sell_price: int
+    sell_price: int = Field(default=0)
     item_quantity: int
     item_quality: str
     by_user: str

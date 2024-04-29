@@ -1,13 +1,11 @@
 from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload, selectinload
-from sqlalchemy.ext.asyncio import AsyncSession
-from ..models.models import User, Stats, Inventory, InventoryItem
+from ..models.models import User, InventoryItem
 from ..models.item_models import Items
-from ..database.CRUD.BaseCRUD import EnhancedCRUD
+from ..crud.BaseCRUD import EnhancedCRUD
 from .db import get_session
 import bcrypt
 from ..utils.logger import MyLogger
-from ..game_systems.gameplay_options import default_stats_data, default_inventory_data, equipment_map
+from ..game_systems.gameplay_options import equipment_map
 user_log = MyLogger.user()
 admin_log = MyLogger.admin()
 game_log = MyLogger.game()
@@ -35,19 +33,15 @@ class UserHandler:
                 #Check for name  & email availability
                 existing_user = (await session.execute(
                     select(User).where((User.username == username) | (User.email == email))
-                )).scalars().first()
+                )).scalar_one_or_none()
 
                 if existing_user:
-                    user_log.warning(f"Username {username} or email {email} already exists.")
                     return False, "Username or email already exists."
 
                 hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
                 new_user = User(username=username, password=hashed_password, email=email)
-                new_user.stats = Stats(**default_stats_data)
-                new_user.inventory = Inventory(**default_inventory_data)
                 session.add(new_user)
                 await session.commit()
-                admin_log.info(f"Created User: {new_user.username}")
                 return True, f"Account created, welcome {username}!"
 
             except Exception as e:
@@ -96,8 +90,10 @@ class UserHandler:
             if user:
                 user = await session.merge(user)
 
-            item = await session.execute(select(Items).where(Items.id == item_id))
-            item = item.scalars().first()
+            #item = await session.execute(select(Items).where(Items.id == item_id))
+            #item = item.scalars().first()
+            session.scalars(select(Items).where(Items.id == item_id).limit(1)).first()
+
             if item:
                 item = await session.merge(item)
 
@@ -147,5 +143,3 @@ class UserHandler:
             raise
         except Exception as e:
             raise
-
-user_crud = UserHandler()

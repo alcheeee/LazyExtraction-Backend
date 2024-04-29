@@ -7,16 +7,16 @@ class Stats(SQLModel, table=True):
     Stats Table for Users, linked by id
     """
     id: Optional[int] = Field(default=None, primary_key=True)
-    level: float
-    reputation: int
-    education: Optional[str]
-    max_energy: int
-    damage: int
-    evasiveness: float
-    health: int
-    luck: float
-    strength: float
-    knowledge: float
+    level: float = Field(default=1.00)
+    reputation: int = Field(default=1)
+    education: Optional[str] = Field(default=None)
+    max_energy: int = Field(default=100)
+    damage: int = Field(default=1)
+    evasiveness: float = Field(default=1.00)
+    health: int = Field(default=100)
+    luck: float = Field(default=1.00)
+    strength: float = Field(default=1.00)
+    knowledge: float = Field(default=1.00)
     user: Optional["User"] = Relationship(back_populates="stats")
     def round_stats(self):
         float_attributes = ['level', 'evasiveness', 'strength', 'knowledge', 'luck']
@@ -31,12 +31,12 @@ class Inventory(SQLModel, table=True):
     Inventory Table for Users, linked by id
     """
     id: Optional[int] = Field(default=None, primary_key=True)
-    bank: int
-    energy: int
-    equipped_weapon_id: Optional[int]
-    equipped_mask_id: Optional[int]
-    equipped_body_id: Optional[int]
-    equipped_legs_id: Optional[int]
+    bank: int = Field(default=1000)
+    energy: int = Field(default=100)
+    equipped_weapon_id: Optional[int] = Field(default=None)
+    equipped_mask_id: Optional[int] = Field(default=None)
+    equipped_body_id: Optional[int] = Field(default=None)
+    equipped_legs_id: Optional[int] = Field(default=None)
     items: List["InventoryItem"] = Relationship(back_populates="inventory")
     user: Optional["User"] = Relationship(back_populates="inventory")
 
@@ -98,7 +98,7 @@ class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     is_admin: bool = Field(default=False)
     username: str = Field(index=True)
-    password: str = Field(index=True)
+    password: str
     email: str = Field(index=True)
     job: Optional[str] = Field(default=None)
 

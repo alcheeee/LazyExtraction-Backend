@@ -1,8 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import NoResultFound
-from ...models.models import User, InventoryItem, Inventory, Stats
+
 
 class BaseCRUD:
     def __init__(self, model, session: AsyncSession):
@@ -50,18 +49,6 @@ class EnhancedCRUD(BaseCRUD):
         instance = result.scalar_one_or_none()
         return instance
 
-    async def get_inventory_item_by_conditions(self, inventory_id, item_id):
-        result = await self.session.execute(
-            select(InventoryItem)
-            .where(
-                InventoryItem.inventory_id == inventory_id,
-                InventoryItem.item_id == item_id
-            )
-        )
-        return result.scalars().first()
 
-    async def get_one(self, *criterion):
-        """Fetch a single instance based on criteria."""
-        query = select(self.model).where(*criterion)
-        result = await self.session.execute(query)
-        return result.scalars().first()
+
+

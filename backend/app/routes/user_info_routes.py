@@ -1,13 +1,7 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import (joinedload,
-                            selectinload)
-
 from fastapi import (APIRouter,
                      HTTPException,
                      Depends)
 
-from ..database.CRUD.BaseCRUD import BaseCRUD
 from ..database.db import get_session
 from ..models.models import User
 from ..models.item_models import Items

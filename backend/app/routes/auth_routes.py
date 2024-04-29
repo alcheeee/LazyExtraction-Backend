@@ -1,11 +1,8 @@
-from fastapi import APIRouter, HTTPException, Form, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, HTTPException, Form
 from pydantic import BaseModel, EmailStr
-from ..auth.auth_handler import UserService
 from ..auth.auth_handler import UserAuthenticator
-from ..database.CRUD.BaseCRUD import EnhancedCRUD
 from ..database.db import get_session
-from ..database.UserHandler import user_crud
+from ..database.UserHandler import UserHandler
 
 
 user_router = APIRouter(
@@ -22,7 +19,8 @@ class UserCreateRequest(BaseModel):
 
 @user_router.post("/register")
 async def register_new_user(request: UserCreateRequest):
-    result, msg = await user_crud.create_user(request.username, request.password, request.email)
+    user_auth_crud = UserHandler()
+    result, msg = await user_auth_crud.create_user(request.username, request.password, request.email)
     if result:
         return {"message": msg}
     else:
