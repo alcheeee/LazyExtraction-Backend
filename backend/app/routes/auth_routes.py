@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Form
+from fastapi import APIRouter, HTTPException, Form, Depends
 from pydantic import BaseModel, EmailStr
 from ..auth.auth_handler import UserAuthenticator
 from ..database.db import get_session
@@ -20,11 +20,13 @@ class UserCreateRequest(BaseModel):
 @user_router.post("/register")
 async def register_new_user(request: UserCreateRequest):
     user_auth_crud = UserHandler()
-    result, msg = await user_auth_crud.create_user(request.username, request.password, request.email)
-    if result:
-        return {"message": msg}
-    else:
-        raise HTTPException(status_code=400, detail={"message": msg})
+    try:
+        result = await user_auth_crud.create_user(request.username, request.password, request.email)
+        return {"message": result}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail={"message": str(e)})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"message": "Internal Server Error"})
 
 
 @user_router.post("/login")

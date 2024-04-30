@@ -1,11 +1,13 @@
-from sqlalchemy.future import select
-from ..models.models import User, InventoryItem
+from sqlalchemy import select
+from sqlalchemy.sql import exists
+from ..models.models import User, InventoryItem, Stats, Inventory
 from ..models.item_models import Items
 from ..crud.BaseCRUD import EnhancedCRUD
 from .db import get_session
 import bcrypt
 from ..utils.logger import MyLogger
 from ..game_systems.gameplay_options import equipment_map
+from sqlalchemy.ext.asyncio import AsyncSession
 user_log = MyLogger.user()
 admin_log = MyLogger.admin()
 game_log = MyLogger.game()
@@ -31,22 +33,25 @@ class UserHandler:
         async with get_session() as session:
             try:
                 #Check for name  & email availability
-                existing_user = (await session.execute(
-                    select(User).where((User.username == username) | (User.email == email))
-                )).scalar_one_or_none()
-
-                if existing_user:
-                    return False, "Username or email already exists."
+                user_exists_query = select(exists().where((User.username == username) | (User.email == email)))
+                user_exists = await session.scalar(user_exists_query)
+                if user_exists:
+                    return "Username or email already exists."
 
                 hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
                 new_user = User(username=username, password=hashed_password, email=email)
                 session.add(new_user)
+
+                new_stats = Stats(user=new_user)
+                new_inventory = Inventory(user=new_user)
+                session.add(new_stats)
+                session.add(new_inventory)
+
                 await session.commit()
-                return True, f"Account created, welcome {username}!"
+                return f"Account created, welcome {username}!"
 
             except Exception as e:
                 await session.rollback()
-                admin_log.error(f"Failed to create user {username}: {str(e)}")
                 raise
 
 

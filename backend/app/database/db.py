@@ -10,25 +10,27 @@ from ..config import settings
 
 engine = create_async_engine(
     settings.DATABASE_URL,
-    future=True,
     echo=True,
     poolclass=AsyncAdaptedQueuePool,
-    pool_size=10,
-    max_overflow=10
+    pool_size=100,
+    max_overflow=0,
+    pool_recycle=30
 )
 
 async_session = async_sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    expire_on_commit=False,
     bind=engine,
-    class_=AsyncSession,
+    autocommit=False,
+    autoflush=True,
+    expire_on_commit=False
 )
 
 @asynccontextmanager
 async def get_session() -> AsyncSession:
     async with async_session() as session:
-        yield session
+        try:
+            yield session
+        finally:
+            session.close()
 
 
 async def init_db():
