@@ -8,7 +8,7 @@ class RouteIDs:
 
     async def find_id(self):
         actions = {
-            "work-job": lambda: job_service.do_user_job(self.user, self.user.job, session=self.session),
+            "work-job": lambda: job_service.do_user_job(self.user, self.user.stats.job, session=self.session),
             "quit-job": lambda: job_service.update_user_job(self.user, 'quit', session=self.session),
         }
         try:

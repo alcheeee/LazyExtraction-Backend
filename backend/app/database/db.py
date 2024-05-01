@@ -12,9 +12,9 @@ engine = create_async_engine(
     settings.DATABASE_URL,
     echo=True,
     poolclass=AsyncAdaptedQueuePool,
-    pool_size=100,
-    max_overflow=0,
-    pool_recycle=30
+    pool_size=30,
+    max_overflow=10,
+    pool_recycle=1800
 )
 
 async_session = async_sessionmaker(
@@ -30,7 +30,7 @@ async def get_session() -> AsyncSession:
         try:
             yield session
         finally:
-            session.close()
+            await session.close()
 
 
 async def init_db():

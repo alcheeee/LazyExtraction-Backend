@@ -65,7 +65,8 @@ async def buy_market_items(request: MarketTransactionRequest,
             user.inventory.bank -= total_cost
             item.general_market_items.item_quantity -= request.quantity
 
-            result = await UserHandler().update_user_inventory(user.id, item.id, request.quantity, selling=False, session=session)
+            user_handler = UserHandler(session=session)
+            result = await user_handler.update_user_inventory(user.id, item.id, request.quantity, selling=False)
             if not result:
                 raise HTTPException(status_code=400, detail={"message": "Failed to update inventory properly."})
 
@@ -113,7 +114,8 @@ async def sell_market_items(request: MarketTransactionRequest,
 
             user.inventory.bank += total_earning
             item.general_market_items.item_quantity += request.quantity
-            result = await UserHandler().update_user_inventory(user.id, item.id, request.quantity, selling=True, session=session)
+            user_handler = UserHandler(session)
+            result = await user_handler.update_user_inventory(user.id, item.id, request.quantity, selling=True)
             if not result:
                 raise HTTPException(status_code=400, detail={"message": "Failed to update inventory properly."})
 

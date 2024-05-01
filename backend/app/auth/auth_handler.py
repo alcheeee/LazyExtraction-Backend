@@ -1,47 +1,41 @@
-from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
-from jose import jwt, JWTError
-from .auth_bearer import SECRET_KEY, ALGORITHM, oauth2_scheme, ACCESS_TOKEN_EXPIRE_MINUTES
-from ..database.UserHandler import UserService
+from jose import JWTError
+from sqlalchemy import select
+from .auth_bearer import oauth2_scheme
+from .auth_deps import password_security, token_handler
 from ..crud.BaseCRUD import EnhancedCRUD
 from ..models.models import User
 from ..database.db import get_session
 from ..utils.logger import MyLogger
-import bcrypt
 user_log = MyLogger.user()
 admin_log = MyLogger.admin()
 
 
-class UserAuthenticator:
-    def __init__(self):
-        self.user_service = None
+class UserService:
+    def __init__(self, session):
+        self.session = session
+        self.user_crud = EnhancedCRUD(User, session)
 
-    async def authenticate_user(self, username: str, password: str, session):
-        self.user_service = UserService(session)
-        user = await self.user_service.get_user_by_username(username)
-        if not user or not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
-            admin_log.warning(f"Authentication failed for User {username}.")
+    async def get_user_pass_id_by_username(self, username: str):
+        try:
+            result = await self.session.execute(
+                select(User.password, User.id).where(User.username == username)
+            )
+            user_data = result.first()
+            if user_data:
+                return user_data
+            return None
+        except Exception as e:
+            return None
+
+    async def authenticate_user(self, username: str, password: str):
+        user_pass_id = await self.get_user_pass_id_by_username(username)
+        if not user_pass_id:
             return False
-        admin_log.info(f"User {username} logged in successfully.")
-        return user
-
-    def create_access_token(self, user_id: int, expires_delta: timedelta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)):
-        data = {"sub": str(user_id)}
-        return encode_token(data, expires_delta)
-
-def encode_token(data: dict, expires_delta: timedelta = timedelta(minutes=15)):
-    expire = datetime.now(timezone.utc) + expires_delta
-    to_encode = data.copy()
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
-def decode_token(token: str):
-    try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except jwt.JWTError:
-        admin_log.error("Failed to decode token.")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Could not validate credentials",)
+        user_password, user_id = user_pass_id
+        if user_password and await password_security.check_pass_hash(password, user_password):
+            return user_id
+        return False
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
@@ -50,19 +44,20 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    try:
+        payload = token_handler.decode_token(token=token)
+        user_id = payload.get("sub")
+        if not user_id:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
     async with get_session() as session:
         try:
-            payload = decode_token(token)
-            user_id: str = payload.get("sub")
-            if user_id is None:
-                admin_log.warning("Token does not contain user ID.")
-                raise credentials_exception
-
             user_crud = EnhancedCRUD(User, session)
             user = await user_crud.get_by_id(int(user_id))
-            if user is None:
-                admin_log.warning(f"User with ID {user_id} not found in database.")
+            if not user:
                 raise credentials_exception
             return user
-        except JWTError:
+        except NoResultFound:
             raise credentials_exception

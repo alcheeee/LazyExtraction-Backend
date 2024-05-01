@@ -9,6 +9,7 @@ class Stats(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     level: float = Field(default=1.00)
     reputation: int = Field(default=1)
+    job: Optional[str] = Field(default=None)
     education: Optional[str] = Field(default=None)
     max_energy: int = Field(default=100)
     damage: int = Field(default=1)
@@ -17,7 +18,8 @@ class Stats(SQLModel, table=True):
     luck: float = Field(default=1.00)
     strength: float = Field(default=1.00)
     knowledge: float = Field(default=1.00)
-    user: Optional["User"] = Relationship(back_populates="stats")
+    user_id: int = Field(default=None, foreign_key="user.id")
+    user: "User" = Relationship(back_populates="stats")
     def round_stats(self):
         float_attributes = ['level', 'evasiveness', 'strength', 'knowledge', 'luck']
         for attr in float_attributes:
@@ -38,7 +40,8 @@ class Inventory(SQLModel, table=True):
     equipped_body_id: Optional[int] = Field(default=None)
     equipped_legs_id: Optional[int] = Field(default=None)
     items: List["InventoryItem"] = Relationship(back_populates="inventory")
-    user: Optional["User"] = Relationship(back_populates="inventory")
+    user_id: int = Field(default=None, foreign_key="user.id")
+    user: "User" = Relationship(back_populates="inventory")
 
 
 class InventoryItem(SQLModel, table=True):
@@ -100,14 +103,11 @@ class User(SQLModel, table=True):
     username: str = Field(index=True)
     password: str
     email: str = Field(index=True)
-    job: Optional[str] = Field(default=None)
 
     corp_id: Optional[int] = Field(default=None, foreign_key="corporations.id")
     corporation: Optional["Corporations"] = Relationship(back_populates="employees")
-    stats_id: Optional[int] = Field(default=None, foreign_key="stats.id")
-    stats: Optional[Stats] = Relationship(back_populates="user")
-    inv_id: Optional[int] = Field(default=None, foreign_key="inventory.id")
-    inventory: Optional[Inventory] = Relationship(back_populates="user")
+    stats: Stats = Relationship(back_populates="user")
+    inventory: Inventory = Relationship(back_populates="user")
     sent_messages: List["PrivateMessage"] = Relationship(back_populates="sender",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.sender_id"})
     received_messages: List["PrivateMessage"] = Relationship(back_populates="receiver",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.receiver_id"})
     friend_requests_sent: List["FriendRequest"] = Relationship(back_populates="requester",sa_relationship_kwargs={"primaryjoin": "User.id == FriendRequest.requester_id"})

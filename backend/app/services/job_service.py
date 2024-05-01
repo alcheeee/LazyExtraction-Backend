@@ -50,7 +50,7 @@ class JobService:
         try:
             job = await self.get_job(job_name, session=session)
 
-            if not job or user.job != job.job_name:
+            if not job or user.stats.job != job.job_name:
                 raise ValueError("Not currently employed.")
 
             energy_required = job.energy_required
@@ -93,7 +93,7 @@ class JobService:
                 raise Exception("User not found.")
 
             elif job_name == 'quit':
-                user.job = None
+                user.stats.job = None
                 await session.commit()
                 return "You quit your job"
 
@@ -102,9 +102,9 @@ class JobService:
                 raise Exception("Job not found.")
 
             elif await self.check_qualifications(user, job):
-                user.job = job.job_name
+                user.stats.job = job.job_name
                 await session.commit()
-                game_log.info(f"Updated user {user.id} job to {user.job}.")
+                game_log.info(f"Updated user {user.id} job to {user.stats.job}.")
                 return f"Congrats! You are now a {job.job_name}!"
             else:
                 game_log.info(f"{user.id} didn't meet the requirements for {job_name}.")

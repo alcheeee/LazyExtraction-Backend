@@ -152,8 +152,9 @@ async def add_an_item_to_user(username: str,item_id: int,quantity: int,
             raise HTTPException(status_code=400, detail={"message": f"Couldn't find user."})
         try:
             session.add(user_sending)
-            await UserHandler().update_user_inventory(user_sending.id, item_id,
-                                                  quantity, selling=False, session=session)
+            user_handler = UserHandler(session)
+            await user_handler.update_user_inventory(user_sending.id, item_id,
+                                                  quantity, selling=False)
             await session.commit()
             return {"message": f"Added {quantity} of item {item_id} to {user_sending.username}"}
 

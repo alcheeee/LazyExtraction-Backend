@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+from sqlalchemy import select, or_
 from sqlalchemy.exc import NoResultFound
 
 
@@ -42,6 +42,7 @@ class BaseCRUD:
 
 class EnhancedCRUD(BaseCRUD):
     async def get_by_id(self, id, options=None):
+        """Get an instance by its id"""
         query = select(self.model).where(self.model.id == id)
         if options:
             query = query.options(*options)
@@ -49,6 +50,14 @@ class EnhancedCRUD(BaseCRUD):
         instance = result.scalar_one_or_none()
         return instance
 
+    async def exists(self, **conditions):
+        """Check if a record exists."""
+        if not conditions:
+            return False
+        query_conditions = [getattr(self.model, field) == value for field, value in conditions.items()]
+        exists_query = select(self.model.id).where(or_(*query_conditions)).limit(1)
+        result = await self.session.execute(exists_query)
+        return result.scalar() is not None
 
 
 

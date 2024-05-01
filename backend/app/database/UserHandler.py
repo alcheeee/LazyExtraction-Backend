@@ -1,113 +1,83 @@
 from sqlalchemy import select
 from sqlalchemy.sql import exists
+
+from .db import get_session
+from ..crud.BaseCRUD import EnhancedCRUD
+
 from ..models.models import User, InventoryItem, Stats, Inventory
 from ..models.item_models import Items
-from ..crud.BaseCRUD import EnhancedCRUD
-from .db import get_session
-import bcrypt
-from ..utils.logger import MyLogger
+
+from ..auth.auth_deps import password_security
+
 from ..game_systems.gameplay_options import equipment_map
-from sqlalchemy.ext.asyncio import AsyncSession
+from ..utils.logger import MyLogger
 user_log = MyLogger.user()
 admin_log = MyLogger.admin()
 game_log = MyLogger.game()
 
-class UserService:
-    def __init__(self, session):
-        self.session = session
-        self.user_crud = EnhancedCRUD(User, session)
-
-    async def get_user_by_id(self, user_id: int):
-        """Fetch a user by their ID using CRUD operations."""
-        return await self.user_crud.get_by_id(user_id)
-
-    async def get_user_by_username(self, username: str):
-        """Fetch a user by their username using explicit query."""
-        result = await self.session.execute(select(User).where(User.username == username))
-        return result.scalars().first()
-
 
 class UserHandler:
+    def __init__(self, session):
+        self.session = session
+
 
     async def create_user(self, username: str, password: str, email: str):
-        async with get_session() as session:
-            try:
-                #Check for name  & email availability
-                user_exists_query = select(exists().where((User.username == username) | (User.email == email)))
-                user_exists = await session.scalar(user_exists_query)
-                if user_exists:
-                    return "Username or email already exists."
+        try:
+            hashed_password = await password_security.hash_password(password=password)
+            new_user = User(username=username, password=hashed_password, email=email)
+            new_stats = Stats(user=new_user)
+            new_inventory = Inventory(user=new_user)
 
-                hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-                new_user = User(username=username, password=hashed_password, email=email)
-                session.add(new_user)
-
-                new_stats = Stats(user=new_user)
-                new_inventory = Inventory(user=new_user)
-                session.add(new_stats)
-                session.add(new_inventory)
-
-                await session.commit()
-                return f"Account created, welcome {username}!"
-
-            except Exception as e:
-                await session.rollback()
-                raise
+            self.session.add_all([new_user, new_stats, new_inventory])
+            await self.session.commit()
+            return f"Account created, welcome {username}!"
+        except Exception as e:
+            await self.session.rollback()
+            raise e
 
 
     async def adjust_energy(self, user_id: int, energy_delta: int):
-        async with get_session() as session:
-            try:
-                user = await session.get(User, user_id)
-                if not user:
-                    raise Exception("User not found")
-
-                if not user.inventory or not user.stats:
-                    raise Exception("User inventory or stats missing")
-
-                new_energy = user.inventory.energy + energy_delta
-
-                if new_energy < 0:
-                    raise ValueError("Not Enough Energy!")
-
-                if new_energy > user.stats.max_energy:
-                    user.inventory.energy = user.stats.max_energy
-                else:
-                    user.inventory.energy = new_energy
-
-                await session.commit()
-                game_log.info(f"User {user.id}: Energy Adjusted by {energy_delta}. New Energy: {user.inventory.energy}.")
-                return str(user.inventory.energy)
-
-            except ValueError as e:
-                await session.rollback()
-                raise
-            except Exception as e:
-                await session.rollback()
-                admin_log.error(f"Error adjusting energy for user {user_id}: {str(e)}")
-                raise
-
-
-    async def update_user_inventory(self, user_id: int, item_id: int, quantity: int = 1, selling=False, session=None):
         try:
-            user = await session.execute(select(User).where(User.id == user_id))
+            user = await self.session.get(User, user_id)
+            if not user:
+                raise Exception("User not found")
+            if not user.inventory or not user.stats:
+                raise Exception("User inventory or stats missing")
+            new_energy = user.inventory.energy + energy_delta
+            if new_energy < 0:
+                raise ValueError("Not Enough Energy!")
+            if new_energy > user.stats.max_energy:
+                user.inventory.energy = user.stats.max_energy
+            else:
+                user.inventory.energy = new_energy
+            await self.session.commit()
+            return str(user.inventory.energy)
+        except ValueError as e:
+            await self.session.rollback()
+            raise e
+        except Exception as e:
+            await self.session.rollback()
+            raise e
+
+
+    async def update_user_inventory(self, user_id: int, item_id: int, quantity: int = 1, selling=False):
+        try:
+            user = await self.session.execute(select(User).where(User.id == user_id))
             user = user.scalars().first()
             if user:
-                user = await session.merge(user)
+                user = await self.session.merge(user)
 
-            #item = await session.execute(select(Items).where(Items.id == item_id))
-            #item = item.scalars().first()
-            session.scalars(select(Items).where(Items.id == item_id).limit(1)).first()
+            self.session.scalars(select(Items).where(Items.id == item_id).limit(1)).first()
 
             if item:
-                item = await session.merge(item)
+                item = await self.session.merge(item)
 
-            item = await session.get(Items, item_id)
+            item = await self.session.get(Items, item_id)
             if not user or not item:
                 raise ValueError(f"Couldn't add {item_id} to {user_id}")
 
             # Get users inventory
-            inventory_item = (await session.execute(
+            inventory_item = (await self.session.execute(
                 select(InventoryItem).where(
                     InventoryItem.inventory_id == user.inventory.id,
                     InventoryItem.item_id == item.id
@@ -122,7 +92,7 @@ class UserHandler:
                     item_id=item.id,
                     quantity=quantity
                 )
-                session.add(inventory_item)
+                self.session.add(inventory_item)
             else:
                 if selling:
                     equipped_item_ids = [getattr(user.inventory, slot) for slot in equipment_map.values()]
@@ -140,7 +110,7 @@ class UserHandler:
                     raise ValueError("Cannot sell all equipped items")
                 inventory_item.quantity = new_quantity
 
-            await session.commit()
+            await self.session.commit()
             action = "Added" if quantity > 0 else "Removed"
             game_log.info(f"{action} {abs(quantity)} of {item.item_name} to/from {user.username}'s inventory.")
             return action

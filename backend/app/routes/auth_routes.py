@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Form, Depends
+from fastapi import APIRouter, HTTPException, Form
 from pydantic import BaseModel, EmailStr
-from ..auth.auth_handler import UserAuthenticator
+from ..models.models import User
+from ..auth.auth_handler import token_handler, UserService
+from ..crud.BaseCRUD import EnhancedCRUD
 from ..database.db import get_session
 from ..database.UserHandler import UserHandler
-
 
 user_router = APIRouter(
     prefix="/user",
@@ -17,28 +18,33 @@ class UserCreateRequest(BaseModel):
     password: str
     email: EmailStr
 
+
 @user_router.post("/register")
 async def register_new_user(request: UserCreateRequest):
-    user_auth_crud = UserHandler()
-    try:
-        result = await user_auth_crud.create_user(request.username, request.password, request.email)
-        return {"message": result}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail={"message": str(e)})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail={"message": "Internal Server Error"})
+    async with get_session() as session:
+        user_crud = EnhancedCRUD(model=User, session=session)
+        exists = await user_crud.exists(username=request.username, email=request.email)
+        if exists:
+            raise HTTPException(status_code=400, detail="User with that username or email already exists")
+
+        user_handler = UserHandler(session=session)
+        try:
+            result = await user_handler.create_user(request.username, request.password, request.email)
+            return {"message": result}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail={"message": "Internal Server Error"})
 
 
 @user_router.post("/login")
 async def login_for_access_token(username: str = Form(...),
                                  password: str = Form(...)):
     async with get_session() as session:
-        user_auth = UserAuthenticator()
-        user = await user_auth.authenticate_user(username, password, session=session)
-        if not user:
+        auth_service = UserService(session=session)
+        user_id = await auth_service.authenticate_user(username, password)
+        if not user_id:
             raise HTTPException(status_code=400, detail={"message": "Incorrect username or password"})
 
-        access_token = user_auth.create_access_token(user_id=user.id)
+        access_token = token_handler.create_token(user_id=user_id)
         return {"access_token": access_token, "token_type": "bearer"}
 
 

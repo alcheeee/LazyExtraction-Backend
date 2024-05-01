@@ -31,10 +31,11 @@ async def get_user_stats(user: User = Depends(get_current_user)):
                 raise HTTPException(status_code=404, detail={"message": "No stats found for the user."})
 
             stats = user.stats
+            inventory = user.inventory
             user_info = {
                 "username": user.username,
-                "bank": user.inventory.bank,
-                "energy": user.inventory.energy,
+                "bank": inventory.bank,
+                "energy": inventory.energy,
                 "level": stats.level,
                 "reputation": stats.reputation,
                 "max_energy": stats.max_energy,
@@ -45,7 +46,7 @@ async def get_user_stats(user: User = Depends(get_current_user)):
                 "luck": stats.luck,
                 "damage": stats.damage,
                 "education": stats.education,
-                "current_job": user.job if user.job else None
+                "current_job": stats.job if stats.job else None
             }
 
             return user_info
