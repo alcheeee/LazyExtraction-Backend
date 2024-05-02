@@ -1,9 +1,9 @@
 from enum import Enum
-from typing import Optional
-from pydantic import BaseModel
+from typing import Optional, List
+from pydantic import BaseModel, Field
 
 
-class ItemType(Enum):
+class ItemType(str, Enum):
     Drug = "Drug"
     Weapon = "Weapon"
     Clothing = "Clothing"
@@ -43,26 +43,48 @@ class MarketItemAdd(BaseModel):
     sell_price: int
 
 class ItemCreate(BaseModel):
-    item_name: str
-    quantity: int
-    illegal: bool
+    item_name: str = "Bandana"
+    quantity: int = 10
+    illegal: bool = False
     category: ItemType
+    randomize_all: bool = True
+    randomize_stats: bool = False
     quality: ItemQuality
-    randomize_stats: bool = True
 
-
-class WeaponDetailCreate(ItemCreate):
-    damage_bonus: int
-    evasiveness_bonus: Optional[float]
-    strength_bonus: Optional[float]
-
-
-class ClothingDetailCreate(ItemCreate):
-    clothing_type: str
+class ItemStats(ItemCreate):
+    clothing_type: Optional[str]
     reputation_bonus: Optional[int]
     max_energy_bonus: Optional[int]
+    damage_bonus: Optional[int]
     evasiveness_bonus: Optional[float]
     health_bonus: Optional[int]
     luck_bonus: Optional[float]
     strength_bonus: Optional[float]
     knowledge_bonus: Optional[float]
+
+
+class FilterItemStats:
+    class WeaponStats(Enum):
+        DAMAGE_BONUS = "damage_bonus"
+        STRENGTH_BONUS = "strength_bonus"
+        EVASIVENESS_BONUS = "evasiveness_bonus"
+
+    class ClothingStats(Enum):
+        REPUTATION_BONUS = "reputation_bonus"
+        MAX_ENERGY_BONUS = "max_energy_bonus"
+        EVASIVENESS_BONUS = "evasiveness_bonus"
+        HEALTH_BONUS = "health_bonus"
+        STRENGTH_BONUS = "strength_bonus"
+        KNOWLEDGE_BONUS = "knowledge_bonus"
+
+
+    def list(self, item_class: Enum) -> List[str]:
+        return [stat.value for stat in item_class]
+
+    def get_relevant_stats(self, category: ItemType) -> List[str]:
+        if category == ItemType.Weapon:
+            return self.list(self.WeaponStats)
+        elif category == ItemType.Clothing:
+            return self.list(self.ClothingStats)
+        return []
+filter_item_stats = FilterItemStats()

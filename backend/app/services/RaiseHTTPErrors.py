@@ -5,27 +5,33 @@ class CommonHTTPErrors:
     def __init__(self):
         self.admin_log = MyLogger.admin()
 
-    def raise_credentials_error(self):
+    @staticmethod
+    def credentials_error():
         """Raise an HTTP 401 error indicating credential validation failure"""
-        raise HTTPException(
+        error = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+        return error
 
-    def raise_mechanics_error(self, message: str):
+    @staticmethod
+    def mechanics_error(message: str):
         """Raises an HTTP 400 error with a custom message"""
-        raise HTTPException(
+        error = HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=message
         )
+        return error
 
-    def raise_server_error(self):
+    @staticmethod
+    def server_error(message="Internal Server Error"):
         """Raises an HTTP 500 server error"""
-        raise HTTPException(
+        error = HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal Server Error"
+            detail=message
         )
+        return error
 
 
 raise_http_error = CommonHTTPErrors()

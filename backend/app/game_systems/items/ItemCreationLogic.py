@@ -1,6 +1,7 @@
 import random
 from math import sqrt
-from ...schemas.item_schema import ItemQuality
+from typing import List, Dict, Tuple
+from ...schemas.item_schema import ItemQuality, ItemType, filter_item_stats
 
 class GenerateItemQuality:
     QUALITY_WEIGHTS = {
@@ -25,42 +26,42 @@ class GenerateItemQuality:
         luck_effect = sqrt(self.luck_stat) / luck_factor
         return max(1, int(base_weight + luck_effect))
 
+STAT_RANGES: Dict[ItemQuality, Tuple[int, int, int]] = {
+    ItemQuality.Junk: (1, 3, 1),
+    ItemQuality.Common: (2, 7, 2),
+    ItemQuality.Uncommon: (3, 8, 4),
+    ItemQuality.Rare: (6, 14, 5),
+    ItemQuality.Special: (8, 17, 7),
+    ItemQuality.Unique: (12, 22, 9)
+}
 
 class GenerateItemStats:
-    STAT_RANGES = {
-        ItemQuality.Junk: (1, 4),
-        ItemQuality.Common: (3, 6),
-        ItemQuality.Uncommon: (5, 8),
-        ItemQuality.Rare: (7, 10),
-        ItemQuality.Special: (9, 12),
-        ItemQuality.Unique: (11, 14)
-    }
-
-    def __init__(self, item_category, quality, luck=None):
+    def __init__(self, item_category: ItemType, quality, luck: float):
         self.category = item_category
         self.quality = quality
         self.luck = luck
 
-    def generate_stats(self):
-        stats = self.get_relevant_stats()
-        generated_stats = {}
-        min_range, max_range = self.STAT_RANGES[self.quality]
-        luck_adjustment = sqrt(self.luck or 0)
+    def generate_stats(self) -> Dict[str, int]:
+        stats = filter_item_stats.get_relevant_stats(self.category)
+        generated_stats = {stat: 0 for stat in stats}
+        min_range, max_range, num_stats_to_change = STAT_RANGES[self.quality]
+        luck_adjustment = sqrt(self.luck)
+        stats_picked = 0
 
-        for stat in stats:
-            generated_stats[stat] = self.generate_stat_value(min_range, max_range, luck_adjustment)
+        if "damage_bonus" in stats and self.category == ItemType.Weapon:
+            generated_stats["damage_bonus"] = self.generate_stat_value(min_range, max_range, luck_adjustment)
+            stats_picked += 3
+            stats.remove("damage_bonus")
+
+        while stats_picked < num_stats_to_change:
+            stat = random.choice(stats)
+            stat_addon = self.generate_stat_value(min_range, max_range, luck_adjustment)
+            generated_stats[stat] = round(generated_stats[stat] + stat_addon, 2)
+            stats_picked += 1
 
         return generated_stats
 
-    def generate_stat_value(self, min_range, max_range, luck_adjustment):
+    def generate_stat_value(self, min_range, max_range, luck_adjustment) -> float:
         return round(random.uniform(min_range + luck_adjustment, max_range + luck_adjustment), 2)
-
-    def get_relevant_stats(self):
-        return {
-            'Weapon': ['damage_bonus', 'evasiveness_bonus', 'strength_bonus'],
-            'Clothing': ['reputation_bonus', 'max_energy_bonus', 'evasiveness_bonus', 'health_bonus', 'strength_bonus', 'knowledge_bonus']
-        }.get(self.category, [])
-
-
 
 

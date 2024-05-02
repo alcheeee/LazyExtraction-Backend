@@ -26,7 +26,7 @@ services:
   gameapi_server:
     build: ./backend
     restart: always
-    command: uvicorn app.main:app --host ${FASTAPI_HOST} --port ${FASTAPI_PORT} --workers 4
+    command: uvicorn app.main:app --host ${FASTAPI_HOST} --port ${FASTAPI_PORT} --workers 4 --reload
     volumes:
       - ./backend:/app
     depends_on:

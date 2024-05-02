@@ -4,7 +4,7 @@ from ..game_systems.items.ItemHandler import ItemCreator
 from ..game_systems.markets.MarketHandlerCRUD import BackendMarketHandler
 from ..models.models import User
 from ..auth.auth_handler import current_user
-from ..schemas.item_schema import MarketItemAdd, WeaponDetailCreate, ClothingDetailCreate
+from ..schemas.item_schema import MarketItemAdd, ItemStats
 from ..database.UserHandler import UserHandler
 from ..services.RaiseHTTPErrors import raise_http_error
 from ..database.db import get_session
@@ -19,35 +19,19 @@ admin_router = APIRouter(
 )
 
 
-@admin_router.post("/create-item/weapon")
-async def create_weapon_endpoint(request: WeaponDetailCreate,
-                                 admin_username: str = Depends(current_user.check_if_admin)):
+@admin_router.post("/create-item/equippable")
+async def create_equippable_item_endpoint(request: ItemStats,
+                                          admin_username: str = Depends(current_user.check_if_admin)):
     async with get_session() as session:
         try:
-            item_creator = ItemCreator(item_category="Weapon", item_details=request, session=session)
-            result = await item_creator.create_item()
-            return {"message": result}
+            item_creator = ItemCreator(item_details=request, session=session)
+            response_json = await item_creator.create_item()
+            return {"message": f"Admin {admin_username} created an item successfully", "item_details": response_json}
 
         except Exception as e:
-            admin_log.error(str(e))
-            raise_http_error.raise_server_error()
             await session.rollback()
-
-
-@admin_router.post("/create-item/clothing")
-async def create_clothing_endpoint(request: ClothingDetailCreate,
-                                   admin_username: str = Depends(current_user.check_if_admin)):
-    async with get_session() as session:
-        try:
-            item_creator = ItemCreator(item_category="Clothing", item_details=request, session=session)
-            result = await item_creator.create_item()
-            return {"message": result}
-
-        except Exception as e:
             admin_log.error(str(e))
-            raise_http_error.raise_server_error()
-            await session.rollback()
-
+            raise raise_http_error.server_error()
 
 
 @admin_router.post("/add-item-to-market")
@@ -59,16 +43,16 @@ async def add_item_to_market(request: MarketItemAdd,
                                                   request.item_cost, request.sell_price, session)
             result = await market_handler.add_item_to_market()
             if not result:
-                raise_http_error.raise_mechanics_error("Failed to add item to market")
+                raise raise_http_error.mechanics_error("Failed to add item to market")
             return {"message": f"Added {request.item_id} to {request.market_name}"}
 
         except ValueError as e:
             await session.rollback()
-            raise_http_error.raise_mechanics_error(str(e))
+            raise raise_http_error.mechanics_error(str(e))
         except Exception as e:
             await session.rollback()
             admin_log.error(str(e))
-            raise_http_error.raise_server_error()
+            raise raise_http_error.server_error()
 
 
 @admin_router.post("/add-item-to-user/{username}/{item_id}/{quantity}")

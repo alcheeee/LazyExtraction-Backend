@@ -32,7 +32,6 @@ class UserHandler:
             await self.session.commit()
             return f"Account created, welcome {username}!"
         except Exception as e:
-            await self.session.rollback()
             raise e
 
 
@@ -56,7 +55,6 @@ class UserHandler:
             await self.session.rollback()
             raise e
         except Exception as e:
-            await self.session.rollback()
             raise e
 
 
