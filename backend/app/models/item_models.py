@@ -7,10 +7,11 @@ from ..schemas.item_schema import ItemType, ItemQuality
 class Items(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     item_name: str
+    category: ItemType = Field(sa_column=Column(Enum(ItemType)))
     quality: ItemQuality = Field(sa_column=Column(Enum(ItemQuality)))
     illegal: bool = Field(default=False)
     quantity: int = Field(default=0)
-    category: ItemType = Field(sa_column=Column(Enum(ItemType)))
+
     # Relationships
     weapon_details: Optional["Weapon"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
     clothing_details: Optional["Clothing"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})

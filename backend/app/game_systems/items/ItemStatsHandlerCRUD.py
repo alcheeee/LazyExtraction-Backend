@@ -1,8 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
-from ...crud.BaseCRUD import EnhancedCRUD
-from ...schemas.item_schema import ItemType
-from ..gameplay_options import item_bonus_mapper, equipment_map
+from ...crud.BaseCRUD import BaseCRUD
+from ...schemas.item_schema import ItemType, equipment_map, item_bonus_mapper
 from ...models.item_models import Items, Clothing
 from ...models.models import User, InventoryItem
 from ...utils.logger import MyLogger
@@ -16,9 +15,9 @@ class ItemStatsHandler:
         self.user_id = user_id
         self.item_id = item_id
         self.session = session
-        self.user_crud = EnhancedCRUD(User, session)
-        self.item_crud = EnhancedCRUD(Items, session)
-        self.inventory_item_crud = EnhancedCRUD(InventoryItem, session)
+        self.user_crud = BaseCRUD(User, session)
+        self.item_crud = BaseCRUD(Items, session)
+        self.inventory_item_crud = BaseCRUD(InventoryItem, session)
 
     def get_item_category(self, item):
         if item.category == ItemType.Clothing:

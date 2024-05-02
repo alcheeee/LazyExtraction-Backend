@@ -9,48 +9,14 @@ class BaseCRUD:
         self.session = session
 
     async def get_by_id(self, id, options=None):
-        """Fetch an instance by its ID, potentially with sqlalchemy eager loading options."""
-        query = select(self.model).where(self.model.id == id)
-        if options:
-            query = query.options(*options)
-        result = await self.session.execute(query)
-        instance = result.scalar()
-        if not instance:
-            raise NoResultFound(f"No {self.model.__name__} found with ID: {id}")
-        return instance
-
-    async def create(self, **kwargs):
-        """Create a new instance of the model."""
-        instance = self.model(**kwargs)
-        self.session.add(instance)
-        await self.session.commit()
-        return instance
-
-    async def update(self, id, **kwargs):
-        """Update an existing instance."""
-        instance = await self.get_by_id(id)
-        for key, value in kwargs.items():
-            setattr(instance, key, value)
-        await self.session.commit()
-        return instance
-
-    async def delete(self, id):
-        """Delete an instance by its ID."""
-        instance = await self.get_by_id(id)
-        await self.session.delete(instance)
-        await self.session.commit()
-
-class EnhancedCRUD(BaseCRUD):
-    async def get_by_id(self, id, options=None):
         """Get an instance by its id"""
         query = select(self.model).where(self.model.id == id)
         if options:
             query = query.options(*options)
         result = await self.session.execute(query)
-        instance = result.scalar_one_or_none()
-        return instance
+        return result.scalar_one_or_none()
 
-    async def exists(self, **conditions):
+    async def check_fields_exist(self, **conditions):
         """Check if a record exists."""
         if not conditions:
             return False
@@ -58,6 +24,25 @@ class EnhancedCRUD(BaseCRUD):
         exists_query = select(self.model.id).where(or_(*query_conditions)).limit(1)
         result = await self.session.execute(exists_query)
         return result.scalar() is not None
+
+    async def get_fields(self, id, *fields):
+        """Get specific fields of a model by id"""
+        if not fields:
+            raise ValueError("No fields specified for retrieval.")
+        query = select(*[getattr(self.model, field) for field in fields]).where(self.model.id == id)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
+
+    async def exists_by_id(self, id):
+        """Check if a record exists by id"""
+        query = select([1]).where(self.model.id == id).limit(1)
+        result = await self.session.execute(query)
+        return result.scalar() is not None
+
+
+
+
 
 
 

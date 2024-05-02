@@ -2,7 +2,7 @@ from sqlmodel import select
 from ..models.models import User
 from ..models.other_models import Jobs
 from ..database.db import get_session
-from ..game_systems.gameplay_options import JOB_TYPES
+from ..schemas.job_schema import JOB_TYPES
 import json
 import logging
 from ..utils.logger import MyLogger

@@ -1,20 +1,19 @@
 from fastapi import Depends, HTTPException, status
 from jose import JWTError
 from sqlalchemy import select
+from sqlalchemy.orm.exc import NoResultFound
 from .auth_bearer import oauth2_scheme
 from .auth_deps import password_security, token_handler
-from ..crud.BaseCRUD import EnhancedCRUD
+from ..crud.UserCRUD import UserCRUD
 from ..models.models import User
 from ..database.db import get_session
-from ..utils.logger import MyLogger
-user_log = MyLogger.user()
-admin_log = MyLogger.admin()
+from ..services.RaiseHTTPErrors import raise_http_error
 
 
 class UserService:
     def __init__(self, session):
         self.session = session
-        self.user_crud = EnhancedCRUD(User, session)
+        self.user_crud = UserCRUD(User, session)
 
     async def get_user_pass_id_by_username(self, username: str):
         try:
@@ -38,26 +37,66 @@ class UserService:
         return False
 
 
+class CurrentUser:
+
+    def verify_payload(self, token):
+        try:
+            payload = token_handler.decode_token(token=token)
+            user_id = payload.get("sub")
+            if not user_id:
+                print("No User ID")
+                raise_http_error.raise_credentials_error()
+            return int(user_id)
+        except JWTError as JWTe:
+            print(str(JWTe))
+            raise_http_error.raise_credentials_error()
+
+    async def ensure_user_exists(self, token: str = Depends(oauth2_scheme)):
+        user_id = self.verify_payload(token=token)
+        async with get_session() as session:
+            user_crud = UserCRUD(User, session)
+            exists = await user_crud.exists_by_id(user_id)
+            if not exists:
+                raise_http_error.raise_credentials_error()
+            return user_id
+
+    async def get_all_user_info(self, token: str = Depends(oauth2_scheme)):
+        user_id = self.verify_payload(token=token)
+        async with get_session() as session:
+            user_crud = UserCRUD(User, session)
+            user = await user_crud.get_by_id(user_id)
+            if not user:
+                raise_http_error.raise_credentials_error()
+            return user
+
+    async def check_if_admin(self, token: str = Depends(oauth2_scheme)):
+        user_id = self.verify_payload(token=token)
+        async with get_session() as session:
+            user_crud = UserCRUD(User, session)
+            admin_name = await user_crud.is_user_admin(user_id)
+            if not admin_name:
+                raise_http_error.raise_credentials_error()
+            return admin_name
+
+
+current_user = CurrentUser()
+
+
 async def get_current_user(token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
     try:
         payload = token_handler.decode_token(token=token)
         user_id = payload.get("sub")
         if not user_id:
-            raise credentials_exception
+            raise_http_error.raise_credentials_error()
     except JWTError:
-        raise credentials_exception
+        raise_http_error.raise_credentials_error()
 
     async with get_session() as session:
         try:
-            user_crud = EnhancedCRUD(User, session)
-            user = await user_crud.get_by_id(int(user_id))
-            if not user:
-                raise credentials_exception
-            return user
+            user_crud = UserCRUD(User, session)
+            user_exists = await user_crud.exists_by_id(int(user_id))
+            if not user_exists:
+                raise_http_error.raise_credentials_error()
+            return user_exists
         except NoResultFound:
-            raise credentials_exception
+            raise_http_error.raise_credentials_error()

@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from .BaseCRUD import BaseCRUD
-from ..models.models import InventoryItem
+from ..models.models import InventoryItem, User
 
 
 class UserCRUD(BaseCRUD):
@@ -14,3 +14,12 @@ class UserCRUD(BaseCRUD):
         )
         return result.scalars().first()
 
+    async def is_user_admin(self, user_id: int):
+        result = await self.session.execute(
+            select(User.is_admin, User.username).where(User.id == user_id)
+        )
+        user_data = result.first()
+        if user_data:
+            is_admin, username = user_data
+            return username if is_admin else False
+        return False

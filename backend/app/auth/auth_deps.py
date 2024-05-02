@@ -22,8 +22,8 @@ class PasswordSecurity:
         return check_hash
 
 class TokenHandler:
-    def __init__(self, secret_key):
-        self.secret_key = secret_key
+    def __init__(self):
+        self.secret_key = SECRET_KEY
         self.algorithm = 'HS256'
         self.expiry_minutes = ACCESS_TOKEN_EXPIRE_MINUTES
 
@@ -37,7 +37,7 @@ class TokenHandler:
         to_encode.update({"exp": expire})
         return jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
 
-    async def decode_token(self, token: str):
+    def decode_token(self, token: str):
         try:
             return jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
         except jwt.JWTError:
@@ -45,7 +45,7 @@ class TokenHandler:
 
 
 password_security = PasswordSecurity()
-token_handler = TokenHandler(secret_key=SECRET_KEY)
+token_handler = TokenHandler()
 
 
 

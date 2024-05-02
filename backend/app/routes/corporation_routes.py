@@ -2,7 +2,7 @@ from sqlmodel import select
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Depends
 from ..models.models import User
-from ..models.corp_models import Corporations
+from ..models.corp_models import Corporation
 from ..auth.auth_handler import get_current_user
 from ..database.db import get_session
 from ..game_systems.corporations.CorporationCRUD import CorpManager
@@ -38,7 +38,7 @@ async def add_user_to_corporation(user_id_to_add: int, user: User = Depends(get_
     async with get_session() as session:
         try:
             corp_manager = CorpManager(session)
-            corporation = await session.get(Corporations, user.corp_id)
+            corporation = await session.get(Corporation, user.corp_id)
 
             if not corporation:
                 raise HTTPException(status_code=404, detail="No associated corporation found.")
@@ -67,7 +67,7 @@ async def remove_user_from_corporation(user_id_to_remove: int, user: User = Depe
     async with get_session() as session:
         try:
             corp_manage = CorpManager(session)
-            corporation = await session.get(Corporations, user.corp_id)
+            corporation = await session.get(Corporation, user.corp_id)
             if not corporation:
                 raise HTTPException(status_code=400, detail={"message": "Invalid Request"})
             if not user.username == corporation.leader:

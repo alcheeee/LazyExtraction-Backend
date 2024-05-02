@@ -1,8 +1,8 @@
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from backend.app import User
-from backend.app import Corporations, CorpUpgrades, CorpInventory, CorpInventoryItem, CorpActivities
-from backend.app import MyLogger
+from ...models.models import User
+from ...models.corp_models import Corporation, CorpUpgrades, CorpInventory, CorpInventoryItem, CorpActivities
+from ...utils.logger import MyLogger
 admin_log = MyLogger.admin()
 
 

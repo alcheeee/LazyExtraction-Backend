@@ -1,9 +1,9 @@
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..gameplay_options import CORPORATION_TYPES
+from ...schemas.corporation_schema import CorporationType
 from .corp_inventory import CorpDefaults
 from ...models.models import User
-from ...models.corp_models import Corporations, CorpInventory, CorpInventoryItem, CorpUpgrades
+from ...models.corp_models import Corporation, CorpInventory, CorpInventoryItem, CorpUpgrades
 from ...utils.logger import MyLogger
 game_log = MyLogger.game()
 admin_log = MyLogger.admin()
@@ -12,7 +12,7 @@ admin_log = MyLogger.admin()
 class CorpManager:
     def __init__(self, session: AsyncSession):
         self.session = session
-        self.corp_types = {ctype.value for ctype in CORPORATION_TYPES}
+        self.corp_types = {ctype.value for ctype in CorporationType}
 
     async def create_corporation(self, corp_name: str, corp_type: str, user_id: int):
         try:
@@ -23,9 +23,9 @@ class CorpManager:
                 raise ValueError("Invalid Corporation type.")
 
             existing_corporation = (await self.session.execute(
-                select(Corporations)
+                select(Corporation)
                 .where(
-                    Corporations.corporation_name == corp_name)
+                    Corporation.corporation_name == corp_name)
             )).scalars().first()
             if existing_corporation:
                 raise ValueError("A corporation with that name already exists.")
@@ -34,7 +34,7 @@ class CorpManager:
 
             #Create corporation
             default_inventory = CorpDefaults.get_default_inventory(corp_type).to_dict()
-            new_corporation = Corporations(corporation_name=corp_name, corporation_type=corp_type, leader=user.username)
+            new_corporation = Corporation(corporation_name=corp_name, corporation_type=corp_type, leader=user.username)
             new_inventory = CorpInventory(corporation=new_corporation)
             new_upgrades = CorpUpgrades(corporation=new_corporation)
             self.session.add(new_corporation)
@@ -62,7 +62,7 @@ class CorpManager:
     async def add_user_to_corporation(self, user_id: int, corporation_id: int):
         try:
             user = await self.session.get(User, user_id)
-            corporation = await self.session.get(Corporations, corporation_id)
+            corporation = await self.session.get(Corporation, corporation_id)
             if user is None or corporation is None:
                 return False, "User or Corporation not found"
             if user.corp_id is not None:
@@ -86,7 +86,7 @@ class CorpManager:
             if user is None or user.corp_id != corporation_id:
                 return False, "User is not part of that corporation"
 
-            corporation = await self.session.get(Corporations, corporation_id)
+            corporation = await self.session.get(Corporation, corporation_id)
             if corporation.leader == user.username:
                 return False, "Leader cannot leave the corporation"
 

@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Form
 from pydantic import BaseModel, EmailStr
 from ..models.models import User
 from ..auth.auth_handler import token_handler, UserService
-from ..crud.BaseCRUD import EnhancedCRUD
+from ..crud.BaseCRUD import BaseCRUD
 from ..database.db import get_session
 from ..database.UserHandler import UserHandler
 
@@ -22,8 +22,8 @@ class UserCreateRequest(BaseModel):
 @user_router.post("/register")
 async def register_new_user(request: UserCreateRequest):
     async with get_session() as session:
-        user_crud = EnhancedCRUD(model=User, session=session)
-        exists = await user_crud.exists(username=request.username, email=request.email)
+        user_crud = BaseCRUD(model=User, session=session)
+        exists = await user_crud.check_fields_exist(username=request.username, email=request.email)
         if exists:
             raise HTTPException(status_code=400, detail="User with that username or email already exists")
 

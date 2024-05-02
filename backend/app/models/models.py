@@ -104,8 +104,8 @@ class User(SQLModel, table=True):
     password: str
     email: str = Field(index=True)
 
-    corp_id: Optional[int] = Field(default=None, foreign_key="corporations.id")
-    corporation: Optional["Corporations"] = Relationship(back_populates="employees")
+    corp_id: Optional[int] = Field(default=None, foreign_key="corporation.id")
+    corporation: Optional["Corporation"] = Relationship(back_populates="employees")
     stats: Stats = Relationship(back_populates="user")
     inventory: Inventory = Relationship(back_populates="user")
     sent_messages: List["PrivateMessage"] = Relationship(back_populates="sender",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.sender_id"})

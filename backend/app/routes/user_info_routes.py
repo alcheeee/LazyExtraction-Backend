@@ -8,7 +8,7 @@ from ..models.item_models import Items
 from ..auth.auth_handler import get_current_user
 
 from ..game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
-from ..game_systems.gameplay_options import equipment_map
+from ..schemas.item_schema import equipment_map
 
 from ..utils.logger import MyLogger
 user_log = MyLogger.user()
