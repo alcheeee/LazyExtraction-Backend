@@ -4,6 +4,7 @@ from ...models.item_models import Items, GeneralMarket, BlackMarket
 from ..items.ItemStatsHandlerCRUD import ItemStatsHandler
 from ...utils.logger import MyLogger
 user_log = MyLogger.user()
+error_log = MyLogger.errors()
 admin_log = MyLogger.admin()
 game_log = MyLogger.game()
 
@@ -24,9 +25,7 @@ class BackendMarketHandler:
 
             existing_item = item.general_market_items.id if item.general_market_items else None
             if existing_item:
-                admin_log.error(f"{item.item_name} is already in the market")
                 raise Exception(f"{item.item_name} is already in the market")
-
 
             market_item = {
                 "item_cost": self.item_cost,
@@ -43,12 +42,11 @@ class BackendMarketHandler:
                 admin_log.info(f"ADMIN ACTION - Added {item.item_name} to General Market.")
                 return True
             else:
-                admin_log.error(f"Market name {self.market_name} is not recognized.")
                 raise Exception(f"Market name {self.market_name} is not recognized.")
 
         except Exception as e:
             await self.session.rollback()
-            admin_log.error(f"Failed to add item to market due to error: {e}")
+            error_log.error(f"Failed to add item to market due to error: {e}")
             raise
 
 class MarketItems:
@@ -84,5 +82,5 @@ class MarketItems:
                 item_details.append(item_info)
             return item_details
         except Exception as e:
-            admin_log.error(f"Failed to get general market items: {str(e)}")
+            error_log.error(f"Failed to get general market items: {str(e)}")
             raise

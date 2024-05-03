@@ -7,7 +7,7 @@ from .auth_deps import password_security, token_handler
 from ..crud.UserCRUD import UserCRUD
 from ..models.models import User
 from ..database.db import get_session
-from ..services.RaiseHTTPErrors import raise_http_error
+from ..services.RaiseHTTPErrors import common_http_errors
 
 
 class UserService:
@@ -45,19 +45,19 @@ class CurrentUser:
             user_id = payload.get("sub")
             if not user_id:
                 print("No User ID")
-                raise raise_http_error.credentials_error()
+                raise common_http_errors.credentials_error()
             return int(user_id)
         except JWTError as JWTe:
             print(str(JWTe))
-            raise raise_http_error.credentials_error()
+            raise common_http_errors.credentials_error()
 
     async def ensure_user_exists(self, token: str = Depends(oauth2_scheme)):
         user_id = self.verify_payload(token=token)
         async with get_session() as session:
             user_crud = UserCRUD(User, session)
-            exists = await user_crud.exists_by_id(user_id)
+            exists = await user_crud.check_user_exists(user_id)
             if not exists:
-                raise raise_http_error.credentials_error()
+                raise common_http_errors.credentials_error()
             return user_id
 
     async def get_all_user_info(self, token: str = Depends(oauth2_scheme)):
@@ -66,7 +66,7 @@ class CurrentUser:
             user_crud = UserCRUD(User, session)
             user = await user_crud.get_by_id(user_id)
             if not user:
-                raise raise_http_error.credentials_error()
+                raise common_http_errors.credentials_error()
             return user
 
     async def check_if_admin(self, token: str = Depends(oauth2_scheme)):
@@ -75,7 +75,7 @@ class CurrentUser:
             user_crud = UserCRUD(User, session)
             admin_name = await user_crud.is_user_admin(user_id)
             if not admin_name:
-                raise raise_http_error.credentials_error()
+                raise common_http_errors.credentials_error()
             return admin_name
 
 
@@ -87,16 +87,16 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         payload = token_handler.decode_token(token=token)
         user_id = payload.get("sub")
         if not user_id:
-            raise raise_http_error.credentials_error()
+            raise common_http_errors.credentials_error()
     except JWTError:
-        raise raise_http_error.credentials_error()
+        raise common_http_errors.credentials_error()
 
     async with get_session() as session:
         try:
             user_crud = UserCRUD(User, session)
             user_exists = await user_crud.exists_by_id(int(user_id))
             if not user_exists:
-                raise raise_http_error.credentials_error()
+                raise common_http_errors.credentials_error()
             return user_exists
         except NoResultFound:
-            raise raise_http_error.credentials_error()
+            raise common_http_errors.credentials_error()

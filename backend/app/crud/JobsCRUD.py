@@ -5,7 +5,8 @@ from .BaseCRUD import BaseCRUD
 
 class JobsCRUD(BaseCRUD):
     async def get_by_name(self, name: str):
-        result = await self.session.execute(select(self.model).where(self.model.job_name == name))
+        query = select(Jobs.job_name).where(Jobs.job_name == name)
+        result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
     async def create(self, job_data: Jobs):

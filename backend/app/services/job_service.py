@@ -6,7 +6,7 @@ from ..schemas.job_schema import JOB_TYPES
 import json
 import logging
 from ..utils.logger import MyLogger
-admin_log = MyLogger.admin()
+error_log = MyLogger.errors()
 game_log = MyLogger.game()
 user_log = MyLogger.user()
 

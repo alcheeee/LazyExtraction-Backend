@@ -5,9 +5,7 @@ from ...schemas.item_schema import ItemType, equipment_map, item_bonus_mapper
 from ...models.item_models import Items, Clothing
 from ...models.models import User, InventoryItem
 from ...utils.logger import MyLogger
-game_log = MyLogger.game()
-admin_log = MyLogger.admin()
-user_log = MyLogger.user()
+error_log = MyLogger.errors()
 
 
 class ItemStatsHandler:

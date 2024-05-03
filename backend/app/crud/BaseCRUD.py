@@ -29,7 +29,15 @@ class BaseCRUD:
         """Get specific fields of a model by id"""
         if not fields:
             raise ValueError("No fields specified for retrieval.")
-        query = select(*[getattr(self.model, field) for field in fields]).where(self.model.id == id)
+
+        model_fields = {field.name for field in self.model.__table__.columns}
+        requested_fields = set(fields)
+        if not requested_fields.issubset(model_fields):
+            missing_fields = requested_fields - model_fields
+            raise ValueError(f"Invalid field names: {', '.join(missing_fields)}")
+
+        query = (select([getattr(self.model, field) for field in fields])
+                 .where(self.model.id == id).options(load_only(*fields)))
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 

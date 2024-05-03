@@ -1,9 +1,6 @@
 from fastapi import HTTPException, status
-from ..utils.logger import MyLogger
 
 class CommonHTTPErrors:
-    def __init__(self):
-        self.admin_log = MyLogger.admin()
 
     @staticmethod
     def credentials_error():
@@ -16,7 +13,7 @@ class CommonHTTPErrors:
         return error
 
     @staticmethod
-    def mechanics_error(message: str):
+    def mechanics_error(message: str = "Error"):
         """Raises an HTTP 400 error with a custom message"""
         error = HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -25,7 +22,7 @@ class CommonHTTPErrors:
         return error
 
     @staticmethod
-    def server_error(message="Internal Server Error"):
+    def server_error(message: str = "Internal Server Error"):
         """Raises an HTTP 500 server error"""
         error = HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -34,4 +31,4 @@ class CommonHTTPErrors:
         return error
 
 
-raise_http_error = CommonHTTPErrors()
+common_http_errors = CommonHTTPErrors()

@@ -1,25 +1,20 @@
 from sqlalchemy import select
 from sqlalchemy.sql import exists
-
 from .db import get_session
 from ..crud.BaseCRUD import BaseCRUD
-
 from ..models.models import User, InventoryItem, Stats, Inventory
 from ..models.item_models import Items
-
 from ..auth.auth_deps import password_security
-
 from ..schemas.item_schema import equipment_map
 from ..utils.logger import MyLogger
 user_log = MyLogger.user()
-admin_log = MyLogger.admin()
+error_log = MyLogger.errors()
 game_log = MyLogger.game()
 
 
 class UserHandler:
     def __init__(self, session):
         self.session = session
-
 
     async def create_user(self, username: str, password: str, email: str):
         try:

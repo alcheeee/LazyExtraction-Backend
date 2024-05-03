@@ -1,10 +1,9 @@
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...models.models import User
-from ...models.corp_models import Corporation, CorpUpgrades, CorpInventory, CorpInventoryItem, CorpActivities
+from ...models.corp_models import Corporation, CorporationItems
 from ...utils.logger import MyLogger
-admin_log = MyLogger.admin()
-
+error_log = MyLogger.errors()
 
 class ActivityHandler:
     def __init__(self, corporation, session: AsyncSession):

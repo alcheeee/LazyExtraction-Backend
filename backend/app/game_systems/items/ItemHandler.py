@@ -8,7 +8,7 @@ from ...models.item_models import Items, Weapon, Clothing
 from ...models.models import User
 from ...utils.logger import MyLogger
 game_log = MyLogger.game()
-admin_log = MyLogger.admin()
+error_log = MyLogger.errors()
 
 class ItemCreator:
 
@@ -62,7 +62,7 @@ class ItemCreator:
             "quantity": self.item_details.quantity
         }
 
-        if 'clothing_type' not in specific_item_details and hasattr(self.item_details, 'clothing_type'):
+        if self.item_details.category == ItemType.Clothing and 'clothing_type' not in specific_item_details and hasattr(self.item_details, 'clothing_type'):
             specific_item_details['clothing_type'] = self.item_details.clothing_type
 
         item = Items(**item_data)

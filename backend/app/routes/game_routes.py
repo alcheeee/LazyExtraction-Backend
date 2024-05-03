@@ -8,7 +8,7 @@ from ..services.job_service import job_service
 from ..game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
 from ..utils.logger import MyLogger
 user_log = MyLogger.user()
-admin_log = MyLogger.admin()
+error_log = MyLogger.errors()
 game_log = MyLogger.game()
 
 
@@ -33,7 +33,7 @@ async def equip_unequip_inventory_item(item_id: int,
             raise HTTPException(status_code=400, detail={"message": str(e)})
         except Exception as e:
             await session.rollback()
-            admin_log.error(str(e))
+            error_log.error(str(e))
             raise HTTPException(status_code=500, detail={"message": "Internal error"})
 
 
@@ -51,7 +51,7 @@ async def user_action_buttons(button_name: str, user: User = Depends(get_current
             raise HTTPException(status_code=400, detail={"message": str(e)})
         except Exception as e:
             await session.rollback()
-            admin_log.error(str(e))
+            error_log.error(str(e))
             raise HTTPException(status_code=500, detail={"message": "Internal Error"})
 
 
@@ -63,7 +63,7 @@ async def get_all_job_info(user: User = Depends(get_current_user)):
             return result
 
         except Exception as e:
-            admin_log.error(str(e))
+            error_log.error(str(e))
             raise HTTPException(status_code=500, detail={"message": "Internal error"})
 
 
@@ -78,7 +78,7 @@ async def apply_to_job(job_name: str, user: User = Depends(get_current_user)):
             await session.rollback()
             raise HTTPException(status_code=400, detail={"message": str(e)})
         except Exception as e:
-            admin_log.error(str(e))
+            error_log.error(str(e))
             raise HTTPException(status_code=500, detail={"message": "Internal Error"})
 
 

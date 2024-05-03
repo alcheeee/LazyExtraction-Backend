@@ -6,9 +6,10 @@ from ..models.models import User
 from ..auth.auth_handler import current_user
 from ..schemas.item_schema import MarketItemAdd, ItemStats
 from ..database.UserHandler import UserHandler
-from ..services.RaiseHTTPErrors import raise_http_error
+from ..services.RaiseHTTPErrors import common_http_errors
 from ..database.db import get_session
 from ..utils.logger import MyLogger
+error_log = MyLogger.errors()
 admin_log = MyLogger.admin()
 
 
@@ -26,12 +27,14 @@ async def create_equippable_item_endpoint(request: ItemStats,
         try:
             item_creator = ItemCreator(item_details=request, session=session)
             response_json = await item_creator.create_item()
-            return {"message": f"Admin {admin_username} created an item successfully", "item_details": response_json}
+            msg = f"Admin {admin_username} created item {request.item_name}"
+            admin_log.info(msg)
+            return {"message": msg, "item_details": response_json}
 
         except Exception as e:
             await session.rollback()
-            admin_log.error(str(e))
-            raise raise_http_error.server_error()
+            error_log.error(str(e))
+            raise common_http_errors.server_error()
 
 
 @admin_router.post("/add-item-to-market")
@@ -43,16 +46,16 @@ async def add_item_to_market(request: MarketItemAdd,
                                                   request.item_cost, request.sell_price, session)
             result = await market_handler.add_item_to_market()
             if not result:
-                raise raise_http_error.mechanics_error("Failed to add item to market")
+                raise common_http_errors.mechanics_error("Failed to add item to market")
             return {"message": f"Added {request.item_id} to {request.market_name}"}
 
         except ValueError as e:
             await session.rollback()
-            raise raise_http_error.mechanics_error(str(e))
+            raise common_http_errors.mechanics_error(str(e))
         except Exception as e:
             await session.rollback()
-            admin_log.error(str(e))
-            raise raise_http_error.server_error()
+            error_log.error(str(e))
+            raise common_http_errors.server_error()
 
 
 @admin_router.post("/add-item-to-user/{username}/{item_id}/{quantity}")
@@ -77,7 +80,7 @@ async def add_an_item_to_user(username: str, item_id: int,quantity: int,
 
         except Exception as e:
             await session.rollback()
-            admin_log.error(str(e))
+            error_log.error(str(e))
             raise HTTPException(status_code=500, detail={"message": f"Internal Error"})
 
 

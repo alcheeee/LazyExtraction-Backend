@@ -9,7 +9,7 @@ from ..database.UserHandler import UserHandler
 from ..database.db import get_session
 from ..utils.logger import MyLogger
 user_log = MyLogger.user()
-admin_log = MyLogger.admin()
+error_log = MyLogger.errors()
 game_log = MyLogger.game()
 
 market_router = APIRouter(
@@ -27,7 +27,7 @@ async def get_all_generalmarket_items(user: User = Depends(get_current_user)):
             items = await market_items.get_items()
             return items
         except Exception as e:
-            admin_log.error(str(e))
+            error_log.error(str(e))
             raise HTTPException(status_code=500, detail={"message": "Internal error"})
 
 
@@ -80,7 +80,7 @@ async def buy_market_items(request: MarketTransactionRequest,
             raise e
         except Exception as e:
             await session.rollback()
-            admin_log.error(f"{user.username} - Error purchasing item due to: {str(e)}")
+            error_log.error(f"{user.username} - Error purchasing item due to: {str(e)}")
             raise HTTPException(status_code=500, detail={"message": "Internal Error"})
 
 
@@ -128,6 +128,6 @@ async def sell_market_items(request: MarketTransactionRequest,
             return {"message": str(e)}
         except Exception as e:
             await session.rollback()
-            admin_log.error(f"{user.username} - Error selling item due to: {str(e)}")
+            error_log.error(f"{user.username} - Error selling item due to: {str(e)}")
             raise HTTPException(status_code=500, detail={"message": "Server error"})
 

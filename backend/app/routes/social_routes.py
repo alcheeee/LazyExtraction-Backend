@@ -8,7 +8,7 @@ from ..models.models import User, FriendsLink, FriendRequest, PrivateMessage
 from ..auth.auth_handler import get_current_user
 from ..database.db import get_session
 from ..utils.logger import MyLogger
-admin_log = MyLogger.admin()
+error_log = MyLogger.errors()
 
 social_router = APIRouter(
     prefix="/social",
@@ -44,7 +44,7 @@ async def send_friend_request(target_user_id: int, user: User = Depends(get_curr
             return {"message": "Friend request sent successfully"}
         except Exception as e:
             await session.rollback()
-            admin_log.error(str(e))
+            error_log.error(str(e))
             raise HTTPException(status_code=400, detail={"message": "Failed to send friend request"})
 
 
@@ -65,7 +65,7 @@ async def remove_friend(friend_id: int, user: User = Depends(get_current_user)):
             return {"message": "Friend successfully removed"}
         except Exception as e:
             await session.rollback()
-            admin_log.error(str(e))
+            error_log.error(str(e))
             raise HTTPException(status_code=500, detail="Error removing friend")
 
 
@@ -93,7 +93,7 @@ async def respond_friend_request(request_user_id: int,
 
         except Exception as e:
             await session.rollback()
-            admin_log.error(str(e))
+            error_log.error(str(e))
             raise HTTPException(status_code=400, detail={"message": "Failed to respond to friend request"})
 
 class MessageCreate(BaseModel):
@@ -121,7 +121,7 @@ async def send_message(receiver_id: int,
             return {"message": "Message sent successfully"}
         except Exception as e:
             await session.rollback()
-            admin_log.error(str(e))
+            error_log.error(str(e))
             raise HTTPException(status_code=400, detail={"message": "Failed to send message"})
 
 
@@ -144,7 +144,7 @@ async def get_friend_requests(user: User = Depends(get_current_user)):
                     for fr in friend_requests]
         except Exception as e:
             await session.rollback()
-            admin_log.error(str(e))
+            error_log.error(str(e))
             raise HTTPException(status_code=400, detail={"message": str(e)})
 
 

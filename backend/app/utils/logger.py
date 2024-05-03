@@ -15,6 +15,7 @@ class LogManager:
         log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         exclude_filter = ExcludeMessageFilter()
         logs = {
+            'errors': 'app/logs/error_logs.log',
             'game': 'app/logs/game_logs.log',
             'admin': 'app/logs/admin_logs.log',
             'user': 'app/logs/user_logs.log'
@@ -40,6 +41,9 @@ class MyLogger:
     @staticmethod
     def get_logger(name):
         return logging.getLogger(name)
+    @staticmethod
+    def errors():
+        return MyLogger.get_logger('errors')
     @staticmethod
     def game():
         return MyLogger.get_logger('game')

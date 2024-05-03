@@ -12,7 +12,7 @@ from ..schemas.item_schema import equipment_map
 
 from ..utils.logger import MyLogger
 user_log = MyLogger.user()
-admin_log = MyLogger.admin()
+error_log = MyLogger.errors()
 game_log = MyLogger.game()
 
 
@@ -52,7 +52,7 @@ async def get_user_stats(user: User = Depends(get_current_user)):
             return user_info
 
         except Exception as e:
-            admin_log.error(f"Error getting user stats: {str(e)}")
+            error_log.error(f"Error getting user stats: {str(e)}")
             raise HTTPException(status_code=500, detail={"message": "Server error"})
 
 
@@ -114,7 +114,7 @@ async def get_user_items(user: User = Depends(get_current_user)):
         except ValueError as e:
             return {"message": str(e)}
         except Exception as e:
-            admin_log.error(f"Error getting user inventory: {str(e)}")
+            error_log.error(f"Error getting user inventory: {str(e)}")
             raise HTTPException(status_code=500, detail={"message": "Error getting inventory"})
 
 

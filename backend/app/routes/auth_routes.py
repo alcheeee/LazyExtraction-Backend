@@ -5,7 +5,7 @@ from ..auth.auth_handler import token_handler, UserService
 from ..crud.BaseCRUD import BaseCRUD
 from ..database.db import get_session
 from ..database.UserHandler import UserHandler
-from ..services.RaiseHTTPErrors import raise_http_error
+from ..services.RaiseHTTPErrors import common_http_errors
 
 user_router = APIRouter(
     prefix="/user",
@@ -26,7 +26,7 @@ async def register_new_user(request: UserCreateRequest):
         user_crud = BaseCRUD(model=User, session=session)
         exists = await user_crud.check_fields_exist(username=request.username, email=request.email)
         if exists:
-            raise raise_http_error.mechanics_error("User with that username or email already exists")
+            raise common_http_errors.mechanics_error("User with that username or email already exists")
 
         user_handler = UserHandler(session=session)
         try:
@@ -34,7 +34,7 @@ async def register_new_user(request: UserCreateRequest):
             return {"message": result}
         except Exception as e:
             await session.rollback()
-            raise raise_http_error.server_error()
+            raise common_http_errors.server_error()
 
 
 @user_router.post("/login")
@@ -44,7 +44,7 @@ async def login_for_access_token(username: str = Form(...),
         auth_service = UserService(session=session)
         user_id = await auth_service.authenticate_user(username, password)
         if not user_id:
-            raise raise_http_error.mechanics_error("Incorrect username or password")
+            raise common_http_errors.mechanics_error("Incorrect username or password")
 
         access_token = token_handler.create_token(user_id=user_id)
         return {"access_token": access_token, "token_type": "bearer"}
