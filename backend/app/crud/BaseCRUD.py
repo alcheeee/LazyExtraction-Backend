@@ -25,23 +25,6 @@ class BaseCRUD:
         result = await self.session.execute(exists_query)
         return result.scalar() is not None
 
-    async def get_fields(self, id, *fields):
-        """Get specific fields of a model by id"""
-        if not fields:
-            raise ValueError("No fields specified for retrieval.")
-
-        model_fields = {field.name for field in self.model.__table__.columns}
-        requested_fields = set(fields)
-        if not requested_fields.issubset(model_fields):
-            missing_fields = requested_fields - model_fields
-            raise ValueError(f"Invalid field names: {', '.join(missing_fields)}")
-
-        query = (select([getattr(self.model, field) for field in fields])
-                 .where(self.model.id == id).options(load_only(*fields)))
-        result = await self.session.execute(query)
-        return result.scalar_one_or_none()
-
-
     async def exists_by_id(self, id):
         """Check if a record exists by id"""
         query = select([1]).where(self.model.id == id).limit(1)

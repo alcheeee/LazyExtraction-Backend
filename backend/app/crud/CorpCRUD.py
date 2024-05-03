@@ -13,7 +13,7 @@ class CorporationCRUD(BaseCRUD):
         return result.scalar_one_or_none()
 
     async def get_corporation_by_name(self, corp_name: str):
-        query = select(Corporation).where(Corporation.name == corp_name)
+        query = select(Corporation.name).where(Corporation.name == corp_name)
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
@@ -34,4 +34,7 @@ class CorporationCRUD(BaseCRUD):
         await self.session.commit()
         return item
 
-
+    async def get_corporation_leader(self, corp_id: int):
+        query = select(Corporation.leader).where(Corporation.id == corp_id)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
