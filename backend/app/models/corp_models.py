@@ -1,5 +1,5 @@
 from typing import Optional, List
-from sqlmodel import SQLModel, Field, Relationship, Enum, Column
+from sqlmodel import SQLModel, Field, Relationship, Enum, Column, String
 from .models import InventoryItem, User
 from ..schemas.corporation_schema import CorporationType
 
@@ -15,7 +15,7 @@ class CorporationItems(SQLModel, table=True):
 class Corporation(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     type: CorporationType = Field(sa_column=Enum(CorporationType))
-    name: str = Field(index=True)
+    name: str = Field(index=True, unique=True)
     leader: str
     private: bool = Field(default=False)
     capital: int = Field(default=0)

@@ -104,7 +104,7 @@ class User(SQLModel, table=True):
     password: str
     email: str = Field(index=True)
 
-    corp_id: Optional[int] = Field(default=None, foreign_key="corporation.id")
+    corp_id: Optional[int] = Field(default=None, foreign_key="corporation.id", index=True)
     corporation: Optional["Corporation"] = Relationship(back_populates="employees")
     stats: Stats = Relationship(back_populates="user")
     inventory: Inventory = Relationship(back_populates="user")
