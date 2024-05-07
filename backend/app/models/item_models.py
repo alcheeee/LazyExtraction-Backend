@@ -1,7 +1,7 @@
 from typing import Optional, List
 from sqlalchemy import Enum, Column, Integer
 from sqlmodel import SQLModel, Field, Relationship
-from ..schemas.item_schema import ItemType, ItemQuality
+from ..schemas.item_schema import ItemType, ItemQuality, ClothingType
 
 
 class Items(SQLModel, table=True):
@@ -24,13 +24,13 @@ class Weapon(SQLModel, table=True):
     damage_bonus: int = Field(default=0, nullable=False)
     evasiveness_bonus: float = Field(default=0)
     strength_bonus: float = Field(default=0)
-    item_id: int = Field(default=None, foreign_key="items.id")
+    item_id: int = Field(default=None, foreign_key="items.id", index=True)
     item: Optional[Items] = Relationship(back_populates="weapon_details")
 
 
 class Clothing(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    clothing_type: str = Field(default="Mask", nullable=False)
+    clothing_type: ClothingType = Field(default=ClothingType.Mask, nullable=False)
     reputation_bonus: int = Field(default=0)
     max_energy_bonus: int = Field(default=0)
     evasiveness_bonus: float = Field(default=0)
@@ -38,7 +38,7 @@ class Clothing(SQLModel, table=True):
     luck_bonus: float = Field(default=0)
     strength_bonus: float = Field(default=0)
     knowledge_bonus: float = Field(default=0)
-    item_id: int = Field(default=None, foreign_key="items.id")
+    item_id: int = Field(default=None, foreign_key="items.id", index=True)
     item: Optional[Items] = Relationship(back_populates="clothing_details")
 
 
@@ -48,7 +48,7 @@ class GeneralMarket(SQLModel, table=True):
     sell_price: int = Field(default=0)
     item_quantity: int
     item_quality: str
-    item_id: int = Field(default=None, foreign_key="items.id")
+    item_id: int = Field(default=None, foreign_key="items.id", index=True)
     item: Optional[Items] = Relationship(back_populates="general_market_items")
 
 
@@ -59,5 +59,5 @@ class BlackMarket(SQLModel, table=True):
     item_quality: str
     by_user: str
     time_posted: str
-    item_id: int = Field(default=None, foreign_key="items.id")
+    item_id: int = Field(default=None, foreign_key="items.id", index=True)
     item: Optional[Items] = Relationship(back_populates="black_market_posts")

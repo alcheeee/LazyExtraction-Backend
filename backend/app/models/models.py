@@ -2,6 +2,12 @@ from sqlmodel import SQLModel, Field, Relationship
 from typing import List, Optional
 from datetime import datetime
 
+
+class FriendsLink(SQLModel, table=True):
+    user1_id: Optional[int] = Field(default=None, foreign_key="user.id", primary_key=True)
+    user2_id: Optional[int] = Field(default=None, foreign_key="user.id", primary_key=True)
+
+
 class Stats(SQLModel, table=True):
     """
     Stats Table for Users, linked by id
@@ -18,8 +24,7 @@ class Stats(SQLModel, table=True):
     luck: float = Field(default=1.00)
     strength: float = Field(default=1.00)
     knowledge: float = Field(default=1.00)
-    user_id: int = Field(default=None, foreign_key="user.id")
-    user: "User" = Relationship(back_populates="stats")
+    user: Optional["User"] = Relationship(back_populates="stats")
     def round_stats(self):
         float_attributes = ['level', 'evasiveness', 'strength', 'knowledge', 'luck']
         for attr in float_attributes:
@@ -40,8 +45,7 @@ class Inventory(SQLModel, table=True):
     equipped_body_id: Optional[int] = Field(default=None)
     equipped_legs_id: Optional[int] = Field(default=None)
     items: List["InventoryItem"] = Relationship(back_populates="inventory")
-    user_id: int = Field(default=None, foreign_key="user.id")
-    user: "User" = Relationship(back_populates="inventory")
+    user: Optional["User"] = Relationship(back_populates="inventory")
 
 
 class InventoryItem(SQLModel, table=True):
@@ -49,16 +53,37 @@ class InventoryItem(SQLModel, table=True):
     Represents individual items within a user's inventory.
     """
     id: int = Field(default=None, primary_key=True)
-    inventory_id: int = Field(default=None, foreign_key="inventory.id")
-    item_id: int = Field(default=None, foreign_key="items.id")
-    quantity: int
+    quantity: int = Field(default=0)
+    inventory_id: int = Field(default=None, foreign_key="inventory.id", index=True)
     inventory: Optional["Inventory"] = Relationship(back_populates="items")
+    item_id: int = Field(default=None, foreign_key="items.id", index=True)
     item: Optional["Items"] = Relationship(sa_relationship_kwargs={"lazy": "selectin"})
 
 
-class FriendsLink(SQLModel, table=True):
-    user1_id: Optional[int] = Field(default=None, foreign_key="user.id", primary_key=True)
-    user2_id: Optional[int] = Field(default=None, foreign_key="user.id", primary_key=True)
+
+class User(SQLModel, table=True):
+    """User Table"""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    is_admin: bool = Field(default=False)
+    username: str = Field(index=True)
+    password: str
+    email: str
+
+    stats_id: Optional[int] = Field(default=None, foreign_key="stats.id", index=True)
+    stats: Optional["Stats"] = Relationship(back_populates="user")
+
+    inventory_id: Optional[int] = Field(default=None, foreign_key="inventory.id", index=True)
+    inventory: Optional["Inventory"] = Relationship(back_populates="user")
+
+    corp_id: Optional[int] = Field(default=None, foreign_key="corporation.id", index=True)
+    corporation: Optional["Corporation"] = Relationship(back_populates="employees")
+
+    sent_messages: List["PrivateMessage"] = Relationship(back_populates="sender",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.sender_id"})
+    received_messages: List["PrivateMessage"] = Relationship(back_populates="receiver",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.receiver_id"})
+    friend_requests_sent: List["FriendRequest"] = Relationship(back_populates="requester",sa_relationship_kwargs={"primaryjoin": "User.id == FriendRequest.requester_id"})
+    friend_requests_received: List["FriendRequest"] = Relationship(back_populates="requestee",sa_relationship_kwargs={"primaryjoin": "User.id == FriendRequest.requestee_id"})
+    friends: List["User"] = Relationship(back_populates="friends",link_model=FriendsLink,sa_relationship_kwargs={"primaryjoin": "User.id == FriendsLink.user2_id","secondaryjoin": "User.id == FriendsLink.user1_id"})
+
 
 class PrivateMessage(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
@@ -88,29 +113,3 @@ class FriendRequest(SQLModel, table=True):
                                      sa_relationship_kwargs={
                                          "primaryjoin": "FriendRequest.requestee_id == User.id"
                                      })
-
-
-class User(SQLModel, table=True):
-    """
-    User Table
-    id: Unique User Identifier in database
-    username: set by user
-    password: set by user
-    email: set by user
-    """
-    id: Optional[int] = Field(default=None, primary_key=True)
-    is_admin: bool = Field(default=False)
-    username: str = Field(index=True)
-    password: str
-    email: str = Field(index=True)
-
-    corp_id: Optional[int] = Field(default=None, foreign_key="corporation.id", index=True)
-    corporation: Optional["Corporation"] = Relationship(back_populates="employees")
-    stats: Stats = Relationship(back_populates="user")
-    inventory: Inventory = Relationship(back_populates="user")
-    sent_messages: List["PrivateMessage"] = Relationship(back_populates="sender",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.sender_id"})
-    received_messages: List["PrivateMessage"] = Relationship(back_populates="receiver",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.receiver_id"})
-    friend_requests_sent: List["FriendRequest"] = Relationship(back_populates="requester",sa_relationship_kwargs={"primaryjoin": "User.id == FriendRequest.requester_id"})
-    friend_requests_received: List["FriendRequest"] = Relationship(back_populates="requestee",sa_relationship_kwargs={"primaryjoin": "User.id == FriendRequest.requestee_id"})
-    friends: List["User"] = Relationship(back_populates="friends",link_model=FriendsLink,sa_relationship_kwargs={"primaryjoin": "User.id == FriendsLink.user2_id","secondaryjoin": "User.id == FriendsLink.user1_id"})
-

@@ -1,6 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
-from ...crud.BaseCRUD import BaseCRUD
+from ...crud.UserCRUD import UserCRUD
+from ...crud.ItemCRUD import ItemsCRUD
+from ...crud.UserInventoryCRUD import UserInventoryCRUD
 from ...schemas.item_schema import ItemType, equipment_map, item_bonus_mapper
 from ...models.item_models import Items, Clothing
 from ...models.models import User, InventoryItem
@@ -13,9 +15,63 @@ class ItemStatsHandler:
         self.user_id = user_id
         self.item_id = item_id
         self.session = session
-        self.user_crud = BaseCRUD(User, session)
-        self.item_crud = BaseCRUD(Items, session)
-        self.inventory_item_crud = BaseCRUD(InventoryItem, session)
+        self.user_crud = UserCRUD(User, session)
+        self.user_inventory_crud = UserInventoryCRUD(InventoryItem, session)
+
+
+    async def user_equip_unequip_item(self):
+        user = await self.user_crud.get_by_id(self.user_id, options=[
+            selectinload(User.inventory)
+        ])
+        item = await self.user_inventory_crud.get_by_id(self.item_id, options=[
+            joinedload(Items.clothing_details),
+            joinedload(Items.weapon_details)
+        ])
+
+        if not item or not user:
+            raise ValueError("User or Item not found")
+
+        item_details = self.get_item_category(item)
+        if not item_details:
+            raise ValueError("Item details not available")
+
+        item_slot_attr = self.determine_slot(item, item_details)
+        if not item_slot_attr:
+            raise ValueError("Item type is not valid for equipping")
+
+        current_equipped_item_id = getattr(user.inventory, item_slot_attr, None)
+
+        if current_equipped_item_id == item.id:
+            setattr(user.inventory, item_slot_attr, None)
+            self.adjust_user_stats(user.stats, item_details, equip=False)
+        else:
+            setattr(user.inventory, item_slot_attr, item.id)
+            if current_equipped_item_id:
+                prev_item = await self.user_inventory_crud.get_by_id(current_equipped_item_id)
+                prev_details = self.get_item_category(prev_item)
+                self.adjust_user_stats(user.stats, prev_details, equip=False)
+            self.adjust_user_stats(user.stats, item_details, equip=True)
+        return "Equipped" if current_equipped_item_id != item.id else "Unequipped"
+
+
+    def adjust_user_stats(self, stats, item_details, equip=True):
+        """Adjust the users stats based on the item details"""
+        multiplier = 1 if equip else -1
+        for stat_key, attr_name in item_bonus_mapper.items():
+            bonus_value = getattr(item_details, attr_name, 0)
+            if bonus_value:
+                current_value = getattr(stats, stat_key, 0)
+                setattr(stats, stat_key, current_value + bonus_value * multiplier)
+        stats.round_stats()
+
+
+    def determine_slot(self, item, item_details):
+        if item.category == ItemType.Clothing and hasattr(item_details, 'clothing_type'):
+            return equipment_map.get(item_details.clothing_type)
+        elif item.category == ItemType.Weapon:
+            return equipment_map.get(ItemType.Weapon)
+        return None
+
 
     def get_item_category(self, item):
         if item.category == ItemType.Clothing:
@@ -23,6 +79,8 @@ class ItemStatsHandler:
         elif item.category == ItemType.Weapon:
             return item.weapon_details
         return None
+
+
 
 
     def get_item_stats_json(self, item):
@@ -36,77 +94,5 @@ class ItemStatsHandler:
             if item_bonus != 0 and item_bonus:
                 item_stats_results[bonus_attr] = item_bonus
         return item_stats_results
-
-
-    async def user_equip_unequip_item(self):
-        try:
-            user = await self.user_crud.get_by_id(self.user_id, options=[
-                selectinload(User.inventory),
-                selectinload(User.stats)
-            ])
-            if not user:
-                raise Exception("User not found")
-
-            item = await self.item_crud.get_by_id(self.item_id, options=[
-                joinedload(Items.clothing_details),
-                joinedload(Items.weapon_details)
-            ])
-            if not item:
-                raise ValueError("Incorrect item type")
-
-            item_details = self.get_item_category(item)
-            if not item_details:
-                raise ValueError(f"No details available for category: {item.category}")
-
-            item_slot_type = item_details.clothing_type if isinstance(item_details, Clothing) else "Weapon"
-            item_slot_attr = equipment_map.get(item_slot_type)
-
-            current_equipped_item_id = getattr(user.inventory, item_slot_attr)
-
-            target_inventory_item = await self.inventory_item_crud.get_inventory_item_by_conditions(
-                user.inventory.id, item.id
-            )
-
-            if not target_inventory_item or target_inventory_item.quantity == 0:
-                raise ValueError("You do not have that item")
-
-            equipping_new_item = current_equipped_item_id != item.id
-            if equipping_new_item:
-                setattr(user.inventory, item_slot_attr, item.id)
-                self.adjust_user_stats_item(user, item_details, equipping=True)
-
-                if current_equipped_item_id:
-                    previous_item_details = self.get_item_category(await self.item_crud.get_by_id(current_equipped_item_id))
-                    self.adjust_user_stats_item(user, previous_item_details, equipping=False)
-            else:
-                setattr(user.inventory, item_slot_attr, None)
-                self.adjust_user_stats_item(user, item_details, equipping=False)
-
-            action = "equipped" if equipping_new_item else "unequipped"
-            return action
-
-        except ValueError:
-            raise
-        except Exception:
-            raise
-
-
-    def adjust_user_stats_item(self, user, item_details, equipping=True):
-        if not item_details:
-            raise ValueError("No item details provided for stat adjustment")
-        try:
-            for stat_key, bonus_attr in item_bonus_mapper.items():
-                item_bonus = getattr(item_details, bonus_attr, 0)
-                if item_bonus:
-                    current_value = getattr(user.stats, stat_key, 0)
-                    adjustment = item_bonus if equipping else -item_bonus
-                    new_value = current_value + adjustment
-                    setattr(user.stats, stat_key, new_value)
-            user.stats.round_stats()
-        except Exception as e:
-            raise
-
-
-
 
 

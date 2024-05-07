@@ -54,60 +54,54 @@ class UserHandler:
 
 
     async def update_user_inventory(self, user_id: int, item_id: int, quantity: int = 1, selling=False):
-        try:
-            user = await self.session.execute(select(User).where(User.id == user_id))
-            user = user.scalars().first()
-            if user:
-                user = await self.session.merge(user)
+        user = await self.session.execute(select(User).where(User.id == user_id))
+        user = user.scalars().first()
+        if user:
+            user = await self.session.merge(user)
 
-            self.session.scalars(select(Items).where(Items.id == item_id).limit(1)).first()
+        self.session.scalars(select(Items).where(Items.id == item_id).limit(1)).first()
 
-            if item:
-                item = await self.session.merge(item)
+        if item:
+            item = await self.session.merge(item)
 
-            item = await self.session.get(Items, item_id)
-            if not user or not item:
-                raise ValueError(f"Couldn't add {item_id} to {user_id}")
+        item = await self.session.get(Items, item_id)
+        if not user or not item:
+            raise ValueError(f"Couldn't add {item_id} to {user_id}")
 
-            # Get users inventory
-            inventory_item = (await self.session.execute(
-                select(InventoryItem).where(
-                    InventoryItem.inventory_id == user.inventory.id,
-                    InventoryItem.item_id == item.id
-                )
-            )).scalars().first()
+        # Get users inventory
+        inventory_item = (await self.session.execute(
+            select(InventoryItem).where(
+                InventoryItem.inventory_id == user.inventory.id,
+                InventoryItem.item_id == item.id
+            )
+        )).scalars().first()
 
-            if not inventory_item and not selling:
-                if quantity <= 0:
-                    raise ValueError("Cannot add zero or negative quantity.")
-                inventory_item = InventoryItem(
-                    inventory_id=user.inventory.id,
-                    item_id=item.id,
-                    quantity=quantity
-                )
-                self.session.add(inventory_item)
+        if not inventory_item and not selling:
+            if quantity <= 0:
+                raise ValueError("Cannot add zero or negative quantity.")
+            inventory_item = InventoryItem(
+                inventory_id=user.inventory.id,
+                item_id=item.id,
+                quantity=quantity
+            )
+            self.session.add(inventory_item)
+        else:
+            if selling:
+                equipped_item_ids = [getattr(user.inventory, slot) for slot in equipment_map.values()]
+                if item.id in equipped_item_ids and inventory_item.quantity <= quantity:
+                    raise ValueError("Cannot sell an equipped item.")
+                new_quantity = inventory_item.quantity - quantity
             else:
-                if selling:
-                    equipped_item_ids = [getattr(user.inventory, slot) for slot in equipment_map.values()]
-                    if item.id in equipped_item_ids and inventory_item.quantity <= quantity:
-                        raise ValueError("Cannot sell an equipped item.")
-                    new_quantity = inventory_item.quantity - quantity
-                else:
-                    new_quantity = inventory_item.quantity + quantity
+                new_quantity = inventory_item.quantity + quantity
 
-                # Update inventory quantity
-                if new_quantity < 0:
-                    raise ValueError("Not enough items in inventory to remove.")
+            # Update inventory quantity
+            if new_quantity < 0:
+                raise ValueError("Not enough items in inventory to remove.")
 
-                if selling and new_quantity < 1 and item.id in equipped_item_ids:
-                    raise ValueError("Cannot sell all equipped items")
-                inventory_item.quantity = new_quantity
+            if selling and new_quantity < 1 and item.id in equipped_item_ids:
+                raise ValueError("Cannot sell all equipped items")
+            inventory_item.quantity = new_quantity
 
-            await self.session.commit()
-            action = "Added" if quantity > 0 else "Removed"
-            game_log.info(f"{action} {abs(quantity)} of {item.item_name} to/from {user.username}'s inventory.")
-            return action
-        except ValueError as e:
-            raise
-        except Exception as e:
-            raise
+        action = "Added" if quantity > 0 else "Removed"
+        game_log.info(f"{action} {abs(quantity)} of {item.item_name} to/from {user.username}'s inventory.")
+        return action

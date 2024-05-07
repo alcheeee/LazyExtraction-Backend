@@ -9,6 +9,11 @@ class ItemType(str, Enum):
     Clothing = "Clothing"
     Other = "Other"
 
+class ClothingType(str, Enum):
+    Mask = "Mask"
+    Body = "Body"
+    Legs = "Legs"
+
 class ItemQuality(Enum):
     Junk = 'Junk'
     Common = 'Common'
@@ -18,10 +23,10 @@ class ItemQuality(Enum):
     Unique = 'Unique'
 
 equipment_map = {
-    "Weapon": "equipped_weapon_id",
-    "Mask": "equipped_mask_id",
-    "Body": "equipped_body_id",
-    "Legs": "equipped_legs_id"
+    ItemType.Weapon: "equipped_weapon_id",
+    ClothingType.Mask: "equipped_mask_id",
+    ClothingType.Body: "equipped_body_id",
+    ClothingType.Legs: "equipped_legs_id"
 }
 
 
@@ -52,7 +57,7 @@ class ItemCreate(BaseModel):
     quality: ItemQuality
 
 class ItemStats(ItemCreate):
-    clothing_type: Optional[str]
+    clothing_type: Optional[ClothingType]
     reputation_bonus: Optional[int]
     max_energy_bonus: Optional[int]
     damage_bonus: Optional[int]

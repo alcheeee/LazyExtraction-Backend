@@ -2,7 +2,9 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import select
 from ..game_systems.items.ItemHandler import ItemCreator
 from ..game_systems.markets.MarketHandlerCRUD import BackendMarketHandler
-from ..models.models import User
+from ..crud.UserInventoryCRUD import UserInventoryCRUD
+from ..crud.UserCRUD import UserCRUD
+from ..models.models import User, Inventory
 from ..auth.auth_handler import current_user
 from ..schemas.item_schema import MarketItemAdd, ItemStats
 from ..database.UserHandler import UserHandler
@@ -58,30 +60,33 @@ async def add_item_to_market(request: MarketItemAdd,
             raise common_http_errors.server_error()
 
 
-@admin_router.post("/add-item-to-user/{username}/{item_id}/{quantity}")
-async def add_an_item_to_user(username: str, item_id: int,quantity: int,
+@admin_router.put("/add-item-to-user/{username}/{item_id}/{quantity}")
+async def add_an_item_to_user(username: str, item_id: int, quantity: int,
                               admin_username: str = Depends(current_user.check_if_admin)):
-
     async with get_session() as session:
-        receiving_user = (await session.execute(
-            select(User).where(
-                User.username == username)
-        )).scalars().first()
+        user_inventory_crud = UserInventoryCRUD(Inventory, session)
+        user_crud = UserCRUD(User, session)
 
-        if not receiving_user:
-            raise HTTPException(status_code=400, detail={"message": f"Couldn't find user."})
         try:
-            session.add(receiving_user)
-            user_handler = UserHandler(session)
-            await user_handler.update_user_inventory(receiving_user.id, item_id,
-                                                  quantity, selling=False)
-            await session.commit()
-            return {"message": f"Added {quantity} of item {item_id} to {receiving_user.username}"}
+            receiving_inventory_id = await user_crud.get_user_inventory_id_by_username(username)
+            if not receiving_inventory_id:
+                raise common_http_errors.server_error()
 
+            result = await user_inventory_crud.update_user_inventory_item(
+                inventory_id=receiving_inventory_id,
+                item_id=item_id,
+                quantity_change=quantity
+            )
+            await session.commit()
+            return {"message": f"Added {quantity} of item {item_id} to {username}"}
+        except ValueError as e:
+            await session.rollback()
+            error_log.error(str(e))
+            raise common_http_errors.mechanics_error(str(e))
         except Exception as e:
             await session.rollback()
             error_log.error(str(e))
-            raise HTTPException(status_code=500, detail={"message": f"Internal Error"})
+            raise common_http_errors.server_error()
 
 
 
