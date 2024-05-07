@@ -1,11 +1,15 @@
 services:
   database:
      image: postgres:latest
+     ports:
+       - "5432:5432"
      restart: always
      environment:
        POSTGRES_DB: ${DATABASE_NAME}
        POSTGRES_USER: ${DATABASE_USER}
        POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+     volumes:
+       - postgres_data:/var/lib/postgresql/data
      command:
        - "postgres"
        - "-c"
@@ -18,15 +22,10 @@ services:
        - "maintenance_work_mem=256MB"
        - "-c"
        - "log_min_duration_statement=1000"
-     volumes:
-       - postgres_data:/var/lib/postgresql/data
-     ports:
-       - "5432:5432"
 
   gameapi_server:
     build: ./backend
     restart: always
-    command: uvicorn app.main:app --host ${FASTAPI_HOST} --port ${FASTAPI_PORT} --workers 4 --reload
     volumes:
       - ./backend:/app
     depends_on:
@@ -36,7 +35,9 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}/${DATABASE_NAME}
+      DATABASE_URL: postgresql+asyncpg://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+      FASTAPI_HOST: ${FASTAPI_HOST}
+      FASTAPI_PORT: ${FASTAPI_PORT}
 
 volumes:
   postgres_data:
