@@ -68,7 +68,9 @@ class ItemCreator:
         item = Items(**item_data)
         self.session.add(item)
         await self.session.flush()
+
         item_detail_instance = item_model(item_id=item.id, **specific_item_details)
         self.session.add(item_detail_instance)
-        await self.session.commit()
-        return {"item_details": item_data, "specific_details": specific_item_details}
+
+        full_item_details = {**item_data, **specific_item_details}
+        return full_item_details

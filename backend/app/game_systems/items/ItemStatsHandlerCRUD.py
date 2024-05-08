@@ -1,17 +1,17 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy import select
 from ...crud.UserCRUD import UserCRUD
-from ...crud.ItemCRUD import ItemsCRUD
 from ...crud.UserInventoryCRUD import UserInventoryCRUD
 from ...schemas.item_schema import ItemType, equipment_map, item_bonus_mapper
-from ...models.item_models import Items, Clothing
-from ...models.models import User, InventoryItem
+from ...models.item_models import Items
+from ...models.models import User, Stats, InventoryItem, Inventory
 from ...utils.logger import MyLogger
 error_log = MyLogger.errors()
 
 
 class ItemStatsHandler:
-    def __init__(self, user_id, item_id: int, session: AsyncSession):
+    def __init__(self, user_id: int, item_id: int, session: AsyncSession):
         self.user_id = user_id
         self.item_id = item_id
         self.session = session
@@ -20,17 +20,28 @@ class ItemStatsHandler:
 
 
     async def user_equip_unequip_item(self):
-        user = await self.user_crud.get_by_id(self.user_id, options=[
-            selectinload(User.inventory)
-        ])
-        item = await self.user_inventory_crud.get_by_id(self.item_id, options=[
-            joinedload(Items.clothing_details),
-            joinedload(Items.weapon_details)
-        ])
+        try:
+            result = await self.session.execute(
+                select(
+                    Inventory,
+                    Stats,
+                    InventoryItem
+                ).select_from(User)
+                 .join(Inventory, User.inventory_id == Inventory.id)
+                 .join(InventoryItem, InventoryItem.inventory_id == Inventory.id)
+                 .join(Stats, User.stats_id == Stats.id)
+                 .where(User.id == self.user_id, InventoryItem.item_id == self.item_id)
+                 .options(
+                     selectinload(InventoryItem.item).joinedload(Items.clothing_details),
+                     selectinload(InventoryItem.item).joinedload(Items.weapon_details)
+                 )
+            )
+            inventory, stats, inventory_item = result.one()
 
-        if not item or not user:
-            raise ValueError("User or Item not found")
+        except Exception as e:
+            raise e
 
+        item = inventory_item.item
         item_details = self.get_item_category(item)
         if not item_details:
             raise ValueError("Item details not available")
@@ -39,18 +50,15 @@ class ItemStatsHandler:
         if not item_slot_attr:
             raise ValueError("Item type is not valid for equipping")
 
-        current_equipped_item_id = getattr(user.inventory, item_slot_attr, None)
+        current_equipped_item_id = getattr(inventory, item_slot_attr)
 
         if current_equipped_item_id == item.id:
-            setattr(user.inventory, item_slot_attr, None)
-            self.adjust_user_stats(user.stats, item_details, equip=False)
+            setattr(inventory, item_slot_attr, None)
+            self.adjust_user_stats(stats, item_details, equip=False)
         else:
-            setattr(user.inventory, item_slot_attr, item.id)
-            if current_equipped_item_id:
-                prev_item = await self.user_inventory_crud.get_by_id(current_equipped_item_id)
-                prev_details = self.get_item_category(prev_item)
-                self.adjust_user_stats(user.stats, prev_details, equip=False)
-            self.adjust_user_stats(user.stats, item_details, equip=True)
+            setattr(inventory, item_slot_attr, item.id)
+            self.adjust_user_stats(stats, item_details, equip=True)
+
         return "Equipped" if current_equipped_item_id != item.id else "Unequipped"
 
 

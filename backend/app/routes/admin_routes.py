@@ -29,9 +29,11 @@ async def create_equippable_item_endpoint(request: ItemStats,
         try:
             item_creator = ItemCreator(item_details=request, session=session)
             response_json = await item_creator.create_item()
+            await session.commit()
+
             msg = f"Admin {admin_username} created item {request.item_name}"
             admin_log.info(msg)
-            return {"message": msg, "item_details": response_json}
+            return {"message": msg, "item-details": response_json}
 
         except Exception as e:
             await session.rollback()

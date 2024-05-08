@@ -28,15 +28,6 @@ class BaseCRUD:
         result = await self.session.execute(exists_query)
         return result.scalar() is not None
 
-    async def update(self, conditions: dict, updates: dict):
-        """Updates any model field"""
-        update_statement = (
-            update(self.model)
-            .where(*[getattr(self.model, field) == value for field, value in conditions.items()])
-            .values(**updates)
-        )
-        await self.session.execute(update_statement)
-
 
 
 

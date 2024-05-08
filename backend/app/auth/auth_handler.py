@@ -55,7 +55,7 @@ class CurrentUser:
         user_id = self.verify_payload(token=token)
         async with get_session() as session:
             user_crud = UserCRUD(User, session)
-            exists = await user_crud.check_user_exists(user_id)
+            exists = await user_crud.get_user_field_from_id(user_id, 'id')
             if not exists:
                 raise common_http_errors.credentials_error()
             return user_id

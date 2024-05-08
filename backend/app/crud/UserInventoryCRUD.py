@@ -38,6 +38,17 @@ class UserInventoryCRUD(BaseCRUD):
             .where(
                 InventoryItem.inventory_id == inventory_id,
                 InventoryItem.item_id == item_id
-            )
-        )
+            ))
         await self.session.execute(delete_statement)
+
+    async def get_inventoryitem_item_id(self, inventory_id: int, item_id: int):
+        query = await self.session.execute(
+            select(InventoryItem)
+            .where(
+                InventoryItem.inventory_id == user.inventory.id,
+                InventoryItem.item_id == current_equipped_item_id
+            ))
+        return query.scalars().first()
+
+
+

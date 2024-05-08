@@ -42,9 +42,12 @@ async def add_user_to_corporation(user_id_to_add: int, corp_id: int, user_id: in
         try:
             corp_manager = CorporationHandler(session)
             await corp_manager.check_if_user_is_leader(corp_id, user_id)
+            if user_id_to_add == user_id:
+                raise ValueError("You can't add yourself!")
             result = await corp_manager.add_user_to_corporation(user_id_to_add, corp_id)
             await session.commit()
             return {"message": result}
+
         except ValueError as e:
             await session.rollback()
             raise common_http_errors.mechanics_error(str(e))

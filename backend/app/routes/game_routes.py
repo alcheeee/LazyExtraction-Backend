@@ -20,8 +20,7 @@ game_router = APIRouter(
 
 
 @game_router.post("/equip-item/{item_id:int}")
-async def equip_unequip_inventory_item(item_id: int,
-                                       user_id: int = Depends(current_user.ensure_user_exists)):
+async def equip_unequip_inventory_item(item_id: int, user_id: int = Depends(current_user.ensure_user_exists)):
     async with get_session() as session:
         try:
             item_stats_handler = ItemStatsHandler(user_id, item_id, session)
@@ -33,8 +32,8 @@ async def equip_unequip_inventory_item(item_id: int,
             await session.rollback()
             raise common_http_errors.mechanics_error(str(e))
         except Exception as e:
-            await session.rollback()
             error_log.error(str(e))
+            await session.rollback()
             raise common_http_errors.server_error()
 
 
@@ -51,8 +50,8 @@ async def user_action_buttons(button_name: str, user_id: int = Depends(current_u
             await session.rollback()
             raise common_http_errors.mechanics_error(str(e))
         except Exception as e:
-            await session.rollback()
             error_log.error(str(e))
+            await session.rollback()
             raise common_http_errors.server_error()
 
 
@@ -79,6 +78,7 @@ async def apply_to_job(job_name: str, user_id: int = Depends(current_user.ensure
             raise common_http_errors.mechanics_error(str(e))
         except Exception as e:
             error_log.error(str(e))
+            await session.rollback()
             raise common_http_errors.server_error()
 
 

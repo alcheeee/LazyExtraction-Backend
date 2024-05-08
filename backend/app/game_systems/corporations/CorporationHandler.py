@@ -25,7 +25,7 @@ class CorporationHandler:
         if existing_corporation:
             raise ValueError("A corporation with that name already exists.")
 
-        user_in_corp = await self.user_crud.get_user_corp_id(user_id)
+        user_in_corp = await self.user_crud.get_user_field_from_id(user_id, 'corp_id')
         if user_in_corp:
             raise ValueError("You must leave your current corporation first!")
 
@@ -48,7 +48,7 @@ class CorporationHandler:
         new_corporation = Corporation(
             name=new_corp_data.name,
             type=new_corp_data.type,
-            leader=await self.user_crud.get_username_by_id(user_id)
+            leader=await self.user_crud.get_user_field_from_id(user_id, 'username')
         )
         self.session.add(new_corporation)
         return new_corporation
@@ -60,20 +60,20 @@ class CorporationHandler:
         return "Successfully removed Corporation"
 
     async def add_user_to_corporation(self, user_id: int, corp_id: int):
-        user_corp = await self.user_crud.get_user_corp_id(corp_id)
+        user_corp = await self.user_crud.get_user_field_from_id(user_id, 'corp_id')
         if user_corp:
             raise ValueError("They are already in a corporation.")
         await self.user_crud.change_user_corp_id(user_id, corp_id)
         return "Successfully added to the corporation"
 
     async def check_if_user_is_leader(self, leader_id: int, corporation_id: int):
-        assumed_leader_username = await self.user_crud.get_username_by_id(leader_id)
+        assumed_leader_username = await self.user_crud.get_user_field_from_id(leader_id, 'username')
         actual_leader_username = await self.corp_crud.get_corporation_leader(corporation_id)
         if assumed_leader_username != actual_leader_username:
             raise ValueError("You do not have permissions to perform this action")
 
     async def remove_player_from_corporation(self, user_to_remove: int, corp_id: int):
-        user_corp_id = await self.user_crud.get_user_corp_id(user_to_remove)
+        user_corp_id = await self.user_crud.get_user_field_from_id(user_id, 'corp_id')
         if user_corp_id != corp_id:
             raise ValueError("That person is not part of the Corporation")
         remove_user = await self.user_crud.remove_user_corp_id(user_to_remove)
