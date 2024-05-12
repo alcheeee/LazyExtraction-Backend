@@ -1,7 +1,9 @@
+from datetime import datetime
 from typing import Optional, List
 from sqlalchemy import Enum, Column, Integer
 from sqlmodel import SQLModel, Field, Relationship
 from ..schemas.item_schema import ItemType, ItemQuality, ClothingType
+from ..schemas.market_schema import MarketNames
 
 
 class Items(SQLModel, table=True):
@@ -15,8 +17,7 @@ class Items(SQLModel, table=True):
     # Relationships
     weapon_details: Optional["Weapon"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
     clothing_details: Optional["Clothing"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
-    black_market_posts: Optional["BlackMarket"] = Relationship(back_populates="item")
-    general_market_items: Optional["GeneralMarket"] = Relationship(back_populates="item")
+    market_items: Optional["MarketItems"] = Relationship(back_populates="item")
 
 
 class Weapon(SQLModel, table=True):
@@ -35,29 +36,21 @@ class Clothing(SQLModel, table=True):
     max_energy_bonus: int = Field(default=0)
     evasiveness_bonus: float = Field(default=0)
     health_bonus: int = Field(default=0)
-    luck_bonus: float = Field(default=0)
     strength_bonus: float = Field(default=0)
     knowledge_bonus: float = Field(default=0)
+    luck_bonus: float = Field(default=0)
     item_id: int = Field(default=None, foreign_key="items.id", index=True)
     item: Optional[Items] = Relationship(back_populates="clothing_details")
 
 
-class GeneralMarket(SQLModel, table=True):
+class MarketItems(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
+    market_name: MarketNames = Field(default=MarketNames.GeneralMarket, nullable=False, index=True)
     item_cost: int = Field(default=0)
-    sell_price: int = Field(default=0)
     item_quantity: int
-    item_quality: str
+    can_be_illegal: bool = Field(default=False)
+    sell_price: int = Field(default=0, nullable=True)
+    by_user: str = Field(default=None, nullable=True)
+    posted_at: datetime = Field(default_factory=datetime.utcnow)
     item_id: int = Field(default=None, foreign_key="items.id", index=True)
-    item: Optional[Items] = Relationship(back_populates="general_market_items")
-
-
-class BlackMarket(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
-    sell_price: int = Field(default=0)
-    item_quantity: int
-    item_quality: str
-    by_user: str
-    time_posted: str
-    item_id: int = Field(default=None, foreign_key="items.id", index=True)
-    item: Optional[Items] = Relationship(back_populates="black_market_posts")
+    item: Optional[Items] = Relationship(back_populates="market_items")

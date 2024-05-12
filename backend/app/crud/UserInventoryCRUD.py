@@ -1,6 +1,6 @@
 from sqlalchemy import select, update, values, delete
 from .BaseCRUD import BaseCRUD
-from ..models.models import InventoryItem, Inventory
+from ..models.models import InventoryItem, Inventory, User
 
 
 class UserInventoryCRUD(BaseCRUD):
@@ -23,11 +23,7 @@ class UserInventoryCRUD(BaseCRUD):
         else:
             if quantity_change <= 0:
                 raise ValueError("Cannot add zero or negative quantity.")
-            new_inventory_item = InventoryItem(
-                inventory_id=inventory_id,
-                item_id=item_id,
-                quantity=quantity_change
-            )
+            new_inventory_item = InventoryItem(inventory_id=inventory_id, item_id=item_id, quantity=quantity_change)
             self.session.add(new_inventory_item)
         return inventory_item
 
@@ -40,15 +36,6 @@ class UserInventoryCRUD(BaseCRUD):
                 InventoryItem.item_id == item_id
             ))
         await self.session.execute(delete_statement)
-
-    async def get_inventoryitem_item_id(self, inventory_id: int, item_id: int):
-        query = await self.session.execute(
-            select(InventoryItem)
-            .where(
-                InventoryItem.inventory_id == user.inventory.id,
-                InventoryItem.item_id == current_equipped_item_id
-            ))
-        return query.scalars().first()
 
 
 

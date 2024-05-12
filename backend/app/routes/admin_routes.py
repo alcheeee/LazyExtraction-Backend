@@ -80,7 +80,8 @@ async def add_an_item_to_user(username: str, item_id: int, quantity: int,
                 quantity_change=quantity
             )
             await session.commit()
-            return {"message": f"Added {quantity} of item {item_id} to {username}"}
+            return {"message": f"Added/Removed {quantity} of item {item_id} to {username}"}
+
         except ValueError as e:
             await session.rollback()
             error_log.error(str(e))

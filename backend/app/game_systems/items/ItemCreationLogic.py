@@ -43,14 +43,14 @@ class GenerateItemStats:
 
     def generate_stats(self) -> Dict[str, int]:
         stats = filter_item_stats.get_relevant_stats(self.category)
-        generated_stats = {stat: 0 for stat in stats}
+        generated_stats = {stat: 0 for stat in stats if stat != 'clothing_type'}
         min_range, max_range, num_stats_to_change = STAT_RANGES[self.quality]
         luck_adjustment = sqrt(self.luck)
         stats_picked = 0
 
         if "damage_bonus" in stats and self.category == ItemType.Weapon:
             generated_stats["damage_bonus"] = self.generate_stat_value(min_range, max_range, luck_adjustment)
-            stats_picked += 3
+            stats_picked += 3 # Arbitrary number, trying to balance damage and other stats
             stats.remove("damage_bonus")
 
         while stats_picked < num_stats_to_change:

@@ -1,10 +1,12 @@
 from sqlmodel import select
-from fastapi import APIRouter, HTTPException, Depends, Form, status
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Depends
 from ..models.models import User, InventoryItem
-from ..auth.auth_handler import get_current_user
-from ..models.item_models import GeneralMarket, Items
-from ..game_systems.markets.MarketHandlerCRUD import MarketItems
+from ..auth.auth_handler import current_user
+from ..models.item_models import Items
+
+from ..game_systems.markets.MarketHandlerCRUD import MarketItems, MarketTransactionHandler
+from ..schemas.market_schema import MarketTransactionRequest
+
 from ..database.UserHandler import UserHandler
 from ..database.db import get_session
 from ..utils.logger import MyLogger
@@ -31,49 +33,15 @@ async def get_all_generalmarket_items(user: User = Depends(get_current_user)):
             raise HTTPException(status_code=500, detail={"message": "Internal error"})
 
 
-class MarketTransactionRequest(BaseModel):
-    item_id: int
-    quantity: int
-
 @market_router.post("/buy-market-item")
 async def buy_market_items(request: MarketTransactionRequest,
-                           user: User = Depends(get_current_user)):
+                           user_id: int = Depends(current_user.ensure_user_exists)):
     async with get_session() as session:
+        market_handler = MarketTransactionHandler(request, user_id, session)
         try:
-            session.add(user)
-            item = await session.execute(select(Items).where(Items.id == request.item_id))
-            item = item.scalars().first()
-            if item:
-                item = await session.merge(item)
-
-            if not item:
-                raise HTTPException(status_code=404, detail={"message": "Item not found"})
-
-            if request.quantity <= 0:
-                raise HTTPException(status_code=400, detail={"message": "Invalid quantity"})
-
-            if not hasattr(item, 'general_market_items') or item.general_market_items is None:
-                raise HTTPException(status_code=404, detail={"message": "Market item not found"})
-            total_cost = item.general_market_items.item_cost * request.quantity
-
-            if user.inventory.bank < total_cost:
-                raise HTTPException(status_code=403, detail={"message": "Insufficient funds"})
-
-            if item.general_market_items.item_quantity < request.quantity:
-                raise HTTPException(status_code=400, detail={"message": "Not enough stock available"})
-
-            user.inventory.bank -= total_cost
-            item.general_market_items.item_quantity -= request.quantity
-
-            user_handler = UserHandler(session=session)
-            result = await user_handler.update_user_inventory(user.id, item.id, request.quantity, selling=False)
-            if not result:
-                raise HTTPException(status_code=400, detail={"message": "Failed to update inventory properly."})
-
-
+            await market_handler.market_purchase()
             await session.commit()
-            user_log.info(f"{user.username} purchased {request.quantity} of {item.item_name}.")
-            return {"message": f"Bought {request.quantity} of {item.item_name}, for {total_cost}."}
+            return {"message": f"Purchase Successful"}
 
         except HTTPException as e:
             await session.rollback()
@@ -85,8 +53,7 @@ async def buy_market_items(request: MarketTransactionRequest,
 
 
 @market_router.post("/sell-market-item")
-async def sell_market_items(request: MarketTransactionRequest,
-                            user: User = Depends(get_current_user)):
+async def sell_market_items(request: MarketTransactionRequest):
     async with get_session() as session:
         try:
             session.add(user)

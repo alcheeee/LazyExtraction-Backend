@@ -75,13 +75,13 @@ class FilterItemStats:
         EVASIVENESS_BONUS = "evasiveness_bonus"
 
     class ClothingStats(Enum):
+        CLOTHING_TYPE = "clothing_type"
         REPUTATION_BONUS = "reputation_bonus"
         MAX_ENERGY_BONUS = "max_energy_bonus"
         EVASIVENESS_BONUS = "evasiveness_bonus"
         HEALTH_BONUS = "health_bonus"
         STRENGTH_BONUS = "strength_bonus"
         KNOWLEDGE_BONUS = "knowledge_bonus"
-
 
     def list(self, item_class: Enum) -> List[str]:
         return [stat.value for stat in item_class]
@@ -92,4 +92,5 @@ class FilterItemStats:
         elif category == ItemType.Clothing:
             return self.list(self.ClothingStats)
         return []
+
 filter_item_stats = FilterItemStats()

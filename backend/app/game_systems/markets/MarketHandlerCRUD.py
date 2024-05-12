@@ -1,12 +1,53 @@
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 from ...models.models import User
-from ...models.item_models import Items, GeneralMarket, BlackMarket
+from ...models.item_models import Items, MarketItems
+from ...schemas.market_schema import MarketNames, MarketTransactionRequest
+from ...schemas.item_schema import filter_item_stats
+
 from ..items.ItemStatsHandlerCRUD import ItemStatsHandler
+from ...crud.MarketCRUD import MarketCRUD
+from ...crud.ItemCRUD import ItemsCRUD
+from ...crud.UserInventoryCRUD import UserInventoryCRUD
+
 from ...utils.logger import MyLogger
-user_log = MyLogger.user()
 error_log = MyLogger.errors()
-admin_log = MyLogger.admin()
 game_log = MyLogger.game()
+
+
+class MarketTransactionHandler:
+    def __init__(self, request: MarketTransactionRequest, user_id: int, session: AsyncSession):
+        self.request = request
+        self.user_id = user_id
+        self.session = session
+        self.market_crud = MarketCRUD(None, session)
+        self.item_crud = ItemsCRUD(None, session)
+        self.inventory_crud = UserInventoryCRUD(None, session)
+
+    async def item_check(self):
+        market_item = await self.market_crud.get_item_info_for_purchase(self.request.market_item_id)
+        if not market_item:
+            raise Exception("Item not found")
+        if market_item.item_quantity < self.request.quantity:
+            raise ValueError("Not enough in stock")
+        return market_item
+
+    async def market_purchase(self):
+        market_item = await self.item_check()
+        total_cost = market_item.item_cost * self.request.quantity
+        user_inventory = await self.session.get(User.inventory, User.id == self.user_id)
+
+        if user_inventory.bank < total_cost:
+            raise ValueError("You can't afford that item")
+
+        user_inventory.bank -= total_cost
+        market_item.item_quantity -= self.request.quantity
+
+        await self.inventory_crud.update_user_inventory_item(user_inventory.id, market_item.item_id, self.request.quantity)
+
+    async def market_sell(self):
+        pass
+
 
 
 class BackendMarketHandler:
@@ -36,7 +77,7 @@ class BackendMarketHandler:
             }
 
             if self.market_name == 'General Market':
-                market_details = GeneralMarket(**market_item)
+                market_details = MarketItems(**market_item)
                 self.session.add(market_details)
                 await self.session.commit()
                 admin_log.info(f"ADMIN ACTION - Added {item.item_name} to General Market.")
@@ -55,7 +96,7 @@ class MarketItems:
 
     async def get_items(self):
         try:
-            items = (await self.session.execute(select(GeneralMarket))).scalars().all()
+            items = (await self.session.execute(select(MarketItems))).scalars().all()
             item_details = []
             for item in items:
                 main_item = await self.session.get(Items, item.item_id)
