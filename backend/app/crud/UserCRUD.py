@@ -12,8 +12,13 @@ class UserCRUD(BaseCRUD):
         return await self.execute_scalar_one_or_none(query)
 
     async def get_user_inventory_id_by_username(self, username: str) -> Optional[int]:
-        """Get user.inventory.id from username"""
+        """Get user.inventory.id from user.username"""
         query = select(Inventory.id).join(User).where(User.username == username)
+        return await self.execute_scalar_one_or_none(query)
+
+    async def get_user_inventory_id_by_userid(self, user_id: int) -> Optional[int]:
+        """Get user.inventory.id from user.id"""
+        query = select(Inventory.id).join(User).where(User.id == user_id)
         return await self.execute_scalar_one_or_none(query)
 
     async def change_user_corp_id(self, user_id: int, corp_id: int) -> True or Exception:

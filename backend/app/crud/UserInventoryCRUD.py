@@ -5,14 +5,25 @@ from ..models.models import InventoryItem, Inventory, User
 
 class UserInventoryCRUD(BaseCRUD):
 
-    async def update_user_inventory_item(self, inventory_id: int, item_id: int, quantity_change: int):
+    async def get_user_inventory_item(self, inventory_id: int, item_id: int):
+        query = select(InventoryItem).where(
+            InventoryItem.inventory_id == inventory_id,
+            InventoryItem.item_id == item_id
+        )
+        result = await self.session.execute(query)
+        return result.scalars().first()
+
+    async def get_user_inventory(self, user_id: int):
+        query = select(User.inventory).where(
+            User.id == user_id
+        )
+        result = await self.session.execute(query)
+        return result.scalars().first()
+
+    async def update_user_inventory_item(self, inventory_id: int, item_id: int, quantity_change: int, inventory_item: InventoryItem=None):
         """Add a new item to the inventory or update the quantity if it exists."""
-        result = await self.session.execute(
-            select(InventoryItem).where(
-                InventoryItem.inventory_id == inventory_id,
-                InventoryItem.item_id == item_id
-            ))
-        inventory_item = result.scalars().first()
+        if inventory_item is None:
+            inventory_item = await self.get_user_inventory_item(inventory_id, item_id)
 
         if inventory_item:
             if quantity_change < 0 and abs(quantity_change) > inventory_item.quantity:

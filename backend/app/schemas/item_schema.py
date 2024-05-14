@@ -41,11 +41,6 @@ item_bonus_mapper = {
     "knowledge": "knowledge_bonus",
 }
 
-class MarketItemAdd(BaseModel):
-    item_id: int
-    market_name: str
-    item_cost: int
-    sell_price: int
 
 class ItemCreate(BaseModel):
     item_name: str = "Bandana"
@@ -55,6 +50,7 @@ class ItemCreate(BaseModel):
     randomize_all: bool = True
     randomize_stats: bool = False
     quality: ItemQuality
+
 
 class ItemStats(ItemCreate):
     clothing_type: Optional[ClothingType]

@@ -4,13 +4,13 @@ from ..models.models import User, InventoryItem
 from ..auth.auth_handler import current_user
 from ..models.item_models import Items
 
-from ..game_systems.markets.MarketHandlerCRUD import MarketItems, MarketTransactionHandler
+from ..game_systems.markets.MarketHandler import MarketTransactionHandler
 from ..schemas.market_schema import MarketTransactionRequest
 
 from ..database.UserHandler import UserHandler
 from ..database.db import get_session
+from ..services.RaiseHTTPErrors import common_http_errors
 from ..utils.logger import MyLogger
-user_log = MyLogger.user()
 error_log = MyLogger.errors()
 game_log = MyLogger.game()
 
@@ -21,80 +21,22 @@ market_router = APIRouter(
 )
 
 
-@market_router.post("/get-market-items")
-async def get_all_generalmarket_items(user: User = Depends(get_current_user)):
+@market_router.post("/market-transaction")
+async def all_market_transactions(request: MarketTransactionRequest, user_id: int = Depends(current_user.ensure_user_exists)):
     async with get_session() as session:
-        market_items = MarketItems(session)
         try:
-            items = await market_items.get_items()
-            return items
+            market_handler = MarketTransactionHandler(request, user_id, session)
+            result = await market_handler.market_transaction()
+
+            await session.commit()
+            game_log.info(result)
+            return {"message": result}
+
+        except ValueError as e:
+            await session.rollback()
+            raise common_http_errors.mechanics_error(str(e))
+
         except Exception as e:
+            await session.rollback()
             error_log.error(str(e))
-            raise HTTPException(status_code=500, detail={"message": "Internal error"})
-
-
-@market_router.post("/buy-market-item")
-async def buy_market_items(request: MarketTransactionRequest,
-                           user_id: int = Depends(current_user.ensure_user_exists)):
-    async with get_session() as session:
-        market_handler = MarketTransactionHandler(request, user_id, session)
-        try:
-            await market_handler.market_purchase()
-            await session.commit()
-            return {"message": f"Purchase Successful"}
-
-        except HTTPException as e:
-            await session.rollback()
-            raise e
-        except Exception as e:
-            await session.rollback()
-            error_log.error(f"{user.username} - Error purchasing item due to: {str(e)}")
-            raise HTTPException(status_code=500, detail={"message": "Internal Error"})
-
-
-@market_router.post("/sell-market-item")
-async def sell_market_items(request: MarketTransactionRequest):
-    async with get_session() as session:
-        try:
-            session.add(user)
-            item = await session.get(Items, request.item_id)
-            if not item:
-                raise HTTPException(status_code=404, detail={"message": "Item not found"})
-
-            if request.quantity <= 0:
-                raise HTTPException(status_code=400, detail={"message": "Invalid quantity"})
-
-            if not hasattr(item, 'general_market_items') or item.general_market_items is None:
-                raise HTTPException(status_code=404, detail={"message": "Market item not found"})
-
-            total_earning = item.general_market_items.sell_price * request.quantity
-
-            inventory_item = (await session.execute(
-                select(InventoryItem).where(
-                    InventoryItem.inventory_id == user.inventory.id,
-                    InventoryItem.item_id == item.id
-                )
-            )).scalars().first()
-
-            if inventory_item is None or inventory_item.quantity < request.quantity:
-                raise HTTPException(status_code=400, detail={"message": "Not enough items to sell"})
-
-            user.inventory.bank += total_earning
-            item.general_market_items.item_quantity += request.quantity
-            user_handler = UserHandler(session)
-            result = await user_handler.update_user_inventory(user.id, item.id, request.quantity, selling=True)
-            if not result:
-                raise HTTPException(status_code=400, detail={"message": "Failed to update inventory properly."})
-
-            await session.commit()
-            user_log.info(f"{user.username} sold {request.quantity} of {item.item_name}.")
-            return {"message": f"Sold {request.quantity} of {item.item_name}, earning {total_earning}."}
-
-        except HTTPException as he:
-            await session.rollback()
-            return {"message": str(e)}
-        except Exception as e:
-            await session.rollback()
-            error_log.error(f"{user.username} - Error selling item due to: {str(e)}")
-            raise HTTPException(status_code=500, detail={"message": "Server error"})
-
+            raise common_http_errors.server_error()

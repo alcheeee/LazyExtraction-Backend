@@ -1,18 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends
-from sqlmodel import select
+from fastapi import APIRouter, Depends
 from ..game_systems.items.ItemHandler import ItemCreator
-from ..game_systems.markets.MarketHandlerCRUD import BackendMarketHandler
 from ..crud.UserInventoryCRUD import UserInventoryCRUD
 from ..crud.UserCRUD import UserCRUD
 from ..models.models import User, Inventory
 from ..auth.auth_handler import current_user
-from ..schemas.item_schema import MarketItemAdd, ItemStats
-from ..database.UserHandler import UserHandler
+from ..schemas.item_schema import ItemStats
 from ..services.RaiseHTTPErrors import common_http_errors
 from ..database.db import get_session
 from ..utils.logger import MyLogger
 error_log = MyLogger.errors()
 admin_log = MyLogger.admin()
+game_log = MyLogger.game()
 
 
 admin_router = APIRouter(
@@ -35,27 +33,6 @@ async def create_equippable_item_endpoint(request: ItemStats,
             admin_log.info(msg)
             return {"message": msg, "item-details": response_json}
 
-        except Exception as e:
-            await session.rollback()
-            error_log.error(str(e))
-            raise common_http_errors.server_error()
-
-
-@admin_router.post("/add-item-to-market")
-async def add_item_to_market(request: MarketItemAdd,
-                             admin_username: str = Depends(current_user.check_if_admin)):
-    async with get_session() as session:
-        try:
-            market_handler = BackendMarketHandler(request.item_id, request.market_name,
-                                                  request.item_cost, request.sell_price, session)
-            result = await market_handler.add_item_to_market()
-            if not result:
-                raise common_http_errors.mechanics_error("Failed to add item to market")
-            return {"message": f"Added {request.item_id} to {request.market_name}"}
-
-        except ValueError as e:
-            await session.rollback()
-            raise common_http_errors.mechanics_error(str(e))
         except Exception as e:
             await session.rollback()
             error_log.error(str(e))

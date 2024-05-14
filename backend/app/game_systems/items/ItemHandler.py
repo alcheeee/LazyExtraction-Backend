@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Type
 from .ItemCreationLogic import GenerateItemQuality, GenerateItemStats
 from ...crud.ItemCRUD import ItemsCRUD
-from ...schemas.item_schema import ItemType, ItemQuality
+from ...schemas.item_schema import ItemType, ItemQuality, ItemStats
 from ...models.item_models import Items, Weapon, Clothing
 from ...models.models import User
 from ...utils.logger import MyLogger
@@ -19,7 +19,7 @@ class ItemCreator:
         ItemType.Other: None
     }
 
-    def __init__(self, item_details: BaseModel, session: AsyncSession, user_luck=1.0):
+    def __init__(self, item_details: ItemStats, session: AsyncSession, user_luck=1.0):
         self.item_details = item_details
         self.session = session
         self.user_luck = user_luck
