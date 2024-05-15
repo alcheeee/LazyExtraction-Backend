@@ -7,7 +7,7 @@ from ..schemas.market_schema import MarketNames, MarketTransactionRequest
 
 class MarketCRUD(BaseCRUD):
 
-    async def get_market_item_from_item_id(self, market_id: int):
+    async def get_market_item_from_market_id(self, market_id: int):
         market_item = await self.session.get(MarketItems, market_id)
         return market_item
 

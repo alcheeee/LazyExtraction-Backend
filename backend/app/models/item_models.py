@@ -13,6 +13,7 @@ class Items(SQLModel, table=True):
     quality: ItemQuality = Field(sa_column=Column(Enum(ItemQuality)))
     illegal: bool = Field(default=False)
     quantity: int = Field(default=0)
+    quick_sell: int = Field(default=0)
 
     # Relationships
     market_items: List["MarketItems"] = Relationship(back_populates="item")
@@ -53,8 +54,6 @@ class Market(SQLModel, table=True):
 class MarketItems(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     item_cost: int = Field(default=0)
-    quick_sell: bool = Field(default=False)
-    sell_price: int = Field(default=None, nullable=True)
     item_quantity: int = Field(default=0)
     by_user: Optional[str] = Field(default=None, nullable=True)
     posted_at: datetime = Field(default_factory=datetime.utcnow)

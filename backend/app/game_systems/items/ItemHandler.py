@@ -1,3 +1,4 @@
+from tenacity import retry, wait_fixed, stop_after_attempt, retry_if_not_exception_type
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Type
@@ -37,21 +38,24 @@ class ItemCreator:
 
         stats_generator = GenerateItemStats(self.item_details.category, quality, self.user_luck)
         item_specific_details = stats_generator.generate_stats()
-        return quality, item_specific_details
+        quick_sell_value = stats_generator.generate_quick_sell(self.item_details.quick_sell)
+        return quality, item_specific_details, quick_sell_value
 
+    @retry(wait=wait_fixed(1), stop=stop_after_attempt(3), retry=retry_if_not_exception_type((ValueError)))
     async def create_item(self):
         item_model = self.get_item_model()
         quality = self.item_details.quality
 
         if self.item_details.randomize_all:
-            quality, specific_item_details = self.generators(randomize_all=True)
+            quality, specific_item_details, quick_sell_value = self.generators(randomize_all=True)
 
         elif self.item_details.randomize_stats:
-            _, specific_item_details = self.generators(quality=quality, randomize_all=False)
+            _, specific_item_details, quick_sell_value = self.generators(quality=quality, randomize_all=False)
 
         else:
             specific_item_details = self.item_details.dict(exclude_unset=True, exclude={
-                "item_name", "illegal", "quality", "quantity", "randomize_stats", "randomize_all", "category"
+                "item_name", "illegal", "quality", "quantity",
+                "randomize_stats", "randomize_all", "category", "quick_sell"
             })
 
         item_data = {
@@ -59,12 +63,12 @@ class ItemCreator:
             "illegal": self.item_details.illegal,
             "category": self.item_details.category,
             "quality": quality,
-            "quantity": self.item_details.quantity
+            "quantity": self.item_details.quantity,
+            "quick_sell": quick_sell_value
         }
 
         if self.item_details.category == ItemType.Clothing and 'clothing_type' not in specific_item_details and hasattr(self.item_details, 'clothing_type'):
             specific_item_details['clothing_type'] = self.item_details.clothing_type
-
         item = Items(**item_data)
         self.session.add(item)
         await self.session.flush()

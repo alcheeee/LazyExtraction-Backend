@@ -25,6 +25,9 @@ market_router = APIRouter(
 async def all_market_transactions(request: MarketTransactionRequest, user_id: int = Depends(current_user.ensure_user_exists)):
     async with get_session() as session:
         try:
+            if request.amount <= 0:
+                raise ValueError("Invalid amount")
+
             market_handler = MarketTransactionHandler(request, user_id, session)
             result = await market_handler.market_transaction()
 

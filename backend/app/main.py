@@ -11,8 +11,7 @@ from .routes.social_routes import social_router
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title=settings.PROJECT_NAME,
-                  version=settings.VERSION)
+    app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION)
 
     app.include_router(user_router)
     app.include_router(user_info_router)
@@ -21,11 +20,14 @@ def create_app() -> FastAPI:
     app.include_router(game_router)
     app.include_router(market_router)
     app.include_router(admin_router)
-    return app
 
+    return app
 
 async def startup():
     await init_db()
 
+
 app = create_app()
 app.router.on_startup.append(startup)
+
+

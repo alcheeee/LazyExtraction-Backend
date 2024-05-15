@@ -16,11 +16,6 @@ class UserCRUD(BaseCRUD):
         query = select(Inventory.id).join(User).where(User.username == username)
         return await self.execute_scalar_one_or_none(query)
 
-    async def get_user_inventory_id_by_userid(self, user_id: int) -> Optional[int]:
-        """Get user.inventory.id from user.id"""
-        query = select(Inventory.id).join(User).where(User.id == user_id)
-        return await self.execute_scalar_one_or_none(query)
-
     async def change_user_corp_id(self, user_id: int, corp_id: int) -> True or Exception:
         """Change Users corp_id field"""
         update_stmt = update(User).where(User.id == user_id).values(corp_id=corp_id)

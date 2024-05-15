@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy import select, update, values, delete
 from .BaseCRUD import BaseCRUD
 from ..models.models import InventoryItem, Inventory, User
@@ -5,7 +6,7 @@ from ..models.models import InventoryItem, Inventory, User
 
 class UserInventoryCRUD(BaseCRUD):
 
-    async def get_user_inventory_item(self, inventory_id: int, item_id: int):
+    async def get_user_inventory_item(self, inventory_id: int, item_id: int) -> InventoryItem:
         query = select(InventoryItem).where(
             InventoryItem.inventory_id == inventory_id,
             InventoryItem.item_id == item_id
@@ -13,12 +14,10 @@ class UserInventoryCRUD(BaseCRUD):
         result = await self.session.execute(query)
         return result.scalars().first()
 
-    async def get_user_inventory(self, user_id: int):
-        query = select(User.inventory).where(
-            User.id == user_id
-        )
-        result = await self.session.execute(query)
-        return result.scalars().first()
+    async def get_user_inventory_id_by_userid(self, user_id: int) -> Optional[int]:
+        """Get user.inventory.id from user.id"""
+        query = select(Inventory.id).join(User).where(User.id == user_id)
+        return await self.execute_scalar_one_or_none(query)
 
     async def update_user_inventory_item(self, inventory_id: int, item_id: int, quantity_change: int, inventory_item: InventoryItem=None):
         """Add a new item to the inventory or update the quantity if it exists."""

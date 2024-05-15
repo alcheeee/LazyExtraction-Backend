@@ -10,15 +10,12 @@ class MarketNames(str, Enum):
 class Transactions(str, Enum):
     Posting = "posting"
     Buying = "buying"
-    Selling = "selling"
+    QuickSell = "quick_sell"
 
 class MarketTransactionRequest(BaseModel):
     market_or_item_id: int
-    market_name: MarketNames
+    market_name: Optional[MarketNames]
     transaction_type: Transactions
     item_cost: Optional[int]
     amount: int
-
-    sell_price: Optional[int] = None    # Only for In-Game items by admins
-    quick_sell: Optional[bool] = False  # Only for In-Game items by admins
 

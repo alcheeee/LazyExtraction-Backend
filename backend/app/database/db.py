@@ -1,11 +1,16 @@
 from sqlmodel import SQLModel
+from fastapi import Depends
 from contextlib import asynccontextmanager
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.ext.asyncio import async_sessionmaker
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    async_sessionmaker,
+    AsyncSession
+)
 from sqlalchemy.pool import AsyncAdaptedQueuePool
 from .init_db.init_jobs import init_jobs_content
 from ..config import settings
+from ..utils.logger import MyLogger
+error_log = MyLogger.errors()
 
 
 engine = create_async_engine(
@@ -20,9 +25,10 @@ engine = create_async_engine(
 async_session = async_sessionmaker(
     bind=engine,
     autocommit=False,
-    autoflush=True,
+    autoflush=False,
     expire_on_commit=False
 )
+
 
 @asynccontextmanager
 async def get_session() -> AsyncSession:
@@ -31,6 +37,14 @@ async def get_session() -> AsyncSession:
             yield session
         finally:
             await session.close()
+
+
+async def dependency_session() -> Depends(AsyncSession):
+    db_session = async_session()
+    try:
+        yield db_session
+    finally:
+        await db_session.close()
 
 
 async def init_db():

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 from ..game_systems.items.ItemHandler import ItemCreator
 from ..crud.UserInventoryCRUD import UserInventoryCRUD
 from ..crud.UserCRUD import UserCRUD
@@ -6,7 +7,7 @@ from ..models.models import User, Inventory
 from ..auth.auth_handler import current_user
 from ..schemas.item_schema import ItemStats
 from ..services.RaiseHTTPErrors import common_http_errors
-from ..database.db import get_session
+from ..database.db import get_session, dependency_session
 from ..utils.logger import MyLogger
 error_log = MyLogger.errors()
 admin_log = MyLogger.admin()
@@ -21,22 +22,22 @@ admin_router = APIRouter(
 
 
 @admin_router.post("/create-item/equippable")
-async def create_equippable_item_endpoint(request: ItemStats,
-                                          admin_username: str = Depends(current_user.check_if_admin)):
-    async with get_session() as session:
-        try:
-            item_creator = ItemCreator(item_details=request, session=session)
-            response_json = await item_creator.create_item()
-            await session.commit()
+async def create_equippable_item_endpoint(request: ItemStats, session: AsyncSession = Depends(dependency_session)):#, admin_username: str = Depends(current_user.check_if_admin)):
+    admin_username = "tests"
+    #async with get_session() as session:
+    try:
+        item_creator = ItemCreator(item_details=request, session=session)
+        response_json = await item_creator.create_item()
+        await session.commit()
 
-            msg = f"Admin {admin_username} created item {request.item_name}"
-            admin_log.info(msg)
-            return {"message": msg, "item-details": response_json}
+        msg = f"Admin {admin_username} created item {request.item_name}"
+        admin_log.info(msg)
+        return {"message": msg, "item-details": response_json}
 
-        except Exception as e:
-            await session.rollback()
-            error_log.error(str(e))
-            raise common_http_errors.server_error()
+    except Exception as e:
+        await session.rollback()
+        error_log.error(str(e))
+        raise common_http_errors.server_error()
 
 
 @admin_router.put("/add-item-to-user/{username}/{item_id}/{quantity}")

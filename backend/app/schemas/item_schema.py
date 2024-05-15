@@ -46,9 +46,10 @@ class ItemCreate(BaseModel):
     item_name: str = "Bandana"
     quantity: int = 10
     illegal: bool = False
-    category: ItemType
+    category: ItemType = ItemType.Clothing
     randomize_all: bool = True
     randomize_stats: bool = False
+    quick_sell: int = 0
     quality: ItemQuality
 
 

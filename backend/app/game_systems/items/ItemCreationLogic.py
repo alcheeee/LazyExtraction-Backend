@@ -19,14 +19,15 @@ class GenerateItemQuality:
     def generate_item_quality(self) -> ItemQuality:
         qualities = [q for q in ItemQuality]
         weights = [self.get_weight(q) for q in qualities]
-        return random.choices(qualities, weights=weights, k=1)[0]
+        quality = random.choices(qualities, weights=weights, k=1)[0]
+        return quality
 
     def get_weight(self, quality: ItemQuality) -> int:
         base_weight, luck_factor = self.QUALITY_WEIGHTS[quality]
         luck_effect = sqrt(self.luck_stat) / luck_factor
         return max(1, int(base_weight + luck_effect))
 
-STAT_RANGES: Dict[ItemQuality, Tuple[int, int, int]] = {
+STAT_RANGES: Dict[ItemQuality, Tuple[min, max, int]] = {
     ItemQuality.Junk: (1, 3, 1),
     ItemQuality.Common: (2, 7, 2),
     ItemQuality.Uncommon: (3, 8, 4),
@@ -61,7 +62,25 @@ class GenerateItemStats:
 
         return generated_stats
 
+
     def generate_stat_value(self, min_range, max_range, luck_adjustment) -> float:
         return round(random.uniform(min_range + luck_adjustment, max_range + luck_adjustment), 2)
+
+
+    def generate_quick_sell(self, quick_sell_value: int):
+        quality_multipliers = {
+            ItemQuality.Junk: 1,
+            ItemQuality.Common: 2,
+            ItemQuality.Uncommon: 4,
+            ItemQuality.Rare: 8,
+            ItemQuality.Special: 16,
+            ItemQuality.Unique: 20,
+        }
+        quick_sell = quick_sell_value * quality_multipliers.get(self.quality, 1)
+        return int(quick_sell)
+
+
+
+
 
 
