@@ -13,7 +13,7 @@ class Items(SQLModel, table=True):
     quality: ItemQuality = Field(sa_column=Column(Enum(ItemQuality)))
     illegal: bool = Field(default=False)
     quantity: int = Field(default=0)
-    quick_sell: int = Field(default=0)
+    quick_sell: int = Field(default=5)
 
     # Relationships
     market_items: List["MarketItems"] = Relationship(back_populates="item")

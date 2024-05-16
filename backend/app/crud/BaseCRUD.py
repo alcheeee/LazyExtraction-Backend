@@ -9,11 +9,19 @@ class BaseCRUD:
         self.session = session
 
     async def execute_scalar_one_or_none(self, query):
+        """
+        :param query: SQLAlchemy Statement
+        :return: Optional[Result]
+        """
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
     async def get_by_id(self, id, options=None):
-        """Get an instance by its id"""
+        """
+        :param id: Model.id
+        :param options: Model(*fields)
+        :return: Optional[Model.[fields]]
+        """
         query = select(self.model).where(self.model.id == id)
         if options:
             query = query.options(*options)

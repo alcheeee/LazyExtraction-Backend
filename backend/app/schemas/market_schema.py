@@ -11,6 +11,7 @@ class Transactions(str, Enum):
     Posting = "posting"
     Buying = "buying"
     QuickSell = "quick_sell"
+    Cancel = "cancel"
 
 class MarketTransactionRequest(BaseModel):
     market_or_item_id: int

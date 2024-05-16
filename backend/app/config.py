@@ -24,6 +24,10 @@ class Settings:
     DB_PASSWORD = os.getenv('DATABASE_PASSWORD')
     DATABASE_URL = os.getenv('DATABASE_URL')
 
+    # Game setup variables
+    # Setup later
+    GAME_BOT_USERNAME = 'Game Admin'
+    GAME_MARKET_USERNAME = 'Market'
 
 
 settings = Settings()

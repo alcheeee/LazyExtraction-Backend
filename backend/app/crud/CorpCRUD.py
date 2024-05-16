@@ -6,10 +6,6 @@ from ..models.corp_models import Corporation, CorporationItems
 
 class CorporationCRUD(BaseCRUD):
 
-    async def base_corporation_query(self, field_one, field_two=None, field_three=None):
-        query = select(Corporation.field_one).where(Corporation.field_two == field_three)
-        pass
-
     # Get Corporation by its id
     async def get_corporation_by_id(self, corp_id: int, load_items: bool = False):
         query = select(Corporation).where(Corporation.id == corp_id)
