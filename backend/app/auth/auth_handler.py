@@ -7,7 +7,7 @@ from .auth_deps import password_security, token_handler
 from ..crud.UserCRUD import UserCRUD
 from ..models.models import User
 from ..database.db import get_session
-from ..services.RaiseHTTPErrors import common_http_errors
+from ..utils.CommonHTTPErrors import common_http_errors
 
 
 class UserService:

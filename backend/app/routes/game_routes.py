@@ -1,11 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from .router_ids import RouteIDs
-from ..models.models import User
 from ..auth.auth_handler import current_user
-from ..services.job_service import job_service
+from ..game_systems.jobs.JobHandler import JobService, JobRequest
 from ..game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
 
-from . import dependency_session, ResponseBuilder, DataName, MyLogger, common_http_errors, AsyncSession
+from . import dependency_session, ResponseBuilder, MyLogger, common_http_errors, AsyncSession
 error_log = MyLogger.errors()
 game_log = MyLogger.game()
 
@@ -37,49 +36,14 @@ async def equip_unequip_inventory_item(
         raise common_http_errors.server_error()
 
 
-@game_router.post("/specific-user-action/{button_name}")
-async def user_action_buttons(
-        button_name: str,
+@game_router.post("/job-action")
+async def job_actions(
+        request: JobRequest,
         user_id: int = Depends(current_user.ensure_user_exists),
         session: AsyncSession = Depends(dependency_session)
     ):
     try:
-        session.add(user)
-        route_id = RouteIDs(button_name, user_id, session=session)
-        msg = await route_id.find_id()
-        return ResponseBuilder.success(msg)
-
-    except ValueError as e:
-        await session.rollback()
-        return ResponseBuilder.error(str(e))
-    except Exception as e:
-        error_log.error(str(e))
-        await session.rollback()
-        raise common_http_errors.server_error()
-
-
-@game_router.get("/get-all-jobs")
-async def get_all_job_info(
-        user_id: int = Depends(current_user.ensure_user_exists),
-        session: AsyncSession = Depends(dependency_session)
-    ):
-    try:
-        result = await job_service.get_all_jobs(session)
-        return result
-
-    except Exception as e:
-        error_log.error(str(e))
-        raise common_http_errors.server_error()
-
-
-@game_router.post("/apply-to-job/{job_name}")
-async def apply_to_job(
-        job_name: str,
-        user_id: int = Depends(current_user.ensure_user_exists),
-        session: AsyncSession = Depends(dependency_session)
-    ):
-    try:
-        msg = await job_service.update_user_job(user_id, job_name, session=session),
+        msg = "TBA"
         return ResponseBuilder.success(msg)
 
     except ValueError as e:

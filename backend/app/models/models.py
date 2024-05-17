@@ -3,35 +3,42 @@ from typing import List, Optional
 from datetime import datetime
 
 
-class FriendsLink(SQLModel, table=True):
-    user1_id: Optional[int] = Field(default=None, foreign_key="user.id", primary_key=True)
-    user2_id: Optional[int] = Field(default=None, foreign_key="user.id", primary_key=True)
-
-
 class Stats(SQLModel, table=True):
     """
     Stats Table for Users, linked by id
     """
     id: Optional[int] = Field(default=None, primary_key=True)
     level: float = Field(default=1.00)
-    reputation: int = Field(default=1)
-    job: Optional[str] = Field(default=None)
-    education: Optional[str] = Field(default=None)
+    reputation: float = Field(default=1.00)
     max_energy: int = Field(default=100)
     damage: int = Field(default=1)
-    evasiveness: float = Field(default=1.00)
     health: int = Field(default=100)
+    evasiveness: float = Field(default=1.00)
     luck: float = Field(default=1.00)
     strength: float = Field(default=1.00)
     knowledge: float = Field(default=1.00)
     user: Optional["User"] = Relationship(back_populates="stats")
     def round_stats(self):
-        float_attributes = ['level', 'evasiveness', 'strength', 'knowledge', 'luck']
+        float_attributes = ['level', 'reputation', 'evasiveness', 'strength', 'knowledge', 'luck']
         for attr in float_attributes:
             value = getattr(self, attr)
             if isinstance(value, float):
                 setattr(self, attr, round(value, 2))
 
+
+class EducationProgress(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    # Allow to go over 100, for every 100, thats a new "Level" of education
+    community_college: float = Field(default=0.00)
+    criminal_justice: float = Field(default=0.00)
+    economics: float = Field(default=0.00)
+    military_planning: float = Field(default=0.00)
+    engineering: float = Field(default=0.00)
+    computer_science: float = Field(default=0.00)
+    health_science: float = Field(default=0.00)
+
+    user: Optional["User"] = Relationship(back_populates="education_progress")
 
 class Inventory(SQLModel, table=True):
     """
@@ -60,6 +67,10 @@ class InventoryItem(SQLModel, table=True):
     item: Optional["Items"] = Relationship(sa_relationship_kwargs={"lazy": "selectin"})
 
 
+class FriendsLink(SQLModel, table=True):
+    user1_id: Optional[int] = Field(default=None, foreign_key="user.id", primary_key=True)
+    user2_id: Optional[int] = Field(default=None, foreign_key="user.id", primary_key=True)
+
 
 class User(SQLModel, table=True):
     """User Table"""
@@ -68,6 +79,14 @@ class User(SQLModel, table=True):
     username: str = Field(index=True)
     password: str
     email: str
+
+    job: Optional[str] = Field(default=None)
+    job_chance_to_promo: float = Field(default=1.00)
+
+    education: Optional[str] = Field(default=None)
+
+    education_progress_id: Optional[int] = Field(default=None, foreign_key="educationprogress.id", index=True)
+    education_progress: Optional["EducationProgress"] = Relationship(back_populates="user")
 
     stats_id: Optional[int] = Field(default=None, foreign_key="stats.id", index=True)
     stats: Optional["Stats"] = Relationship(back_populates="user")
@@ -78,11 +97,16 @@ class User(SQLModel, table=True):
     corp_id: Optional[int] = Field(default=None, foreign_key="corporation.id", index=True)
     corporation: Optional["Corporation"] = Relationship(back_populates="employees")
 
+
+    # I will clean this up in the future, for now I just cant be bothered. Not enough content yet
     sent_messages: List["PrivateMessage"] = Relationship(back_populates="sender",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.sender_id"})
     received_messages: List["PrivateMessage"] = Relationship(back_populates="receiver",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.receiver_id"})
     friend_requests_sent: List["FriendRequest"] = Relationship(back_populates="requester",sa_relationship_kwargs={"primaryjoin": "User.id == FriendRequest.requester_id"})
     friend_requests_received: List["FriendRequest"] = Relationship(back_populates="requestee",sa_relationship_kwargs={"primaryjoin": "User.id == FriendRequest.requestee_id"})
     friends: List["User"] = Relationship(back_populates="friends",link_model=FriendsLink,sa_relationship_kwargs={"primaryjoin": "User.id == FriendsLink.user2_id","secondaryjoin": "User.id == FriendsLink.user1_id"})
+
+
+
 
 
 class PrivateMessage(SQLModel, table=True):

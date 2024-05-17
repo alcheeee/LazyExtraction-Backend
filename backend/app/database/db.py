@@ -1,16 +1,17 @@
+from contextlib import asynccontextmanager
+
 from sqlmodel import SQLModel
 from fastapi import Depends
-from contextlib import asynccontextmanager
+
+from sqlalchemy.pool import AsyncAdaptedQueuePool
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     async_sessionmaker,
     AsyncSession
 )
-from sqlalchemy.pool import AsyncAdaptedQueuePool
+
 from .init_db.init_jobs import init_jobs_content
 from ..config import settings
-from ..utils.logger import MyLogger
-error_log = MyLogger.errors()
 
 
 engine = create_async_engine(
@@ -53,6 +54,7 @@ async def init_db():
 
     if settings.PROJECT_MODE == settings.Mode.development:
         async with get_session() as session:
-            await init_jobs_content(session)
+            pass
+            #await init_jobs_content(session)
 
 

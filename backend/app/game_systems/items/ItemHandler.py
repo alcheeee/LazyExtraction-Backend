@@ -25,11 +25,13 @@ class ItemCreator:
         self.session = session
         self.user_luck = user_luck
 
+
     def get_item_model(self):
         item_model = self.item_model_map.get(self.item_details.category)
         if not item_model:
             raise Exception(f"No class defined for item type {self.item_details.category}")
         return item_model
+
 
     def generators(self, quality=None, randomize_all=True):
         if randomize_all:
@@ -40,6 +42,7 @@ class ItemCreator:
         item_specific_details = stats_generator.generate_stats()
         quick_sell_value = stats_generator.generate_quick_sell(self.item_details.quick_sell)
         return quality, item_specific_details, quick_sell_value
+
 
     @retry(wait=wait_fixed(1), stop=stop_after_attempt(3), retry=retry_if_not_exception_type((ValueError)))
     async def create_item(self):
@@ -53,7 +56,8 @@ class ItemCreator:
             _, specific_item_details, quick_sell_value = self.generators(quality=quality, randomize_all=False)
 
         else:
-            specific_item_details = self.item_details.dict(exclude_unset=True, exclude={
+            specific_item_details = self.item_details.dict(
+                exclude_unset=True, exclude={
                 "item_name", "illegal", "quality", "quantity",
                 "randomize_stats", "randomize_all", "category", "quick_sell"
             })

@@ -1,15 +1,15 @@
-from ..services.job_service import job_service
+from ..game_systems.jobs.JobHandler import JobService
 
 class RouteIDs:
-    def __init__(self, route_name_id, user, session):
+    def __init__(self, route_name_id, user_id, session):
         self.route_name_id = route_name_id
-        self.user = user
+        self.user_id = user_id
         self.session = session
 
     async def find_id(self):
         actions = {
-            "work-job": lambda: job_service.do_user_job(self.user, self.user.stats.job, session=self.session),
-            "quit-job": lambda: job_service.update_user_job(self.user, 'quit', session=self.session),
+            #"work-job": lambda: job_service.do_user_job(self.user, self.user.stats.job, session=self.session),
+            #"quit-job": lambda: job_service.update_user_job(self.user, 'quit', session=self.session),
         }
         try:
             if self.route_name_id in actions:
