@@ -1,5 +1,5 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select
+from sqlalchemy.orm import selectinload
 from ...models.models import User
 from ...models.other_models import Jobs
 from ...schemas.job_schema import JobTypes, JobRequest, JobActionType
@@ -37,7 +37,7 @@ class JobService:
 
 
     async def work_job(self):
-        pass
+        return "Test complete"
 
 
     async def quit_job(self):
@@ -45,17 +45,19 @@ class JobService:
 
 
     async def apply_to_job(self):
-        user_job = await self.get_user_job()
-        if user_job:
+        job_name = self.request.job_name
+        user = await self.user_crud.get_stats_education(self.user_id)
+        if user.job:
             raise ValueError("You need to quit your current job first")
 
         job = await self.get_job_by_name()
 
-        if await self.check_qualifications(job):
-            user_job = self.request.job_name
-            return f"Congrats! You are now a {job.job_name}!"
-        else:
+        if not self.check_qualifications(user, job):
             raise ValueError("You don't meet the required qualifications")
+
+        user.job = job_name
+        self.session.add(user)
+        return f"Congrats! You are now a {job_name}!"
 
 
     async def ask_for_promotion(self):
@@ -74,16 +76,22 @@ class JobService:
         return job
 
 
-    async def check_qualifications(self, job: object):
-        try:
-            if job:
-                required_stats = json.loads(job.required_stats)
-                for stat, required_value in required_stats.items():
-                    if getattr(user.stats, stat, 0) < required_value:
-                        return False
-                return True
-        except Exception as e:
-            raise e
+    @staticmethod
+    def check_qualifications(user, job: Jobs = None):
+        if user.stats.level < job.level_required:
+            return False
+        if user.stats.reputation < job.reputation_required:
+            return False
+        if job.education_required and user.education_progress is None:
+            return False
+        if not job.education_required:
+            return True
+
+        education_progress_field = getattr(user.education_progress, job.education_required, 0)
+        if education_progress_field < job.education_progress_required:
+            return False
+        return True
+
 
 
 

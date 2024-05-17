@@ -1,18 +1,25 @@
 from typing import Optional, Union
-import sqlalchemy
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy import select, update
 from .BaseCRUD import BaseCRUD
 from ..models.models import User, Inventory
 
 
 class UserCRUD(BaseCRUD):
-    async def get_user_field_from_id(self, user_id: int, field: str) -> Optional[object]:
+    async def get_user_field_from_id(self, user_id: int, field: str) -> Optional[User]:
+        """
+        :param user_id: int = User.id
+        :param field: User.(field)
+        :return: Optional[field]
+        """
         query = select(getattr(User, field)).where(User.id == user_id)
         return await self.execute_scalar_one_or_none(query)
 
     async def get_user_inventory_id_by_username(self, username: str) -> Optional[int]:
-        """Get user.inventory.id from user.username"""
+        """
+        :param username: str = User.username
+        :return: Optional[User.inventory_id]
+        """
         query = select(Inventory.id).join(User).where(User.username == username)
         return await self.execute_scalar_one_or_none(query)
 
@@ -37,3 +44,30 @@ class UserCRUD(BaseCRUD):
             is_admin, username = user_data
             return username if is_admin else False
         return False
+
+    async def get_stats_inv_education(self, user_id: int):
+        query = (
+            select(User)
+            .options(
+                selectinload(User.stats),
+                selectinload(User.education_progress),
+                selectinload(User.inventory)
+            )
+            .where(User.id == user_id)
+        )
+        result = await self.session.execute(query)
+        user = result.scalar_one_or_none()
+        if not user:
+            raise Exception("User stats or Education not found")
+        return user
+
+
+    async def get_stats_education(self, user_id: int):
+        user = await self.session.get(
+            User, user_id,
+            options=[
+                selectinload(User.stats),
+                selectinload(User.education_progress)
+            ]
+        )
+        return user

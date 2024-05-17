@@ -1,5 +1,5 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, update
 from ..models.other_models import Jobs
 from ..models.models import User
 from .BaseCRUD import BaseCRUD
@@ -37,7 +37,7 @@ class JobsCRUD(BaseCRUD):
         update_stmt = (
             update(User)
             .where(User.id == user_id)
-            .values(job=job_name, )
+            .values(job=job_name)
             .execution_options(synchronize_session="fetch")
         )
         result = await self.session.execute(update_stmt)

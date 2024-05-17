@@ -17,6 +17,7 @@ class Jobs(SQLModel, table=True):
     level_required: int = Field(default=0)
     reputation_required: float = Field(default=0.00)
     education_required: Optional[str] = Field(default=None)
+    education_progress_required: Optional[int] = Field(default=0)
 
     # Rewards
     income: int = Field(default=40)

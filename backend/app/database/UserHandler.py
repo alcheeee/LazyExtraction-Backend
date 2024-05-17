@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.sql import exists
 from .db import get_session
 from ..crud.BaseCRUD import BaseCRUD
-from ..models.models import User, InventoryItem, Stats, Inventory
+from ..models.models import User, InventoryItem, Stats, Inventory, EducationProgress
 from ..models.item_models import Items
 from ..auth.auth_deps import password_security
 from ..schemas.item_schema import equipment_map
@@ -22,6 +22,7 @@ class UserHandler:
             new_user = User(username=username, password=hashed_password, email=email)
             new_stats = Stats(user=new_user)
             new_inventory = Inventory(user=new_user)
+            new_education = EducationProgress(user=new_user)
 
             self.session.add_all([new_user, new_stats, new_inventory])
             await self.session.commit()

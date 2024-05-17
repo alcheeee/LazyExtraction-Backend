@@ -43,7 +43,9 @@ async def job_actions(
         session: AsyncSession = Depends(dependency_session)
     ):
     try:
-        msg = "TBA"
+        job_handler = JobService(request, user_id, session)
+        msg = await job_handler.handle_job_action()
+        await session.commit()
         return ResponseBuilder.success(msg)
 
     except ValueError as e:

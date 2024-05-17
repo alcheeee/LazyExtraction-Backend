@@ -46,3 +46,19 @@ class JobCreate(BaseModel):
     level_adj: float = 0.25
     chance_for_promo_adj: float = 0.25
     reputation_adj: float = 0.00
+
+
+class JobRequirementsCheck:
+    user_stats_to_check = {
+        "energy_required": "energy",
+        "level_required": "level",
+        "reputation_required": "reputation"
+    }
+    user_education_to_check = {
+        #"education_required": "education", # We dont fetch this, since this will be used for something else
+        "education_progress_required": "" # We fetch this dynamically depending on education_required and EducationPaths
+
+    }
+
+
+
