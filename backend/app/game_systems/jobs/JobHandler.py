@@ -1,14 +1,8 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlalchemy.orm import selectinload
-from ...models.models import User
-from ...models.other_models import Jobs
 from ...schemas.job_schema import JobTypes, JobRequest, JobActionType
 from ...crud.JobsCRUD import JobsCRUD
 from ...crud.UserCRUD import UserCRUD
-import json
-import logging
-from ...utils import MyLogger
-user_log = MyLogger.user()
+from ...models import User, Jobs
 
 
 class JobService:

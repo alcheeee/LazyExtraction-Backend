@@ -1,8 +1,11 @@
 from typing import Optional, Union
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import selectinload
 from sqlalchemy import select, update
 from .BaseCRUD import BaseCRUD
-from ..models.models import User, Inventory
+from ..models import (
+    User,
+    Inventory
+)
 
 
 class UserCRUD(BaseCRUD):

@@ -1,7 +1,4 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from ...models.models import User, Inventory
-from ...models.item_models import Items, MarketItems
 from ...schemas.market_schema import MarketTransactionRequest, Transactions
 
 from ...crud.MarketCRUD import MarketCRUD
@@ -9,9 +6,11 @@ from ...crud.ItemCRUD import ItemsCRUD
 from ...crud.UserCRUD import UserCRUD
 from ...crud.UserInventoryCRUD import UserInventoryCRUD
 
-from ...utils.logger import MyLogger
-error_log = MyLogger.errors()
-game_log = MyLogger.game()
+from ...models import (
+    User,
+    Items,
+    MarketItems
+)
 
 
 class MarketTransactionHandler:

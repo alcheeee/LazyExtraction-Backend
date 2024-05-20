@@ -1,8 +1,12 @@
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select, update, delete
 from .BaseCRUD import BaseCRUD
-from ..models.models import User
-from ..models.corp_models import Corporation, CorporationItems
+from ..models import (
+    User,
+    Corporation,
+    CorporationItems
+)
+
 
 class CorporationCRUD(BaseCRUD):
 

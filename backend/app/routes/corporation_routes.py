@@ -1,11 +1,15 @@
-from fastapi import APIRouter, HTTPException, Depends
-from ..models.models import User
-from ..models.corp_models import Corporation
+from fastapi import APIRouter, Depends
 from ..schemas.corporation_schema import NewCorporationInfo
-from ..auth.auth_handler import current_user
-from ..game_systems.corporations.CorporationHandler import CorporationHandler, UserCRUD, CorporationCRUD
+from ..auth import current_user
+from ..game_systems.corporations.CorporationHandler import CorporationHandler
+from . import (
+    AsyncSession,
+    dependency_session,
+    ResponseBuilder,
+    MyLogger,
+    common_http_errors
+)
 
-from . import dependency_session, ResponseBuilder, DataName, MyLogger, common_http_errors, AsyncSession
 error_log = MyLogger.errors()
 
 corporation_router = APIRouter(

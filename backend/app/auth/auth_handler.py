@@ -1,13 +1,12 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from jose import JWTError
-from sqlalchemy import select
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import select, exc
 from .auth_bearer import oauth2_scheme
 from .auth_deps import password_security, token_handler
 from ..crud.UserCRUD import UserCRUD
-from ..models.models import User
-from ..database.db import get_session
-from ..utils.CommonHTTPErrors import common_http_errors
+from ..models import User
+from ..database import get_session
+from ..utils import common_http_errors
 
 
 class UserService:
@@ -98,5 +97,5 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             if not user_exists:
                 raise common_http_errors.credentials_error()
             return user_exists
-        except NoResultFound:
+        except exc.NoResultFound:
             raise common_http_errors.credentials_error()

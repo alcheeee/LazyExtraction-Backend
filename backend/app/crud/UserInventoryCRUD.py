@@ -2,7 +2,11 @@ from typing import Optional
 from sqlalchemy import select, update, values, delete
 from sqlalchemy.orm import joinedload
 from .BaseCRUD import BaseCRUD
-from ..models.models import InventoryItem, Inventory, User
+from ..models import (
+    InventoryItem,
+    Inventory,
+    User
+)
 
 
 class UserInventoryCRUD(BaseCRUD):

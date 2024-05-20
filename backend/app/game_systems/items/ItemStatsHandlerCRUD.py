@@ -1,13 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import selectinload
 from sqlalchemy import select
 from ...crud.UserCRUD import UserCRUD
 from ...crud.UserInventoryCRUD import UserInventoryCRUD
 from ...schemas.item_schema import ItemType, equipment_map, item_bonus_mapper
-from ...models.item_models import Items
-from ...models.models import User, Stats, InventoryItem, Inventory
-from ...utils.logger import MyLogger
-error_log = MyLogger.errors()
+from ...models import (
+    User,
+    Stats,
+    Inventory,
+    InventoryItem,
+    Items
+)
 
 
 class ItemStatsHandler:

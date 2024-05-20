@@ -1,13 +1,19 @@
 from fastapi import APIRouter, Depends
-
-from ..models.models import User
-from ..models.item_models import Items
 from ..auth.auth_handler import get_current_user
-
 from ..game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
 from ..schemas.item_schema import equipment_map
+from ..models import (
+    User,
+    Items
+)
 
-from . import dependency_session, ResponseBuilder, DataName, MyLogger, common_http_errors, AsyncSession
+
+from . import (
+    AsyncSession,
+    dependency_session,
+    ResponseBuilder,
+    common_http_errors,
+)
 
 
 user_info_router = APIRouter(

@@ -1,7 +1,11 @@
 from sqlalchemy import update, values, delete, select
 from .BaseCRUD import BaseCRUD
-from ..models.models import InventoryItem
-from ..models.item_models import Items, MarketItems, Market
+from ..models import (
+    InventoryItem,
+    Items,
+    Market,
+    MarketItems
+)
 from ..schemas.market_schema import MarketNames, MarketTransactionRequest
 
 

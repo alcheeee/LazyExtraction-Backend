@@ -1,11 +1,23 @@
 from fastapi import APIRouter, Depends
+from ..schemas.item_schema import ItemStats
 from ..game_systems.items.ItemHandler import ItemCreator
 from ..crud.UserInventoryCRUD import UserInventoryCRUD
 from ..crud.UserCRUD import UserCRUD
-from ..models.models import User, Inventory
-from ..auth.auth_handler import current_user
-from ..schemas.item_schema import ItemStats
-from . import dependency_session, ResponseBuilder, DataName, MyLogger, common_http_errors, AsyncSession
+from ..auth import current_user
+from ..models import (
+    User,
+    Inventory
+)
+
+from . import (
+    AsyncSession,
+    dependency_session,
+    ResponseBuilder,
+    DataName,
+    MyLogger,
+    common_http_errors
+)
+
 error_log = MyLogger.errors()
 admin_log = MyLogger.admin()
 

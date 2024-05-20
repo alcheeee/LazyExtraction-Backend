@@ -55,10 +55,8 @@ class JobRequirementsCheck:
         "reputation_required": "reputation"
     }
     user_education_to_check = {
-        #"education_required": "education", # We dont fetch this, since this will be used for something else
-        "education_progress_required": "" # We fetch this dynamically depending on education_required and EducationPaths
+        #"education_required": "education", # We don't fetch this, since this will be used for something else
+        "education_progress_required": ""
+        # We fetch this dynamically depending on education_required and EducationPaths
 
     }
-
-
-

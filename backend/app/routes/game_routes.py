@@ -1,13 +1,17 @@
 from fastapi import APIRouter, Depends
-from .router_ids import RouteIDs
-from ..auth.auth_handler import current_user
 from ..game_systems.jobs.JobHandler import JobService, JobRequest
 from ..game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
+from ..auth import current_user
+from . import (
+    AsyncSession,
+    dependency_session,
+    ResponseBuilder,
+    MyLogger,
+    common_http_errors
+)
 
-from . import dependency_session, ResponseBuilder, MyLogger, common_http_errors, AsyncSession
 error_log = MyLogger.errors()
 game_log = MyLogger.game()
-
 
 game_router = APIRouter(
     prefix="/game",

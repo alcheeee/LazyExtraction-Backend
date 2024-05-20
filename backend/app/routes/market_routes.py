@@ -1,15 +1,15 @@
-from sqlmodel import select
-from fastapi import APIRouter, HTTPException, Depends
-
-from ..models.models import User, InventoryItem
-from ..auth.auth_handler import current_user
-from ..models.item_models import Items
-
+from fastapi import APIRouter, Depends
+from ..auth import current_user
 from ..game_systems.markets.MarketHandler import MarketTransactionHandler
 from ..schemas.market_schema import MarketTransactionRequest
-from ..database.UserHandler import UserHandler
+from . import (
+    AsyncSession,
+    dependency_session,
+    ResponseBuilder,
+    MyLogger,
+    common_http_errors
+)
 
-from . import dependency_session, ResponseBuilder, DataName, MyLogger, common_http_errors, AsyncSession
 error_log = MyLogger.errors()
 game_log = MyLogger.game()
 

@@ -1,11 +1,19 @@
-import datetime
 from pydantic import BaseModel
 from sqlmodel import select
 from fastapi import APIRouter, Depends
 from ..models.models import User, FriendsLink, FriendRequest, PrivateMessage
 from ..auth.auth_handler import get_current_user
-from . import dependency_session, ResponseBuilder, MyLogger, common_http_errors, AsyncSession
+from . import (
+    AsyncSession,
+    dependency_session,
+    ResponseBuilder,
+    MyLogger,
+    common_http_errors
+)
+
+
 error_log = MyLogger.errors()
+
 
 social_router = APIRouter(
     prefix="/social",

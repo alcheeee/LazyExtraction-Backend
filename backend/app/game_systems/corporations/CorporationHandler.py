@@ -1,13 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import update
 from ...schemas.corporation_schema import NewCorporationInfo, CorporationDefaults
-from ...models.models import User
 from ...crud.CorpCRUD import CorporationCRUD
 from ...crud.UserCRUD import UserCRUD
-from ...models.corp_models import Corporation, CorporationItems
-from ...utils.logger import MyLogger
-game_log = MyLogger.game()
-error_log = MyLogger.errors()
+from ...models import (
+    User,
+    Corporation,
+    CorporationItems
+)
 
 
 

@@ -1,14 +1,18 @@
 from sqlalchemy import select
-from sqlalchemy.sql import exists
-from .db import get_session
+from . import get_session
 from ..crud.BaseCRUD import BaseCRUD
-from ..models.models import User, InventoryItem, Stats, Inventory, EducationProgress
-from ..models.item_models import Items
 from ..auth.auth_deps import password_security
 from ..schemas.item_schema import equipment_map
+from ..models import (
+    User,
+    Stats,
+    Items,
+    Inventory,
+    InventoryItem,
+    EducationProgress
+)
+
 from ..utils.logger import MyLogger
-user_log = MyLogger.user()
-error_log = MyLogger.errors()
 game_log = MyLogger.game()
 
 

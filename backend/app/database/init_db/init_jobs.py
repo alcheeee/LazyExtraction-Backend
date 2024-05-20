@@ -1,5 +1,5 @@
 from ...crud.JobsCRUD import JobsCRUD
-from ...models.other_models import Jobs
+from ...models import Jobs
 
 jobs_list = []
 

@@ -1,8 +1,9 @@
-from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy import select, update
-from ..models.other_models import Jobs
-from ..models.models import User
 from .BaseCRUD import BaseCRUD
+from ..models import (
+    User,
+    Jobs
+)
 
 class JobsCRUD(BaseCRUD):
 

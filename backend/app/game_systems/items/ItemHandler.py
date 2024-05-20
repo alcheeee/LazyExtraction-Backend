@@ -1,15 +1,15 @@
 from tenacity import retry, wait_fixed, stop_after_attempt, retry_if_not_exception_type
+from typing import Dict, Type
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Dict, Type
 from .ItemCreationLogic import GenerateItemQuality, GenerateItemStats
-from ...crud.ItemCRUD import ItemsCRUD
-from ...schemas.item_schema import ItemType, ItemQuality, ItemStats
-from ...models.item_models import Items, Weapon, Clothing
-from ...models.models import User
-from ...utils.logger import MyLogger
-game_log = MyLogger.game()
-error_log = MyLogger.errors()
+from ...schemas.item_schema import ItemType, ItemStats
+from ...models import (
+    Items,
+    Weapon,
+    Clothing
+)
+
 
 class ItemCreator:
 
