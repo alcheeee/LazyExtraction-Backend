@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...schemas.corporation_schema import NewCorporationInfo, CorporationDefaults
-from ...crud.CorpCRUD import CorporationCRUD
-from ...crud.UserCRUD import UserCRUD
+from ...crud.corp_crud import CorporationCRUD
+from ...crud.user_crud import UserCRUD
 from ...models import (
     User,
     Corporation,
@@ -27,6 +27,7 @@ class CorporationHandler:
         user_in_corp = await self.user_crud.get_user_field_from_id(user_id, 'corp_id')
         if user_in_corp:
             raise ValueError("You must leave your current corporation first!")
+
 
     async def create_corporation(self, new_corp_data: NewCorporationInfo, user_id: int) -> Corporation:
         """
@@ -71,11 +72,11 @@ class CorporationHandler:
         if assumed_leader_username != actual_leader_username:
             raise ValueError("You do not have permissions to perform this action")
 
-    async def remove_player_from_corporation(self, user_to_remove: int, corp_id: int):
+    async def remove_player_from_corporation(self, user_id: int, corp_id: int):
         user_corp_id = await self.user_crud.get_user_field_from_id(user_id, 'corp_id')
         if user_corp_id != corp_id:
             raise ValueError("That person is not part of the Corporation")
-        remove_user = await self.user_crud.remove_user_corp_id(user_to_remove)
+        remove_user = await self.user_crud.remove_user_corp_id(user_id)
         return "Successfully removed the player from Corporation"
 
 

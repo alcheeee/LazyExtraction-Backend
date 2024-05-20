@@ -1,6 +1,6 @@
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select, update, delete
-from .BaseCRUD import BaseCRUD
+from .base_crud import BaseCRUD
 from ..models import (
     User,
     Corporation,

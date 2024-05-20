@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends
-from ..auth.auth_handler import get_current_user
+
 from ..game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
 from ..schemas.item_schema import equipment_map
+
+from ..auth.auth_handler import get_current_user
 from ..models import (
     User,
     Items

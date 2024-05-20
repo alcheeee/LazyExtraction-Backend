@@ -1,15 +1,10 @@
+import tenacity
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlalchemy import select
-from ...crud.UserCRUD import UserCRUD
-from ...crud.UserInventoryCRUD import UserInventoryCRUD
 from ...schemas.item_schema import ItemType, equipment_map, item_bonus_mapper
+from ...crud import UserCRUD, UserInventoryCRUD
 from ...models import (
     User,
-    Stats,
-    Inventory,
     InventoryItem,
-    Items
 )
 
 
@@ -21,28 +16,13 @@ class ItemStatsHandler:
         self.user_crud = UserCRUD(User, session)
         self.user_inventory_crud = UserInventoryCRUD(InventoryItem, session)
 
-
+    @tenacity.retry(
+        wait=tenacity.wait_fixed(1),
+        stop=tenacity.stop_after_attempt(3),
+        retry=tenacity.retry_if_not_exception_type(ValueError)
+    )
     async def user_equip_unequip_item(self):
-        try:
-            result = await self.session.execute(
-                select(
-                    Inventory,
-                    Stats,
-                    InventoryItem
-                ).select_from(User)
-                 .join(Inventory, User.inventory_id == Inventory.id)
-                 .join(InventoryItem, InventoryItem.inventory_id == Inventory.id)
-                 .join(Stats, User.stats_id == Stats.id)
-                 .where(User.id == self.user_id, InventoryItem.item_id == self.item_id)
-                 .options(
-                     selectinload(InventoryItem.item).joinedload(Items.clothing_details),
-                     selectinload(InventoryItem.item).joinedload(Items.weapon_details)
-                 )
-            )
-            inventory, stats, inventory_item = result.one()
-
-        except Exception as e:
-            raise e
+        inventory, inventory_item, stats = await self.get_needed_info(self.item_id)
 
         item = inventory_item.item
         item_details = self.get_item_category(item)
@@ -51,18 +31,63 @@ class ItemStatsHandler:
 
         item_slot_attr = self.determine_slot(item, item_details)
         if not item_slot_attr:
-            raise ValueError("Item type is not valid for equipping")
+            raise ValueError("This item cannot be equipped")
 
-        current_equipped_item_id = getattr(inventory, item_slot_attr)
+        equipped_item_id = getattr(inventory, item_slot_attr)
+        if equipped_item_id and equipped_item_id != item.id:
+            await self.unequip_item(equipped_item_id, inventory, stats)
 
-        if current_equipped_item_id == item.id:
+        if equipped_item_id == item.id:
             setattr(inventory, item_slot_attr, None)
+            inventory_item.quantity += 1
             self.adjust_user_stats(stats, item_details, equip=False)
+            status = "Item Unequipped"
         else:
-            setattr(inventory, item_slot_attr, item.id)
-            self.adjust_user_stats(stats, item_details, equip=True)
+            if inventory_item.quantity < 1:
+                raise ValueError("Not enough quantity to equip")
 
-        return "Equipped" if current_equipped_item_id != item.id else "Unequipped"
+            setattr(inventory, item_slot_attr, item.id)
+            inventory_item.quantity -= 1
+            self.adjust_user_stats(stats, item_details, equip=True)
+            status = "Item Equipped"
+
+        return status
+
+
+    async def unequip_item(
+            self,
+            equipped_item_id: int,
+            inventory=None,
+            inventory_item=None,
+            stats=None
+    ):
+        if inventory is None or inventory_item is None or stats is None:
+            inventory, inventory_item, stats = await self.get_needed_info(equipped_item_id)
+
+        item = inventory_item.item
+        item_details = self.get_item_category(item)
+        if not item_details:
+            raise ValueError("Item details not available")
+
+        item_slot_attr = self.determine_slot(item, item_details)
+        if not item_slot_attr:
+            raise ValueError("This item cannot be equipped")
+
+        if inventory_item:
+            setattr(inventory, item_slot_attr, None)
+            inventory_item.quantity += 1
+            self.adjust_user_stats(stats, item_details, equip=False)
+            status = "Item Unequipped"
+            return status
+
+
+    async def get_needed_info(self, item_id: int):
+        (
+            inventory,
+            stats,
+            inventory_item
+        ) = await self.user_inventory_crud.get_inv_stats_invitem(self.user_id, item_id)
+        return inventory, inventory_item, stats
 
 
     def adjust_user_stats(self, stats, item_details, equip=True):
@@ -75,7 +100,6 @@ class ItemStatsHandler:
                 setattr(stats, stat_key, current_value + bonus_value * multiplier)
         stats.round_stats()
 
-
     def determine_slot(self, item, item_details):
         if item.category == ItemType.Clothing and hasattr(item_details, 'clothing_type'):
             return equipment_map.get(item_details.clothing_type)
@@ -83,16 +107,12 @@ class ItemStatsHandler:
             return equipment_map.get(ItemType.Weapon)
         return None
 
-
     def get_item_category(self, item):
         if item.category == ItemType.Clothing:
             return item.clothing_details
         elif item.category == ItemType.Weapon:
             return item.weapon_details
         return None
-
-
-
 
     def get_item_stats_json(self, item):
         item_stats_source = self.get_item_category(item)
@@ -105,5 +125,3 @@ class ItemStatsHandler:
             if item_bonus != 0 and item_bonus:
                 item_stats_results[bonus_attr] = item_bonus
         return item_stats_results
-
-

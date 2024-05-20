@@ -1,4 +1,4 @@
-from ...crud.JobsCRUD import JobsCRUD
+from ...crud.jobs_crud import JobsCRUD
 from ...models import Jobs
 
 jobs_list = []

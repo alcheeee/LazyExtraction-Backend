@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Form, Depends
 from pydantic import BaseModel, EmailStr
-from ..models import User
+
 from ..auth.auth_handler import token_handler, UserService
-from ..crud.BaseCRUD import BaseCRUD
-from ..database.UserHandler import UserHandler
+from ..database.user_handler import UserHandler
+
+from ..crud import BaseCRUD
+from ..models import User
 from . import (
     AsyncSession,
     dependency_session,

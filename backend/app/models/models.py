@@ -40,6 +40,7 @@ class EducationProgress(SQLModel, table=True):
 
     user: Optional["User"] = Relationship(back_populates="education_progress")
 
+
 class Inventory(SQLModel, table=True):
     """
     Inventory Table for Users, linked by id

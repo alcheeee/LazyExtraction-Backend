@@ -1,6 +1,6 @@
 from typing import Optional
 from sqlalchemy import select
-from .BaseCRUD import BaseCRUD
+from .base_crud import BaseCRUD
 from ..models.item_models import Items
 
 

@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
 from ..schemas.corporation_schema import NewCorporationInfo
-from ..auth import current_user
 from ..game_systems.corporations.CorporationHandler import CorporationHandler
+
+from ..auth import current_user
 from . import (
     AsyncSession,
     dependency_session,
@@ -17,6 +18,7 @@ corporation_router = APIRouter(
     tags=["corporations"],
     responses={404: {"description": "Not Found"}}
 )
+
 
 @corporation_router.post("/create-corporation")
 async def create_corporation(
@@ -92,5 +94,3 @@ async def remove_user_from_corporation(
         await session.rollback()
         error_log.error(str(e))
         raise common_http_errors.server_error()
-
-

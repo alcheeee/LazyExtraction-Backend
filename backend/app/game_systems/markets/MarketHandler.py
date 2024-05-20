@@ -1,11 +1,13 @@
+import tenacity
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...schemas.market_schema import MarketTransactionRequest, Transactions
 
-from ...crud.MarketCRUD import MarketCRUD
-from ...crud.ItemCRUD import ItemsCRUD
-from ...crud.UserCRUD import UserCRUD
-from ...crud.UserInventoryCRUD import UserInventoryCRUD
-
+from ...crud import (
+    MarketCRUD,
+    ItemsCRUD,
+    UserCRUD,
+    UserInventoryCRUD
+)
 from ...models import (
     User,
     Items,
@@ -26,6 +28,11 @@ class MarketTransactionHandler:
         self.transaction = request.transaction_type
 
 
+    @tenacity.retry(
+        wait=tenacity.wait_fixed(1),
+        stop=tenacity.stop_after_attempt(3),
+        retry=tenacity.retry_if_not_exception_type(ValueError)
+    )
     async def market_transaction(self):
         """
         Handler for all market_transactions

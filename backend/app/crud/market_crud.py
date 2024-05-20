@@ -1,5 +1,5 @@
 from sqlalchemy import update, values, delete, select
-from .BaseCRUD import BaseCRUD
+from .base_crud import BaseCRUD
 from ..models import (
     InventoryItem,
     Items,

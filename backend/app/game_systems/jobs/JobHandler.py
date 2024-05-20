@@ -1,7 +1,6 @@
-from sqlmodel.ext.asyncio.session import AsyncSession
 from ...schemas.job_schema import JobTypes, JobRequest, JobActionType
-from ...crud.JobsCRUD import JobsCRUD
-from ...crud.UserCRUD import UserCRUD
+from ...database import AsyncSession
+from ...crud import JobsCRUD, UserCRUD
 from ...models import User, Jobs
 
 

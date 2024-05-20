@@ -1,4 +1,4 @@
-from tenacity import retry, wait_fixed, stop_after_attempt, retry_if_not_exception_type
+import tenacity
 from typing import Dict, Type
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +12,6 @@ from ...models import (
 
 
 class ItemCreator:
-
     item_model_map: Dict[ItemType, Type[BaseModel]] = {
         ItemType.Weapon: Weapon,
         ItemType.Clothing: Clothing,
@@ -25,13 +24,11 @@ class ItemCreator:
         self.session = session
         self.user_luck = user_luck
 
-
     def get_item_model(self):
         item_model = self.item_model_map.get(self.item_details.category)
         if not item_model:
             raise Exception(f"No class defined for item type {self.item_details.category}")
         return item_model
-
 
     def generators(self, quality=None, randomize_all=True):
         if randomize_all:
@@ -43,8 +40,11 @@ class ItemCreator:
         quick_sell_value = stats_generator.generate_quick_sell(self.item_details.quick_sell)
         return quality, item_specific_details, quick_sell_value
 
-
-    @retry(wait=wait_fixed(1), stop=stop_after_attempt(3), retry=retry_if_not_exception_type((ValueError)))
+    @tenacity.retry(
+        wait=tenacity.wait_fixed(1),
+        stop=tenacity.stop_after_attempt(3),
+        retry=tenacity.retry_if_not_exception_type(ValueError)
+    )
     async def create_item(self):
         item_model = self.get_item_model()
         quality = self.item_details.quality
@@ -58,9 +58,9 @@ class ItemCreator:
         else:
             specific_item_details = self.item_details.dict(
                 exclude_unset=True, exclude={
-                "item_name", "illegal", "quality", "quantity",
-                "randomize_stats", "randomize_all", "category", "quick_sell"
-            })
+                    "item_name", "illegal", "quality", "quantity",
+                    "randomize_stats", "randomize_all", "category", "quick_sell"
+                })
 
         item_data = {
             "item_name": self.item_details.item_name,
@@ -71,7 +71,8 @@ class ItemCreator:
             "quick_sell": quick_sell_value
         }
 
-        if self.item_details.category == ItemType.Clothing and 'clothing_type' not in specific_item_details and hasattr(self.item_details, 'clothing_type'):
+        if self.item_details.category == ItemType.Clothing and 'clothing_type' not in specific_item_details and hasattr(
+                self.item_details, 'clothing_type'):
             specific_item_details['clothing_type'] = self.item_details.clothing_type
         item = Items(**item_data)
         self.session.add(item)

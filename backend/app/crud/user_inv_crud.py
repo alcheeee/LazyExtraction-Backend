@@ -1,11 +1,13 @@
 from typing import Optional
 from sqlalchemy import select, update, values, delete
-from sqlalchemy.orm import joinedload
-from .BaseCRUD import BaseCRUD
+from sqlalchemy.orm import joinedload, selectinload
+from .base_crud import BaseCRUD
 from ..models import (
     InventoryItem,
     Inventory,
-    User
+    Stats,
+    User,
+    Items
 )
 
 
@@ -120,5 +122,26 @@ class UserInventoryCRUD(BaseCRUD):
         return inventory_item
 
 
+    async def get_inv_stats_invitem(self, user_id: int, item_id: int):
+        try:
+            result = await self.session.execute(
+                select(
+                    Inventory,
+                    Stats,
+                    InventoryItem
+                ).select_from(User)
+                 .join(Inventory, User.inventory_id == Inventory.id)
+                 .join(InventoryItem, InventoryItem.inventory_id == Inventory.id)
+                 .join(Stats, User.stats_id == Stats.id)
+                 .where(User.id == user_id, InventoryItem.item_id == item_id)
+                 .options(
+                     selectinload(InventoryItem.item).joinedload(Items.clothing_details),
+                     selectinload(InventoryItem.item).joinedload(Items.weapon_details)
+                 )
+            )
+            inventory, stats, inventory_item = result.one()
+            return inventory, stats, inventory_item
 
+        except Exception as e:
+            raise e
 

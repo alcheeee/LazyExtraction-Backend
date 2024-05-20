@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from ..schemas.item_schema import ItemStats
 from ..game_systems.items.ItemHandler import ItemCreator
-from ..crud.UserInventoryCRUD import UserInventoryCRUD
-from ..crud.UserCRUD import UserCRUD
 from ..auth import current_user
+
+from ..crud import UserInventoryCRUD, UserCRUD
 from ..models import (
     User,
     Inventory

@@ -3,7 +3,7 @@ from jose import JWTError
 from sqlalchemy import select, exc
 from .auth_bearer import oauth2_scheme
 from .auth_deps import password_security, token_handler
-from ..crud.UserCRUD import UserCRUD
+from ..crud.user_crud import UserCRUD
 from ..models import User
 from ..database import get_session
 from ..utils import common_http_errors

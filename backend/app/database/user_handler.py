@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from . import get_session
-from ..crud.BaseCRUD import BaseCRUD
+from ..crud.base_crud import BaseCRUD
 from ..auth.auth_deps import password_security
 from ..schemas.item_schema import equipment_map
 from ..models import (
