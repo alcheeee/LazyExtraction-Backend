@@ -1,13 +1,15 @@
 from fastapi import FastAPI
 from .config import settings
 from .database.db import init_db
-from .routes.auth_routes import user_router
-from .routes.admin_routes import admin_router
-from .routes.corporation_routes import corporation_router
-from .routes.market_routes import market_router
-from .routes.game_routes import game_router
-from .routes.user_info_routes import user_info_router
-from .routes.social_routes import social_router
+from .routes import (
+    user_router,
+    admin_router,
+    corporation_router,
+    market_router,
+    game_router,
+    user_info_router,
+    social_router
+)
 
 
 def create_app() -> FastAPI:

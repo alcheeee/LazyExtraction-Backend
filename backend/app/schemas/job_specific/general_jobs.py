@@ -1,4 +1,5 @@
 from ..job_schema import JobTypes, JobCreate
+from ..education_schema import EducationPaths
 
 
 general_jobs_data = [
@@ -11,7 +12,7 @@ general_jobs_data = [
         "energy_required": 5,
         "level_required": 1,
         "reputation_required": 0,
-        "education_required": None,
+        "education_required": EducationPaths.CommunityCollege.value,
         "education_progress_required": 0.00,
         "income": 40,
         "level_adj": 0.25,

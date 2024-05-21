@@ -2,6 +2,7 @@ from ...schemas.job_schema import JobTypes, JobRequest, JobActionType
 from ...database import AsyncSession
 from ...crud import JobsCRUD, UserCRUD
 from ...models import User, Jobs
+import tenacity
 
 
 class JobService:
@@ -29,8 +30,28 @@ class JobService:
             raise ValueError("Invalid action")
 
 
+    @tenacity.retry(
+        wait=tenacity.wait_fixed(1),
+        stop=tenacity.stop_after_attempt(3),
+        retry=tenacity.retry_if_not_exception_type(ValueError)
+    )
     async def work_job(self):
-        return "Test complete"
+        user_info = await self.user_crud.get_stats_inv_ids_and_jobname(self.user_id)
+        stats_id, inv_id, job_name = user_info
+
+        job = await self.get_job_by_name(job_name)
+        if not job:
+            raise Exception("No job found")
+
+        update_dict = {
+            'stats_rep': job.reputation_adj,
+            'stats_level': job.level_adj,
+            'inv_bank': job.income,
+            'inv_energy': job.energy_required
+        }
+
+        await self.user_crud.update_job_stuff(inv_id, stats_id, update_dict)
+        return f"Successfully worked job"
 
 
     async def quit_job(self):
@@ -43,7 +64,7 @@ class JobService:
         if user.job:
             raise ValueError("You need to quit your current job first")
 
-        job = await self.get_job_by_name()
+        job = await self.get_job_by_name(self.request.job_name)
 
         if not self.check_qualifications(user, job):
             raise ValueError("You don't meet the required qualifications")
@@ -62,8 +83,8 @@ class JobService:
         return user_job
 
 
-    async def get_job_by_name(self):
-        job = await self.job_crud.get_job_by_name(self.request.job_name)
+    async def get_job_by_name(self, job_name: str):
+        job = await self.job_crud.get_job_by_name(job_name)
         if not job:
             raise Exception("Job not found")
         return job

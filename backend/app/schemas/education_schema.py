@@ -11,10 +11,3 @@ class EducationPaths(str, Enum):
     HealthScience = "health_science"
     ComputerScience = "computer_science"
 
-
-class CJEducation(BaseModel):
-    pass
-
-
-class CCEducation(BaseModel):
-    pass

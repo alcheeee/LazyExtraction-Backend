@@ -1,6 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel
 from enum import Enum
+from .education_schema import EducationPaths
 
 
 class JobTypes(str, Enum):
@@ -23,7 +24,7 @@ class JobActionType(str, Enum):
 
 class JobRequest(BaseModel):
     job_action: JobActionType = JobActionType.Work
-    job_name: Optional[str]
+    job_name: Optional[str] = "Store Bagger"
 
 
 class JobCreate(BaseModel):
@@ -38,7 +39,7 @@ class JobCreate(BaseModel):
     energy_required: int = 5
     level_required: int = 1
     reputation_required: float = 0.00
-    education_required: Optional[str] = None
+    education_required: Optional[str] = EducationPaths.CommunityCollege.value
     education_progress_required: float = 0.00
 
     # Rewards
@@ -47,16 +48,3 @@ class JobCreate(BaseModel):
     chance_for_promo_adj: float = 0.25
     reputation_adj: float = 0.00
 
-
-class JobRequirementsCheck:
-    user_stats_to_check = {
-        "energy_required": "energy",
-        "level_required": "level",
-        "reputation_required": "reputation"
-    }
-    user_education_to_check = {
-        #"education_required": "education", # We don't fetch this, since this will be used for something else
-        "education_progress_required": ""
-        # We fetch this dynamically depending on education_required and EducationPaths
-
-    }
