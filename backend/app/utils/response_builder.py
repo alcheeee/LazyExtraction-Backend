@@ -3,6 +3,7 @@ from enum import Enum
 
 class DataName(str, Enum):
     ItemDetails = "item-details"
+    ItemGiven = "item-given"
 
 
 class ResponseBuilder:

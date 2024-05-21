@@ -29,7 +29,6 @@ class UserInventoryCRUD(BaseCRUD):
             raise ValueError("You do not have that item")
         return result
 
-
     async def get_user_inventory_id_by_userid(self, user_id: int) -> Optional[int]:
         """
         :param User.id
@@ -37,7 +36,6 @@ class UserInventoryCRUD(BaseCRUD):
         """
         query = select(Inventory.id).join(User).where(User.id == user_id)
         return await self.execute_scalar_one_or_none(query)
-
 
     async def get_user_bank_from_userid(self, user_id) -> Optional[int]:
         """
@@ -56,7 +54,6 @@ class UserInventoryCRUD(BaseCRUD):
             raise Exception("Failed to get user Inventory or Bank")
         return inventory_details
 
-
     async def update_bank_balance(self, inventory_id: int, new_balance: int):
         """
         :param inventory_id: Inventory.id
@@ -68,7 +65,6 @@ class UserInventoryCRUD(BaseCRUD):
         ).values(bank=new_balance)
         result = await self.session.execute(update_)
         return result
-
 
     async def update_bank_balance_by_username(self, username: str, balance_adjustment: int):
         """
@@ -94,18 +90,22 @@ class UserInventoryCRUD(BaseCRUD):
         await self.session.execute(update_stmt)
         return new_bank_balance
 
-
-    async def update_user_inventory_item(self, inventory_id: int, item_id: int, quantity_change: int, inventory_item: InventoryItem=None):
+    async def update_user_inventory_item(self, inventory_id: int, item_id: int, quantity_change: int,
+                                         inventory_item: InventoryItem = None):
         """
         :param inventory_id: User.inventory_id
         :param item_id: Items.id
         :param quantity_change: int
-        :param inventory_item: InventoryItem instance
+        :param inventory_item: Optional[InventoryItem] instance
         :return: New/Update/Delete InventoryItem instance
         :raise ValueError
         """
         if inventory_item is None:
-            inventory_item = await self.get_inventory_item_by_userid(inventory_id, item_id)
+            query = select(InventoryItem).join(Inventory).where(
+                Inventory.id == inventory_id,
+                InventoryItem.item_id == item_id
+            )
+            inventory_item = (await self.session.execute(query)).scalars().first()
 
         if inventory_item:
             if quantity_change < 0 and abs(quantity_change) > inventory_item.quantity:
@@ -121,7 +121,6 @@ class UserInventoryCRUD(BaseCRUD):
             self.session.add(new_inventory_item)
         return inventory_item
 
-
     async def get_inv_stats_invitem(self, user_id: int, item_id: int):
         try:
             result = await self.session.execute(
@@ -130,18 +129,18 @@ class UserInventoryCRUD(BaseCRUD):
                     Stats,
                     InventoryItem
                 ).select_from(User)
-                 .join(Inventory, User.inventory_id == Inventory.id)
-                 .join(InventoryItem, InventoryItem.inventory_id == Inventory.id)
-                 .join(Stats, User.stats_id == Stats.id)
-                 .where(User.id == user_id, InventoryItem.item_id == item_id)
-                 .options(
-                     selectinload(InventoryItem.item).joinedload(Items.clothing_details),
-                     selectinload(InventoryItem.item).joinedload(Items.weapon_details)
-                 )
+                .join(Inventory, User.inventory_id == Inventory.id)
+                .join(InventoryItem, InventoryItem.inventory_id == Inventory.id)
+                .join(Stats, User.stats_id == Stats.id)
+                .where(User.id == user_id, InventoryItem.item_id == item_id)
+                .options(
+                    selectinload(InventoryItem.item).joinedload(Items.clothing_details),
+                    selectinload(InventoryItem.item).joinedload(Items.weapon_details),
+                    selectinload(InventoryItem.item).joinedload(Items.armor_details)
+                )
             )
             inventory, stats, inventory_item = result.one()
             return inventory, stats, inventory_item
 
         except Exception as e:
             raise e
-

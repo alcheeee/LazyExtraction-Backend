@@ -43,7 +43,7 @@ async def get_user_stats(
             "level": stats.level,
             "reputation": stats.reputation,
             "max_energy": stats.max_energy,
-            "evasiveness": stats.evasiveness,
+            "agility": stats.agility,
             "health": stats.health,
             "strength": stats.strength,
             "knowledge": stats.knowledge,
@@ -56,7 +56,6 @@ async def get_user_stats(
         return user_info
 
     except Exception as e:
-        error_log.error(f"Error getting user stats: {str(e)}")
         raise common_http_errors.server_error()
 
 
@@ -120,7 +119,6 @@ async def get_user_items(
     except ValueError as e:
         return ResponseBuilder.error(str(e))
     except Exception as e:
-        error_log.error(f"Error getting user inventory: {str(e)}")
         raise common_http_errors.server_error()
 
 

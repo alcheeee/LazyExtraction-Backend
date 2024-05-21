@@ -1,39 +1,39 @@
 import random
 from math import sqrt
 from typing import List, Dict, Tuple
-from ...schemas.item_schema import ItemQuality, ItemType, filter_item_stats
+from ...schemas.item_schema import ItemTier, ItemType, filter_item_stats
 
 class GenerateItemQuality:
     QUALITY_WEIGHTS = {
-        ItemQuality.Junk: (60, 1),
-        ItemQuality.Common: (40, 2),
-        ItemQuality.Uncommon: (35, 3),
-        ItemQuality.Rare: (10, 4),
-        ItemQuality.Special: (3, 5),
-        ItemQuality.Unique: (1, 6)
+        ItemTier.Tier1: (60, 1),
+        ItemTier.Tier2: (40, 2),
+        ItemTier.Tier3: (35, 3),
+        ItemTier.Tier4: (10, 4),
+        ItemTier.Tier5: (3, 5),
+        ItemTier.Tier6: (1, 6)
     }
 
     def __init__(self, luck_stat):
         self.luck_stat = luck_stat
 
-    def generate_item_quality(self) -> ItemQuality:
-        qualities = [q for q in ItemQuality]
+    def generate_item_quality(self) -> ItemTier:
+        qualities = [q for q in ItemTier]
         weights = [self.get_weight(q) for q in qualities]
         quality = random.choices(qualities, weights=weights, k=1)[0]
         return quality
 
-    def get_weight(self, quality: ItemQuality) -> int:
+    def get_weight(self, quality: ItemTier) -> int:
         base_weight, luck_factor = self.QUALITY_WEIGHTS[quality]
         luck_effect = sqrt(self.luck_stat) / luck_factor
         return max(1, int(base_weight + luck_effect))
 
-STAT_RANGES: Dict[ItemQuality, Tuple[min, max, int]] = {
-    ItemQuality.Junk: (1, 3, 1),
-    ItemQuality.Common: (2, 7, 2),
-    ItemQuality.Uncommon: (3, 8, 4),
-    ItemQuality.Rare: (6, 14, 5),
-    ItemQuality.Special: (8, 17, 7),
-    ItemQuality.Unique: (12, 22, 9)
+STAT_RANGES: Dict[ItemTier, Tuple[min, max, int]] = {
+    ItemTier.Tier1: (1, 3, 1),
+    ItemTier.Tier2: (2, 7, 2),
+    ItemTier.Tier3: (3, 8, 4),
+    ItemTier.Tier4: (6, 14, 5),
+    ItemTier.Tier5: (8, 17, 7),
+    ItemTier.Tier6: (12, 22, 9)
 }
 
 class GenerateItemStats:
@@ -62,19 +62,17 @@ class GenerateItemStats:
 
         return generated_stats
 
-
     def generate_stat_value(self, min_range, max_range, luck_adjustment) -> float:
         return round(random.uniform(min_range + luck_adjustment, max_range + luck_adjustment), 2)
 
-
     def generate_quick_sell(self, quick_sell_value: int):
         quality_multipliers = {
-            ItemQuality.Junk: 1,
-            ItemQuality.Common: 2,
-            ItemQuality.Uncommon: 4,
-            ItemQuality.Rare: 8,
-            ItemQuality.Special: 16,
-            ItemQuality.Unique: 20,
+            ItemTier.Tier1: 1,
+            ItemTier.Tier2: 2,
+            ItemTier.Tier3: 4,
+            ItemTier.Tier4: 8,
+            ItemTier.Tier5: 16,
+            ItemTier.Tier6: 20,
         }
         quick_sell = quick_sell_value * quality_multipliers.get(self.quality, 1)
         return int(quick_sell)

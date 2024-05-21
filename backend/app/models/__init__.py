@@ -9,6 +9,7 @@ from .corp_models import (
 from .item_models import (
     Items,
     Clothing,
+    Armor,
     Weapon,
     MarketItems,
     Market
@@ -28,6 +29,7 @@ __all__ = [
     'CorporationItems',
     'CorporationType',
     'Items',
+    'Armor',
     'Clothing',
     'Weapon',
     'MarketItems',

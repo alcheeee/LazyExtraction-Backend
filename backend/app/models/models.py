@@ -11,15 +11,23 @@ class Stats(SQLModel, table=True):
     level: float = Field(default=1.00)
     reputation: float = Field(default=1.00)
     max_energy: int = Field(default=100)
-    damage: int = Field(default=1)
-    health: int = Field(default=100)
-    evasiveness: float = Field(default=1.00)
     luck: float = Field(default=1.00)
-    strength: float = Field(default=1.00)
     knowledge: float = Field(default=1.00)
+    max_weight: float = Field(default=100.00)  # in pounds
+
+    # Combat related
+    agility: float = Field(default=1.00)
+    health: int = Field(default=100)
+    damage: int = Field(default=1)
+    strength: float = Field(default=1.00)
+    head_protection: int = Field(default=5)
+    chest_protection: int = Field(default=5)
+    stomach_protection: int = Field(default=5)
+    arm_protection: int = Field(default=5)
+
     user: Optional["User"] = Relationship(back_populates="stats")
     def round_stats(self):
-        float_attributes = ['level', 'reputation', 'evasiveness', 'strength', 'knowledge', 'luck']
+        float_attributes = ['level', 'reputation', 'agility', 'strength', 'knowledge', 'luck', 'max_weight']
         for attr in float_attributes:
             value = getattr(self, attr)
             if isinstance(value, float):
@@ -52,6 +60,8 @@ class Inventory(SQLModel, table=True):
     equipped_mask_id: Optional[int] = Field(default=None)
     equipped_body_id: Optional[int] = Field(default=None)
     equipped_legs_id: Optional[int] = Field(default=None)
+    equipped_body_armor_id: Optional[int] = Field(default=None)
+    equipped_head_armor_id: Optional[int] = Field(default=None)
     items: List["InventoryItem"] = Relationship(back_populates="inventory")
     user: Optional["User"] = Relationship(back_populates="inventory")
 
@@ -77,9 +87,9 @@ class User(SQLModel, table=True):
     """User Table"""
     id: Optional[int] = Field(default=None, primary_key=True)
     is_admin: bool = Field(default=False)
-    username: str = Field(index=True)
+    username: str = Field(index=True, unique=True)
     password: str
-    email: str
+    email: str = Field(index=True, unique=True)
 
     job: Optional[str] = Field(default=None)
     job_chance_to_promo: float = Field(default=1.00)

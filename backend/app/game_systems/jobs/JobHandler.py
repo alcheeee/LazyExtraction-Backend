@@ -55,7 +55,8 @@ class JobService:
 
 
     async def quit_job(self):
-        pass
+        await self.job_crud.update_users_job(self.user_id)
+        return "You quit your job"
 
 
     @tenacity.retry(
