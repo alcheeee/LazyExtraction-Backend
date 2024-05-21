@@ -5,7 +5,8 @@ from .base_crud import BaseCRUD
 from ..models import (
     User,
     Inventory,
-    Stats
+    Stats,
+    EducationProgress
 )
 
 
@@ -27,20 +28,22 @@ class UserCRUD(BaseCRUD):
         query = select(Inventory.id).join(User).where(User.username == username)
         return await self.execute_scalar_one_or_none(query)
 
-    async def change_user_corp_id(self, user_id: int, corp_id: int) -> True or Exception:
-        """Change Users corp_id field"""
+    async def change_user_corp_id(self, user_id: int, corp_id: Optional[int] = None) -> True or Exception:
+        """
+        :param user_id: int = User.id
+        :param corp_id: int = Corporation.id
+        :return: True
+        :raise Exception
+        """
         update_stmt = update(User).where(User.id == user_id).values(corp_id=corp_id)
         await self.session.execute(update_stmt)
         return True
 
-    async def remove_user_corp_id(self, user_id: int) -> True or Exception:
-        """Remove a users corp_id"""
-        update_stmt = update(User).where(User.id == user_id).values(corp_id=None)
-        await self.session.execute(update_stmt)
-        return True
-
     async def is_user_admin(self, user_id: int) -> Union[str, bool]:
-        """Check if user is an admin"""
+        """
+        :param user_id: int = User.id
+        :return: username or False
+        """
         query = select(User.is_admin, User.username).where(User.id == user_id)
         result = await self.session.execute(query)
         user_data = result.one_or_none()
@@ -49,7 +52,12 @@ class UserCRUD(BaseCRUD):
             return username if is_admin else False
         return False
 
-    async def get_stats_inv_ids_and_jobname(self, user_id: int):
+    async def get_stats_inv_ids_and_jobname(self, user_id: int) -> Union[(int, int, str)]:
+        """
+        :param user_id: int = User.id
+        :return: (User.stats_id, User.inventory_id, User.job)
+        :raise Exception
+        """
         query = (
             select(User.stats_id, User.inventory_id, User.job)
             .where(User.id == user_id)
@@ -61,47 +69,11 @@ class UserCRUD(BaseCRUD):
         return user
 
 
-    async def update_job_stuff(self, inventory_id: int, stats_id: int, update_dict: dict):
-        inv_query = select(Inventory.bank, Inventory.energy).where(Inventory.id == inventory_id)
-        inv_info = (await self.session.execute(inv_query)).one_or_none()
-        if inv_info is None:
-            raise Exception("Inventory not found")
-
-        # Calculate new inventory values
-        new_bank = inv_info.bank + update_dict['inv_bank']
-        new_energy = inv_info.energy - update_dict['inv_energy']
-        if new_energy < 0:
-            raise ValueError("Not enough energy")
-
-        # Update Inventory table
-        inv_update_stmt = update(Inventory).where(
-            Inventory.id == inventory_id
-        ).values(
-            bank=new_bank,
-            energy=new_energy
-        )
-        await self.session.execute(inv_update_stmt)
-
-        # Get current stats values
-        stats_query = select(Stats.reputation, Stats.level).where(Stats.id == stats_id)
-        stats_info = (await self.session.execute(stats_query)).one_or_none()
-        if stats_info is None:
-            raise ValueError("Stats not found")
-
-        # Calculate new stats values
-        new_rep = stats_info.reputation + update_dict['stats_rep']
-        new_level = stats_info.level + update_dict['stats_level']
-
-        # Update Stats table
-        stats_update_stmt = update(Stats).where(
-            Stats.id == stats_id
-        ).values(
-            reputation=new_rep,
-            level=new_level
-        )
-        await self.session.execute(stats_update_stmt)
-
-    async def get_stats_education(self, user_id: int):
+    async def get_stats_education(self, user_id: int) -> Optional[User]:
+        """
+        :param user_id: int = User.id
+        :return: (User, User.stats, User.education_progress)
+        """
         user = await self.session.get(
             User, user_id,
             options=[

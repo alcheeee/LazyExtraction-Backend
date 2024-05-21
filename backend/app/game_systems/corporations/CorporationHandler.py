@@ -76,7 +76,7 @@ class CorporationHandler:
         user_corp_id = await self.user_crud.get_user_field_from_id(user_id, 'corp_id')
         if user_corp_id != corp_id:
             raise ValueError("That person is not part of the Corporation")
-        remove_user = await self.user_crud.remove_user_corp_id(user_id)
+        remove_user = await self.user_crud.change_user_corp_id(user_id)
         return "Successfully removed the player from Corporation"
 
 

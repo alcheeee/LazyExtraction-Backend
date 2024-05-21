@@ -2,6 +2,8 @@ from sqlalchemy import select, update
 from .base_crud import BaseCRUD
 from ..models import (
     User,
+    Inventory,
+    Stats,
     Jobs
 )
 
@@ -47,7 +49,45 @@ class JobsCRUD(BaseCRUD):
         return job_name
 
 
+    async def update_job_stuff(self, inventory_id: int, stats_id: int, update_dict: dict):
+        inv_query = select(Inventory.bank, Inventory.energy).where(Inventory.id == inventory_id)
+        inv_info = (await self.session.execute(inv_query)).one_or_none()
+        if inv_info is None:
+            raise Exception("Inventory not found")
 
+        # Calculate new inventory values
+        new_bank = inv_info.bank + update_dict['inv_bank']
+        new_energy = inv_info.energy - update_dict['inv_energy']
+        if new_energy < 0:
+            raise ValueError("Not enough energy")
+
+        # Update Inventory table
+        inv_update_stmt = update(Inventory).where(
+            Inventory.id == inventory_id
+        ).values(
+            bank=new_bank,
+            energy=new_energy
+        )
+        await self.session.execute(inv_update_stmt)
+
+        # Get current stats values
+        stats_query = select(Stats.reputation, Stats.level).where(Stats.id == stats_id)
+        stats_info = (await self.session.execute(stats_query)).one_or_none()
+        if stats_info is None:
+            raise ValueError("Stats not found")
+
+        # Calculate new stats values
+        new_rep = stats_info.reputation + update_dict['stats_rep']
+        new_level = stats_info.level + update_dict['stats_level']
+
+        # Update Stats table
+        stats_update_stmt = update(Stats).where(
+            Stats.id == stats_id
+        ).values(
+            reputation=new_rep,
+            level=new_level
+        )
+        await self.session.execute(stats_update_stmt)
 
 
 

@@ -50,7 +50,7 @@ class JobService:
             'inv_energy': job.energy_required
         }
 
-        await self.user_crud.update_job_stuff(inv_id, stats_id, update_dict)
+        await self.job_crud.update_job_stuff(inv_id, stats_id, update_dict)
         return f"Successfully worked job"
 
 
@@ -58,6 +58,11 @@ class JobService:
         pass
 
 
+    @tenacity.retry(
+        wait=tenacity.wait_fixed(1),
+        stop=tenacity.stop_after_attempt(3),
+        retry=tenacity.retry_if_not_exception_type(ValueError)
+    )
     async def apply_to_job(self):
         job_name = self.request.job_name
         user = await self.user_crud.get_stats_education(self.user_id)
