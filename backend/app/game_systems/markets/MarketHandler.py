@@ -1,6 +1,6 @@
 import tenacity
 from sqlalchemy.ext.asyncio import AsyncSession
-from ...schemas.market_schema import MarketTransactionRequest, Transactions
+from ...schemas import MarketTransactionRequest, Transactions
 
 from ...crud import (
     MarketCRUD,

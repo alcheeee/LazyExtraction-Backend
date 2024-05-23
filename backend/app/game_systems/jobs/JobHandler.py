@@ -1,4 +1,4 @@
-from ...schemas.job_schema import JobTypes, JobRequest, JobActionType
+from ...schemas import JobTypes, JobRequest, JobActionType
 from ...database import AsyncSession
 from ...crud import JobsCRUD, UserCRUD
 from ...models import User, Jobs

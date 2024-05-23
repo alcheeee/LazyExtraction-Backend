@@ -1,0 +1,5 @@
+
+
+clothing_items = {
+
+}

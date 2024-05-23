@@ -1,0 +1,161 @@
+from .. import (
+    ItemType,
+    ItemTier,
+    AttachmentTypes
+)
+
+attachment_items = {
+    'Bipod': {
+        'polymer_rifle_bipod': {
+            'item_name': 'Polymer Rifle Bipod',
+            'category': ItemType.Attachments,
+            'tier': ItemTier.Tier4,
+            'quick_sell': 800,
+            'type': AttachmentTypes.Bipod,
+            'weight_adj': 0.0,
+            'max_durability_adj': 0,
+            'damage_adj': 0,
+            'range_adj': 0,
+            'accuracy_adj': 0,
+            'reload_speed_adj': 0.0,
+            'fire_rate_adj': 0.0,
+            'magazine_size_adj': 0,
+            'headshot_chance_adj': 0,
+            'agility_penalty_adj': 0.0
+        },
+    },
+    'FrontGrip': {
+        'tactical_front_grip': {
+            'item_name': 'Tactical Front Grip',
+            'category': ItemType.Attachments,
+            'tier': ItemTier.Tier3,
+            'quick_sell': 500,
+            'type': AttachmentTypes.FrontGrip,
+            'weight_adj': -0.1,
+            'max_durability_adj': 0,
+            'damage_adj': 0,
+            'range_adj': 0,
+            'accuracy_adj': 10,
+            'reload_speed_adj': -0.1,
+            'fire_rate_adj': 0.0,
+            'magazine_size_adj': 0,
+            'headshot_chance_adj': 0,
+            'agility_penalty_adj': -0.1
+        },
+    },
+    'Muzzle': {
+        'flash_suppressor': {
+            'item_name': 'Flash Suppressor',
+            'category': ItemType.Attachments,
+            'tier': ItemTier.Tier2,
+            'quick_sell': 400,
+            'type': AttachmentTypes.Muzzle,
+            'weight_adj': 0.0,
+            'max_durability_adj': 0,
+            'damage_adj': 0,
+            'range_adj': 5,
+            'accuracy_adj': 5,
+            'reload_speed_adj': 0.0,
+            'fire_rate_adj': 0.0,
+            'magazine_size_adj': 0,
+            'headshot_chance_adj': 0,
+            'agility_penalty_adj': 0.0
+        },
+    },
+    'Magazine': {
+        'extended_magazine': {
+            'item_name': 'Extended Magazine',
+            'category': ItemType.Attachments,
+            'tier': ItemTier.Tier3,
+            'quick_sell': 600,
+            'type': AttachmentTypes.Magazine,
+            'weight_adj': 0.2,
+            'max_durability_adj': 0,
+            'damage_adj': 0,
+            'range_adj': 0,
+            'accuracy_adj': 0,
+            'reload_speed_adj': -0.2,
+            'fire_rate_adj': 0.0,
+            'magazine_size_adj': 15,
+            'headshot_chance_adj': 0,
+            'agility_penalty_adj': -0.2
+        },
+    },
+    'Stock': {
+        'adjustable_stock': {
+            'item_name': 'Adjustable Stock',
+            'category': ItemType.Attachments,
+            'tier': ItemTier.Tier2,
+            'quick_sell': 450,
+            'type': AttachmentTypes.Stock,
+            'weight_adj': -0.1,
+            'max_durability_adj': 0,
+            'damage_adj': 0,
+            'range_adj': 0,
+            'accuracy_adj': 8,
+            'reload_speed_adj': 0.0,
+            'fire_rate_adj': 0.0,
+            'magazine_size_adj': 0,
+            'headshot_chance_adj': 0,
+            'agility_penalty_adj': -0.1
+        },
+    },
+    'Scope': {
+        'sniper_scope': {
+            'item_name': 'Sniper Scope',
+            'category': ItemType.Attachments,
+            'tier': ItemTier.Tier4,
+            'quick_sell': 1000,
+            'type': AttachmentTypes.Scope,
+            'weight_adj': 0.3,
+            'max_durability_adj': 0,
+            'damage_adj': 0,
+            'range_adj': 50,
+            'accuracy_adj': 20,
+            'reload_speed_adj': 0.0,
+            'fire_rate_adj': 0.0,
+            'magazine_size_adj': 0,
+            'headshot_chance_adj': 5,
+            'agility_penalty_adj': -0.3
+        },
+    },
+    'Laser': {
+        'tactical_laser': {
+            'item_name': 'Tactical Laser',
+            'category': ItemType.Attachments,
+            'tier': ItemTier.Tier3,
+            'quick_sell': 700,
+            'type': AttachmentTypes.Laser,
+            'weight_adj': 0.1,
+            'max_durability_adj': 0,
+            'damage_adj': 0,
+            'range_adj': 0,
+            'accuracy_adj': 10,
+            'reload_speed_adj': 0.0,
+            'fire_rate_adj': 0.0,
+            'magazine_size_adj': 0,
+            'headshot_chance_adj': 0,
+            'agility_penalty_adj': -0.1
+        },
+    },
+    'Barrel': {
+        'long_barrel': {
+            'item_name': 'Long Barrel',
+            'category': ItemType.Attachments,
+            'tier': ItemTier.Tier3,
+            'quick_sell': 900,
+            'type': AttachmentTypes.Barrel,
+            'weight_adj': 0.3,
+            'max_durability_adj': 0,
+            'damage_adj': 0,
+            'range_adj': 25,
+            'accuracy_adj': 15,
+            'reload_speed_adj': 0.0,
+            'fire_rate_adj': 0.0,
+            'magazine_size_adj': 0,
+            'headshot_chance_adj': 0,
+            'agility_penalty_adj': -0.2
+        },
+    },
+}
+

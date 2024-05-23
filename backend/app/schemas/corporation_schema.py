@@ -10,7 +10,7 @@ class NewCorporationInfo(BaseModel):
     name: str
     type: CorporationType
 
-class ItemType(Enum):
+class CorpItemType(Enum):
     POLYMER = "Polymer"
     ELECTRONIC_PARTS = "Electronic Parts"
     SCRAP_METAL = "Scrap Metal"
@@ -31,15 +31,15 @@ class UpgradeType(Enum):
 class CorporationDefaults:
     DEFAULTS = {
         CorporationType.Industrial: {
-            'items': [ItemType.POLYMER, ItemType.ELECTRONIC_PARTS, ItemType.SCRAP_METAL],
+            'items': [CorpItemType.POLYMER, CorpItemType.ELECTRONIC_PARTS, CorpItemType.SCRAP_METAL],
             'upgrades': [UpgradeType.INDUSTRIAL_PRODUCTION, UpgradeType.INDUSTRIAL_LEVEL]
         },
         CorporationType.Criminal: {
-            'items': [ItemType.WEAPONS, ItemType.CONTRABAND, ItemType.SURVEILLANCE_GEAR],
+            'items': [CorpItemType.WEAPONS, CorpItemType.CONTRABAND, CorpItemType.SURVEILLANCE_GEAR],
             'upgrades': [UpgradeType.CRIMINAL_NETWORKS, UpgradeType.CRIMINAL_MONEY_LAUNDERING]
         },
         CorporationType.Law: {
-            'items': [ItemType.CONFIDENTIAL_FILES, ItemType.FORENSIC_EQUIPMENT],
+            'items': [CorpItemType.CONFIDENTIAL_FILES, CorpItemType.FORENSIC_EQUIPMENT],
             'upgrades': [UpgradeType.LAW_FORENSICS, UpgradeType.LAW_LEGAL_FRAMEWORKS]
         }
     }

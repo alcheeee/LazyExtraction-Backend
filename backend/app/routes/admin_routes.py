@@ -9,12 +9,14 @@ from . import (
     MyLogger,
     common_http_errors
 )
-from ..schemas.item_schema import (
+from ..schemas import (
+    MedicalCreate,
     ClothingCreate,
     ArmorCreate,
     WeaponCreate
 )
 from ..game_systems.items.ItemHandler import (
+    MedicalCreator,
     ClothingCreator,
     WeaponCreator,
     ArmorCreator
@@ -35,6 +37,27 @@ admin_router = APIRouter(
 )
 
 
+@admin_router.post("/create-item/medical")
+async def create_medical_item_endpoint(
+        request: MedicalCreate,
+        admin_username: str = Depends(current_user.check_if_admin),
+        session: AsyncSession = Depends(dependency_session)
+    ):
+    try:
+        medical_creator = MedicalCreator(request=request, session=session)
+        response = await medical_creator.create_medical()
+        await session.commit()
+
+        msg = f"Admin {admin_username} created medical item {request.item_name}"
+        admin_log.info(msg)
+        return ResponseBuilder.success(msg, DataName.ItemDetails, response)
+
+    except Exception as e:
+        await session.rollback()
+        error_log.error(str(e))
+        raise common_http_errors.server_error()
+
+
 @admin_router.post("/create-item/clothing")
 async def create_clothing_item_endpoint(
         request: ClothingCreate,
@@ -43,7 +66,7 @@ async def create_clothing_item_endpoint(
     ):
     try:
         clothing_creator = ClothingCreator(request=request, session=session)
-        response_json = await clothing_creator.create_clothing_item()
+        response_json = await clothing_creator.create_clothing()
         await session.commit()
 
         msg = f"Admin {admin_username} created clothing item {request.item_name}"
@@ -98,7 +121,6 @@ async def create_weapon_item_endpoint(
         raise common_http_errors.server_error()
 
 
-
 @admin_router.put("/add-item-to-user/{username}/{item_id}/{quantity}")
 async def add_an_item_to_user(
         username: str, item_id: int, quantity: int,
@@ -119,7 +141,7 @@ async def add_an_item_to_user(
             quantity_change=quantity
         )
         await session.commit()
-        msg = f"Added/Removed {quantity} of item {item_id} to {username}"
+        msg = f"Admin {admin_username} Added/Removed {quantity} of item {item_id} to {username}"
         admin_log.info(msg)
         return ResponseBuilder.success(msg, DataName.ItemGiven, result)
 

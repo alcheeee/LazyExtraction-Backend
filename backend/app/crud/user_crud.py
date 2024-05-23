@@ -6,7 +6,7 @@ from ..models import (
     User,
     Inventory,
     Stats,
-    EducationProgress
+    TrainingProgress
 )
 
 

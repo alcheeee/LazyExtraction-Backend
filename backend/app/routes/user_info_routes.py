@@ -1,15 +1,11 @@
 from fastapi import APIRouter, Depends
-
 from ..game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
-from ..schemas.item_schema import equipment_map
-
+from ..schemas import equipment_map
 from ..auth.auth_handler import get_current_user
 from ..models import (
     User,
     Items
 )
-
-
 from . import (
     AsyncSession,
     dependency_session,
@@ -49,7 +45,6 @@ async def get_user_stats(
             "knowledge": stats.knowledge,
             "luck": stats.luck,
             "damage": stats.damage,
-            "education": stats.education,
             "current_job": stats.job if stats.job else None
         }
 
@@ -89,9 +84,8 @@ async def get_user_items(
             item_info = {
                 "item_id": main_item.id,
                 "item_name": main_item.item_name,
-                "item_quality": main_item.quality,
+                "item_tier": main_item.tier,
                 "quantity": item.quantity,
-                "illegal": main_item.illegal,
                 "category": main_item.category.value,
                 "slot_type": None,
                 "equipped_slot": None,

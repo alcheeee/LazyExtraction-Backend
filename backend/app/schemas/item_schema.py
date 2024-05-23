@@ -1,14 +1,16 @@
 from enum import Enum
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class ItemType(str, Enum):
-    Drug = "Drug"
-    Weapon = "Weapon"
+    Medical = "Medical"
     Armor = "Armor"
     Clothing = "Clothing"
-    Other = "Other"
+    Weapon = "Weapon"
+    Bullets = "Bullets"
+    Attachments = "Attachments"
+    Valuable = "Valuable"
 
 class ClothingType(str, Enum):
     Mask = "Mask"
@@ -26,6 +28,25 @@ class ItemTier(Enum):
     Tier4 = 'Tier 4'
     Tier5 = 'Tier 5'
     Tier6 = 'Tier 6'
+
+tier_weights = {
+    # Second value is supposed to be Luck Factor, not added yet
+    ItemTier.Tier1: (60, 1),
+    ItemTier.Tier2: (40, 2),
+    ItemTier.Tier3: (35, 3),
+    ItemTier.Tier4: (10, 4),
+    ItemTier.Tier5: (3, 5),
+    ItemTier.Tier6: (1, 6)
+}
+
+tier_multipliers = {
+    ItemTier.Tier1: 1,
+    ItemTier.Tier2: 1.25,
+    ItemTier.Tier3: 1.5,
+    ItemTier.Tier4: 2,
+    ItemTier.Tier5: 2.5,
+    ItemTier.Tier6: 3
+}
 
 equipment_map = {
     ItemType.Weapon: "equipped_weapon_id",
@@ -54,48 +75,38 @@ armor_bonus_wrapper = {
     "agility": "agility_penalty"
 }
 
-weapon_bonus_wrapper = {
-    "strength": "strength_bonus",
-    "damage": "damage_bonus",
-    "agility": "agility_penalty"
+medical_bonus_wrapper = {
+    "max_weight": "weight_bonus",
+    "agility": "agility_bonus"
 }
+
 
 class ItemCreate(BaseModel):
     item_name: str = "AR"
-    quality: ItemTier = ItemTier.Tier1
+    tier: ItemTier = ItemTier.Tier1
     quick_sell: int = 10
     category: ItemType = ItemType.Weapon
-    illegal: bool = False
     randomize_all: bool = False
     randomize_stats: bool = False
 
+class MedicalCreate(ItemCreate):
+    health_increase: int = 0
+    pain_reduction: int = 0
+    weight_bonus: int = 0
+    agility_bonus: int = 0
+    amount_of_actions: int = 1
 
 class ClothingCreate(ItemCreate):
     clothing_type: Optional[ClothingType]
     reputation_bonus: Optional[int] = 0
     max_energy_bonus: Optional[int] = 0
     damage_bonus: Optional[int] = 0
-    agility_bonus: Optional[float] = 0.01
+    agility_bonus: Optional[float] = 0.00
     health_bonus: Optional[int] = 0
-    luck_bonus: Optional[float] = 0.01
-    strength_bonus: Optional[float] = 0.01
-    knowledge_bonus: Optional[float] = 0.01
+    luck_bonus: Optional[float] = 0.00
+    strength_bonus: Optional[float] = 0.00
+    knowledge_bonus: Optional[float] = 0.00
 
-class WeaponCreate(ItemCreate):
-    weight: float = 3.5
-    max_durability: int = 100
-    current_durability: float = 100.00
-
-    damage_bonus: int = 0
-    strength_bonus: float = 0.01
-    range: int = 5
-    accuracy: int = 50
-    reload_speed: float = 2.5
-    fire_rate: float = 2.2
-    magazine_size: int = 0
-    armor_penetration: int = 0
-    headshot_chance: int = 0
-    agility_penalty: float = -1.4
 
 class ArmorCreate(ItemCreate):
     type: ArmorType = ArmorType.Head
@@ -111,6 +122,12 @@ class ArmorCreate(ItemCreate):
 
 
 class FilterItemStats:
+    class MedicalStats(Enum):
+        HEALTH_INCREASE = "health_increase"
+        PAIN_REDUCTION = "pain_reduction"
+        WEIGHT_BONUS = "weight_bonus"
+        AGILITY_BONUS ="agility_bonus"
+        AMOUNT_OF_ACTIONS = "amount_of_actions"
 
     class ClothingStats(Enum):
         CLOTHING_TYPE = "clothing_type"

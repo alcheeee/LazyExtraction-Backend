@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from ...schemas.corporation_schema import NewCorporationInfo, CorporationDefaults
+from ...schemas import NewCorporationInfo, CorporationDefaults
 from ...crud.corp_crud import CorporationCRUD
 from ...crud.user_crud import UserCRUD
 from ...models import (

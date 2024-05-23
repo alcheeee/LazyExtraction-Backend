@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
-from ..schemas.corporation_schema import NewCorporationInfo
+from ..schemas import NewCorporationInfo
 from ..game_systems.corporations.CorporationHandler import CorporationHandler
-
 from ..auth import current_user
 from . import (
     AsyncSession,

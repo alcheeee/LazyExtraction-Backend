@@ -1,168 +1,139 @@
-import tenacity
-from typing import Dict, Type
-from pydantic import BaseModel
+from typing import Optional, Union
 from sqlalchemy.ext.asyncio import AsyncSession
-from .ItemCreationLogic import GenerateItemQuality, GenerateItemStats
-from ...schemas.item_schema import ItemType, ClothingCreate, ArmorCreate, ArmorType, WeaponCreate
-from ...models import (
-    Items,
-    Weapon,
-    Clothing,
-    Armor
+from .ItemCreatorClasses import (
+    MedicalCreator,
+    ArmorCreator,
+    WeaponCreator,
+    ClothingCreator
+)
+from . import (
+    ItemTier,
+    MedicalCreate,
+    ClothingCreate,
+    ArmorCreate,
+    ArmorType
+)
+from ...schemas import WeaponCreate
+from .items_data import (
+    medical_items,
+    armor_items,
+    weapon_items,
+    clothing_items
 )
 
 
-class ClothingCreator:
-    def __init__(self, request: ClothingCreate, session: AsyncSession, user_luck=1.0):
-        self.request = request
-        self.session = session
-        self.user_luck = user_luck
+class NewItem:
+    class BaseItem:
+        def __init__(self, item_name: str, item_variant: Optional[Union[str, ItemTier]], session: AsyncSession):
+            self.item_name = item_name
+            self.item_variant = item_variant
+            self.session = session
 
-    def generators(self, quality=None, randomize_all=True):
-        if randomize_all:
-            quality_generator = GenerateItemQuality(self.user_luck)
-            quality = quality_generator.generate_item_quality()
+        def get_item_data(self, item_dict):
+            item_data = item_dict.get(self.item_name, {}).get(self.item_variant)
+            if not item_data:
+                raise Exception(f"Item or tier not found for {self.item_name} with tier {self.item_variant}")
+            return item_data
 
-        stats_generator = GenerateItemStats(self.request.category, quality, self.user_luck)
-        item_specific_details = stats_generator.generate_stats()
-        quick_sell_value = stats_generator.generate_quick_sell(self.request.quick_sell)
-        return quality, item_specific_details, quick_sell_value
+    class Medical(BaseItem):
+        async def create(self):
+            request = self.create_medical_request()
+            creator = MedicalCreator(request, self.session)
+            return await creator.create_medical()
 
-    @tenacity.retry(
-        wait=tenacity.wait_fixed(1),
-        stop=tenacity.stop_after_attempt(3),
-        retry=tenacity.retry_if_not_exception_type(ValueError)
-    )
-    async def create_clothing_item(self):
-        quality = self.request.quality
-
-        if self.request.randomize_all:
-            quality, clothing_details, quick_sell_value = self.generators(randomize_all=True)
-        elif self.request.randomize_stats:
-            _, clothing_details, quick_sell_value = self.generators(quality=quality, randomize_all=False)
-        else:
-            clothing_details = self.request.dict(
-                exclude_unset=True, exclude={
-                    "item_name", "illegal", "quality",
-                    "randomize_stats", "randomize_all", "category", "quick_sell"
-                })
-
-        item_data = {
-            "item_name": self.request.item_name,
-            "illegal": self.request.illegal,
-            "category": ItemType.Clothing,
-            "quality": quality,
-            "quick_sell": quick_sell_value
-        }
-
-        if 'clothing_type' not in clothing_details and hasattr(self.request, 'clothing_type'):
-            clothing_details['clothing_type'] = self.request.clothing_type
+        def create_medical_request(self):
+            item_data = self.get_item_data(medical_items)
+            return MedicalCreate(
+                item_name=item_data['item_name'],
+                category=item_data['category'],
+                tier=item_data['tier'],
+                quick_sell=item_data['quick_sell'],
+                health_increase=item_data.get('health_increase', 0),
+                pain_reduction=item_data.get('pain_reduction', 0),
+                weight_bonus=item_data.get('weight_bonus', 0),
+                agility_bonus=item_data.get('agility_bonus', 0),
+                amount_of_actions=item_data.get('amount_of_actions', 0)
+            )
 
 
-        item = Items(**item_data)
-        self.session.add(item)
-        await self.session.flush()
+    class Clothing(BaseItem):
+        async def create(self):
+            request = self.create_clothing_request()
+            creator = ClothingCreator(request, self.session)
+            return await creator.create_clothing()
 
-        item_detail_instance = Clothing(item_id=item.id, **clothing_details)
-        self.session.add(item_detail_instance)
-
-        full_item_details = {**item_data, **clothing_details}
-        return full_item_details
-
-
-class ArmorCreator:
-    def __init__(self, request: ArmorCreate, session: AsyncSession):
-        self.request = request
-        self.session = session
-
-    @tenacity.retry(
-        wait=tenacity.wait_fixed(1),
-        stop=tenacity.stop_after_attempt(3),
-        retry=tenacity.retry_if_not_exception_type(ValueError)
-    )
-    async def create_armor(self):
-        item_data = {
-            "item_name": self.request.item_name,
-            "illegal": self.request.illegal,
-            "category": ItemType.Armor,
-            "quality": self.request.quality,
-            "quick_sell": self.request.quick_sell
-        }
-        item = Items(**item_data)
-        self.session.add(item)
-        await self.session.flush()
-
-        armor_details = Armor(
-            item_id=item.id,
-            type=self.request.type,
-            durability=self.request.durability,
-            weight=self.request.weight,
-            head_protection=self.request.head_protection,
-            chest_protection=self.request.chest_protection,
-            stomach_protection=self.request.stomach_protection,
-            arm_protection=self.request.arm_protection,
-            agility_penalty=self.request.agility_penalty
-        )
-        self.session.add(armor_details)
-
-        return armor_details
+        def create_clothing_request(self):
+            item_data = self.get_item_data(clothing_items)
+            return ClothingCreate(
+                item_name=item_data['item_name'],
+                category=item_data['category'],
+                tier=item_data['tier'],
+                quick_sell=item_data['quick_sell'],
+                clothing_type=item_data.get('clothing_type', None),
+                reputation_bonus=item_data.get('reputation_bonus', 0),
+                max_energy_bonus=item_data.get('max_energy_bonus', 0),
+                damage_bonus=item_data.get('damage_bonus', 0),
+                agility_bonus=item_data.get('agility_bonus', 0.01),
+                health_bonus=item_data.get('health_bonus', 0),
+                luck_bonus=item_data.get('luck_bonus', 0.01),
+                strength_bonus=item_data.get('strength_bonus', 0.01),
+                knowledge_bonus=item_data.get('knowledge_bonus', 0.01),
+                randomize_all=item_data.get('randomize_all', False),
+                randomize_stats=item_data.get('randomize_stats', False)
+            )
 
 
-class WeaponCreator:
-    def __init__(self, request: WeaponCreate, session: AsyncSession):
-        self.request = request
-        self.session = session
+    class Weapon(BaseItem):
+        async def create(self):
+            request = self.create_weapon_request()
+            creator = WeaponCreator(request, self.session)
+            return await creator.create_weapon()
 
-    @tenacity.retry(
-        wait=tenacity.wait_fixed(1),
-        stop=tenacity.stop_after_attempt(3),
-        retry=tenacity.retry_if_not_exception_type(ValueError)
-    )
-    async def create_weapon(self):
-
-        item_data = {
-            "item_name": self.request.item_name,
-            "illegal": self.request.illegal,
-            "category": ItemType.Weapon,
-            "quality": self.request.quality,
-            "quick_sell": self.request.quick_sell
-        }
-
-        item = Items(**item_data)
-        self.session.add(item)
-        await self.session.flush()
-
-        weapon_details = Weapon(
-            item_id=item.id,
-            damage_bonus=self.request.damage_bonus,
-            strength_bonus=self.request.strength_bonus,
-            weight=self.request.weight,
-            durability=self.request.durability,
-            range=self.request.range,
-            accuracy=self.request.accuracy,
-            reload_speed=self.request.reload_speed,
-            fire_rate=self.request.fire_rate,
-            magazine_size=self.request.magazine_size,
-            armor_penetration=self.request.armor_penetration,
-            headshot_chance=self.request.headshot_chance,
-            agility_bonus=self.request.agility_bonus
-        )
-
-        self.session.add(weapon_details)
-        return weapon_details
+        def create_weapon_request(self):
+            item_data = self.get_item_data(weapon_items)
+            return WeaponCreate(
+                item_name=item_data['item_name'],
+                category=item_data['category'],
+                tier=item_data['tier'],
+                quick_sell=item_data['quick_sell'],
+                weight=item_data.get('weight', 3.5),
+                max_durability=item_data.get('max_durability', 100),
+                current_durability=item_data.get('current_durability', 100.00),
+                damage_bonus=item_data.get('damage_bonus', 0),
+                strength_bonus=item_data.get('strength_bonus', 0.00),
+                range=item_data.get('range', 5),
+                accuracy=item_data.get('accuracy', 50),
+                reload_speed=item_data.get('reload_speed', 0),
+                fire_rate=item_data.get('fire_rate', 0),
+                magazine_size=item_data.get('magazine_size', 0),
+                armor_penetration=item_data.get('armor_penetration', 0),
+                headshot_chance=item_data.get('headshot_chance', 0),
+                agility_penalty=item_data.get('agility_penalty', -1.4)
+            )
 
 
+    class Armor(BaseItem):
+        async def create(self):
+            request = self.create_armor_request()
+            creator = ArmorCreator(request, self.session)
+            return await creator.create_armor()
 
-
-
-
-
-
-
-
-
-
-
-
+        def create_armor_request(self):
+            item_data = self.get_item_data(armor_items)
+            return ArmorCreate(
+                item_name=item_data['item_name'],
+                category=item_data['category'],
+                tier=item_data['tier'],
+                quick_sell=item_data['quick_sell'],
+                type=item_data.get('type', ArmorType.Head),
+                max_durability=item_data.get('max_durability', 100),
+                current_durability=item_data.get('current_durability', 100.00),
+                weight=item_data.get('weight', 5.5),
+                head_protection=item_data.get('head_protection', 0),
+                chest_protection=item_data.get('chest_protection', 0),
+                stomach_protection=item_data.get('stomach_protection', 0),
+                arm_protection=item_data.get('arm_protection', 0),
+                agility_penalty=item_data.get('agility_penalty', -0.4)
+            )
 
 

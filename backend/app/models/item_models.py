@@ -1,17 +1,15 @@
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy import Enum, Column, Integer
+from sqlalchemy import Enum, Column
 from sqlmodel import SQLModel, Field, Relationship
-from ..schemas.item_schema import ItemType, ItemTier, ClothingType, ArmorType
-from ..schemas.market_schema import MarketNames
+from ..schemas import ItemType, ItemTier, ClothingType, ArmorType, MarketNames
 
 
 class Items(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     item_name: str = Field(index=True)
     category: ItemType = Field(sa_column=Column(Enum(ItemType)))
-    quality: ItemTier = Field(sa_column=Column(Enum(ItemTier)))
-    illegal: bool = Field(default=False)
+    tier: ItemTier = Field(sa_column=Column(Enum(ItemTier)))
     quick_sell: int = Field(default=5)
 
     # Relationships
@@ -19,30 +17,20 @@ class Items(SQLModel, table=True):
     weapon_details: Optional["Weapon"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
     clothing_details: Optional["Clothing"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
     armor_details: Optional["Armor"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
+    medical_details: Optional["Medical"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
+    bullet_details: Optional["Bullets"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
+    attachment_details: Optional["Attachments"] = Relationship(back_populates="item", sa_relationship_kwargs={"uselist": False})
 
 
-class Weapon(SQLModel, table=True):
+class Medical(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    damage_bonus: int = Field(default=0, nullable=False)
-    strength_bonus: float = Field(default=0)
-    weight: float = Field(default=5.0)  # in pounds
-    max_durability: int = Field(default=100)
-    current_durability: float = Field(default=100.00)
-
-    # For Guns only
-    range: int = Field(default=5) # In meters
-    accuracy: int = Field(default=80) # 80/100
-    reload_speed: float = Field(default=2.0) # In seconds
-    fire_rate: float = Field(default=2.5)  # for Round-Per-Second
-
-    # Bullet/Attachment related
-    magazine_size: int = Field(default=30)
-    armor_penetration: int = Field(default=1)
-    headshot_chance: int = Field(default=0)
-    agility_penalty: float = Field(default=-0.01)
-
+    health_increase: int = Field(default=0)
+    pain_reduction: int = Field(default=0)
+    weight_bonus: int = Field(default=0)
+    agility_bonus: int = Field(default=0)
+    amount_of_actions: int = Field(default=0)
     item_id: int = Field(default=None, foreign_key="items.id", index=True)
-    item: Optional[Items] = Relationship(back_populates="weapon_details")
+    item: Optional[Items] = Relationship(back_populates="medical_details")
 
 
 class Armor(SQLModel, table=True):
@@ -72,7 +60,7 @@ class Clothing(SQLModel, table=True):
     knowledge_bonus: float = Field(default=0)
     luck_bonus: float = Field(default=0)
     item_id: int = Field(default=None, foreign_key="items.id", index=True)
-    item: Optional["Items"] = Relationship(back_populates="clothing_details")
+    item: Optional[Items] = Relationship(back_populates="clothing_details")
 
 
 class Market(SQLModel, table=True):
@@ -89,9 +77,9 @@ class MarketItems(SQLModel, table=True):
     by_user: Optional[str] = Field(default=None, nullable=True)
     posted_at: datetime = Field(default_factory=datetime.utcnow)
     item_id: int = Field(default=None, foreign_key="items.id")
-    item: Optional["Items"] = Relationship(back_populates="market_items")
+    item: Optional[Items] = Relationship(back_populates="market_items")
     main_market_post_id: int = Field(default=None, foreign_key="market.id")
-    main_market_post: Optional["Market"] = Relationship(back_populates="postings")
+    main_market_post: Optional[Market] = Relationship(back_populates="postings")
 
 
 

@@ -1,31 +1,24 @@
 import random
 from math import sqrt
 from typing import List, Dict, Tuple
-from ...schemas.item_schema import ItemTier, ItemType, filter_item_stats
+from . import ItemTier, ItemType, filter_item_stats, tier_weights
 
-class GenerateItemQuality:
-    QUALITY_WEIGHTS = {
-        ItemTier.Tier1: (60, 1),
-        ItemTier.Tier2: (40, 2),
-        ItemTier.Tier3: (35, 3),
-        ItemTier.Tier4: (10, 4),
-        ItemTier.Tier5: (3, 5),
-        ItemTier.Tier6: (1, 6)
-    }
+class GenerateItemTier:
 
     def __init__(self, luck_stat):
         self.luck_stat = luck_stat
 
-    def generate_item_quality(self) -> ItemTier:
-        qualities = [q for q in ItemTier]
-        weights = [self.get_weight(q) for q in qualities]
-        quality = random.choices(qualities, weights=weights, k=1)[0]
-        return quality
+    def generate_item_tier(self) -> ItemTier:
+        tiers = [q for q in ItemTier]
+        weights = [self.get_weight(tier) for tier in tiers]
+        tier = random.choices(tiers, weights=weights, k=1)[0]
+        return tier
 
-    def get_weight(self, quality: ItemTier) -> int:
-        base_weight, luck_factor = self.QUALITY_WEIGHTS[quality]
+    def get_weight(self, tier: ItemTier) -> int:
+        base_weight, luck_factor = tier_weights[tier]
         luck_effect = sqrt(self.luck_stat) / luck_factor
         return max(1, int(base_weight + luck_effect))
+
 
 STAT_RANGES: Dict[ItemTier, Tuple[min, max, int]] = {
     ItemTier.Tier1: (1, 3, 1),
@@ -37,15 +30,15 @@ STAT_RANGES: Dict[ItemTier, Tuple[min, max, int]] = {
 }
 
 class GenerateItemStats:
-    def __init__(self, item_category: ItemType, quality, luck: float):
+    def __init__(self, item_category: ItemType, tier, luck: float):
         self.category = item_category
-        self.quality = quality
+        self.tier = tier
         self.luck = luck
 
     def generate_stats(self) -> Dict[str, int]:
         stats = filter_item_stats.get_relevant_stats(self.category)
         generated_stats = {stat: 0 for stat in stats if stat != 'clothing_type'}
-        min_range, max_range, num_stats_to_change = STAT_RANGES[self.quality]
+        min_range, max_range, num_stats_to_change = STAT_RANGES[self.tier]
         luck_adjustment = sqrt(self.luck)
         stats_picked = 0
 
@@ -66,7 +59,7 @@ class GenerateItemStats:
         return round(random.uniform(min_range + luck_adjustment, max_range + luck_adjustment), 2)
 
     def generate_quick_sell(self, quick_sell_value: int):
-        quality_multipliers = {
+        tier_multipliers = {
             ItemTier.Tier1: 1,
             ItemTier.Tier2: 2,
             ItemTier.Tier3: 4,
@@ -74,7 +67,7 @@ class GenerateItemStats:
             ItemTier.Tier5: 16,
             ItemTier.Tier6: 20,
         }
-        quick_sell = quick_sell_value * quality_multipliers.get(self.quality, 1)
+        quick_sell = quick_sell_value * tier_multipliers.get(self.tier, 1)
         return int(quick_sell)
 
 

@@ -2,14 +2,14 @@ from sqlalchemy import select
 from . import get_session
 from ..crud.base_crud import BaseCRUD
 from ..auth.auth_deps import password_security
-from ..schemas.item_schema import equipment_map
+from ..schemas import equipment_map
 from ..models import (
     User,
     Stats,
     Items,
     Inventory,
     InventoryItem,
-    EducationProgress
+    TrainingProgress
 )
 
 from ..utils.logger import MyLogger
@@ -26,9 +26,9 @@ class UserHandler:
             new_user = User(username=username, password=hashed_password, email=email)
             new_stats = Stats(user=new_user)
             new_inventory = Inventory(user=new_user)
-            new_education = EducationProgress(user=new_user)
+            new_training = TrainingProgress(user=new_user)
 
-            self.session.add_all([new_user, new_stats, new_inventory])
+            self.session.add_all([new_user, new_stats, new_inventory, new_training])
             await self.session.commit()
             return f"Account created, welcome {username}!"
         except Exception as e:

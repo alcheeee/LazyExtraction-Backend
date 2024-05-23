@@ -1,13 +1,13 @@
 import tenacity
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...crud import UserCRUD, UserInventoryCRUD
-from ...schemas.item_schema import (
+from . import (
     ItemType,
     equipment_map,
     clothing_bonus_wrapper,
     armor_bonus_wrapper,
     weapon_bonus_wrapper,
-    ArmorType
+    ArmorType,
 )
 from ...models import (
     User,

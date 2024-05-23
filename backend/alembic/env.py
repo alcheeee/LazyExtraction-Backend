@@ -14,6 +14,7 @@ from app.models.corp_models import *
 from app.models.models import *
 from app.models.item_models import *
 from app.models.other_models import *
+from app.models.weapon_models import *
 
 
 config = context.config

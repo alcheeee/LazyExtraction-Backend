@@ -1,13 +1,13 @@
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship, Enum, Column, String
 from .models import InventoryItem, User
-from ..schemas.corporation_schema import CorporationType
+from ..schemas import CorporationType, ItemTier
 
 
 class CorporationItems(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     item_name: str
-    quality: str = Field(default="Junk")
+    tier: ItemTier = Field(sa_column=Column(Enum(ItemTier)), default=ItemTier.Tier1)
     quantity: int = Field(default=0)
     corporation_id: Optional[int] = Field(default=None, foreign_key="corporation.id")
     corporation: Optional["Corporation"] = Relationship(back_populates="items")

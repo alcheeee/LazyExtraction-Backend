@@ -10,3 +10,7 @@ docker-compose exec gameapi_server alembic revision --autogenerate -m ""
 docker-compose exec gameapi_server alembic upgrade head
 
 
+Revision code for updating an Enum column:
+
+def upgrade():
+    op.execute("ALTER TYPE itemtype ADD VALUE 'Medical';")

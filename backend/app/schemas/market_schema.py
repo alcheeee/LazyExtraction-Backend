@@ -6,6 +6,8 @@ from enum import Enum
 class MarketNames(str, Enum):
     GeneralMarket = "general_market"
     BlackMarket = "black_market"
+    Larry = "larry"
+    Tommy = "tommy"
 
 class Transactions(str, Enum):
     Posting = "posting"

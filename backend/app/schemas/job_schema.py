@@ -1,18 +1,18 @@
 from typing import Optional
 from pydantic import BaseModel
 from enum import Enum
-from .education_schema import EducationPaths
+from .training_schema import TrainingPaths
 
 
 class JobTypes(str, Enum):
-    General = "general"
-    Criminal = "criminal"
-    CriminalJustice = "criminal_justice"
+    Basic = "basic"
+    AdvancedInfantry = "advanced_infantry"
+    SpecialOperations = "special_operations"
+    Intelligence = "intelligence"
+    Engineering = "engineering"
+    Medical = "medical"
+    Leadership = "leadership"
     Economics = "economics"
-    MilitaryPlanning = "military_planning"
-    Engineering = "engineer"
-    HealthScience = "health_science"
-    ComputerScience = "computer_science"
 
 
 class JobActionType(str, Enum):
@@ -39,8 +39,8 @@ class JobCreate(BaseModel):
     energy_required: int = 5
     level_required: int = 1
     reputation_required: float = 0.00
-    education_required: Optional[str] = EducationPaths.CommunityCollege.value
-    education_progress_required: float = 0.00
+    training_required: Optional[str] = TrainingPaths.BasicTraining.value
+    training_progress_required: float = 0.00
 
     # Rewards
     income: int = 40

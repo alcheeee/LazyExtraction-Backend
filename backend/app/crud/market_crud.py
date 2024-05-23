@@ -6,7 +6,7 @@ from ..models import (
     Market,
     MarketItems
 )
-from ..schemas.market_schema import MarketNames, MarketTransactionRequest
+from ..schemas import MarketNames, MarketTransactionRequest
 
 
 class MarketCRUD(BaseCRUD):

@@ -1,43 +1,53 @@
-from .other_models import Jobs
-
+from .other_models import (
+    Jobs,
+    World
+)
 from .corp_models import (
     Corporation,
     CorporationItems,
     CorporationType
 )
-
 from .item_models import (
     Items,
+    Medical,
     Clothing,
     Armor,
-    Weapon,
     MarketItems,
     Market
 )
-
+from .weapon_models import (
+    Weapon,
+    Bullets,
+    Attachments
+)
 from .models import (
     User,
     Inventory,
     InventoryItem,
     Stats,
-    EducationProgress
+    TrainingProgress
 )
 
+
 __all__ = [
+    'World',
     'Jobs',
     'Corporation',
     'CorporationItems',
     'CorporationType',
     'Items',
+    'Medical',
     'Armor',
     'Clothing',
-    'Weapon',
     'MarketItems',
     'Market',
     'User',
     'Inventory',
     'InventoryItem',
     'Stats',
-    'EducationProgress'
+    'TrainingProgress',
+    'Weapon',
+    'Bullets',
+    'Attachments'
 ]
 

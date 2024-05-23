@@ -20,6 +20,7 @@ class Stats(SQLModel, table=True):
     health: int = Field(default=100)
     damage: int = Field(default=1)
     strength: float = Field(default=1.00)
+
     head_protection: int = Field(default=5)
     chest_protection: int = Field(default=5)
     stomach_protection: int = Field(default=5)
@@ -34,19 +35,20 @@ class Stats(SQLModel, table=True):
                 setattr(self, attr, round(value, 2))
 
 
-class EducationProgress(SQLModel, table=True):
+class TrainingProgress(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    # Allow to go over 100, for every 100, thats a new "Level" of education
-    community_college: float = Field(default=0.00)
-    criminal_justice: float = Field(default=0.00)
-    economics: float = Field(default=0.00)
-    military_planning: float = Field(default=0.00)
+    # Allow to go over 100, for every 100, thats a new "Level" of training
+    basic_training: float = Field(default=0.00)
+    advanced_infantry: float = Field(default=0.00)
+    special_operations: float = Field(default=0.00)
+    intelligence: float = Field(default=0.00)
     engineering: float = Field(default=0.00)
-    computer_science: float = Field(default=0.00)
-    health_science: float = Field(default=0.00)
+    medical: float = Field(default=0.00)
+    leadership: float = Field(default=0.00)
+    economics: float = Field(default=0.00)
 
-    user: Optional["User"] = Relationship(back_populates="education_progress")
+    user: Optional["User"] = Relationship(back_populates="training_progress")
 
 
 class Inventory(SQLModel, table=True):
@@ -94,10 +96,10 @@ class User(SQLModel, table=True):
     job: Optional[str] = Field(default=None)
     job_chance_to_promo: float = Field(default=1.00)
 
-    education: Optional[str] = Field(default=None)
+    training: Optional[str] = Field(default=None)
 
-    education_progress_id: Optional[int] = Field(default=None, foreign_key="educationprogress.id", index=True)
-    education_progress: Optional["EducationProgress"] = Relationship(back_populates="user")
+    training_progress_id: Optional[int] = Field(default=None, foreign_key="trainingprogress.id", index=True)
+    training_progress: Optional["TrainingProgress"] = Relationship(back_populates="user")
 
     stats_id: Optional[int] = Field(default=None, foreign_key="stats.id", index=True)
     stats: Optional["Stats"] = Relationship(back_populates="user")
@@ -108,6 +110,8 @@ class User(SQLModel, table=True):
     corp_id: Optional[int] = Field(default=None, foreign_key="corporation.id", index=True)
     corporation: Optional["Corporation"] = Relationship(back_populates="employees")
 
+    world_id: Optional[int] = Field(default=None, foreign_key="world.id", index=True)
+    world: Optional["World"] = Relationship(back_populates="players")
 
     # I will clean this up in the future, for now I just cant be bothered. Not enough content yet
     sent_messages: List["PrivateMessage"] = Relationship(back_populates="sender",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.sender_id"})
