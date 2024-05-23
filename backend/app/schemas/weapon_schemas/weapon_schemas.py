@@ -39,13 +39,12 @@ class AttachmentTypes(str, Enum):
 
 
 class WeaponCreate(ItemCreate):
-    allowed_attachments: Optional[List[str]] = Field(default_factory=lambda: ["Bipod", "Laser", "Magazine"])
-    attachments: Optional[str]
+    allowed_attachments: Optional[List[str]] = ["Bipod", "Laser", "Magazine"]
+    attachments: Optional[List[str]] = []
 
     weight: float = 3.5
     max_durability: int = 100
     current_durability: float = 100.0
-
     caliber: Optional[str]
     damage_bonus: int = 0
     strength_bonus: float = 0.0

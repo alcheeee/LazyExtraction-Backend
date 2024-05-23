@@ -1,5 +1,6 @@
 from typing import Optional
 from sqlmodel import SQLModel, Field, Relationship, Column, Enum
+from sqlalchemy.dialects.postgresql import JSON
 from ..schemas import AttachmentTypes
 from . import Items
 
@@ -14,8 +15,8 @@ class Weapon(SQLModel, table=True):
     current_durability: float = Field(default=100.00)
 
     # For Guns only
-    attachments: Optional[str] = Field(default=None)
-    allowed_attachments: Optional[str] = Field(default=None)
+    attachments: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+    allowed_attachments: Optional[dict] = Field(default=None, sa_column=Column(JSON))
 
     caliber: Optional[str]
     range: int = Field(default=0)  # In meters

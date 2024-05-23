@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     AsyncSession
 )
+from .init_db import init_content
 
-from .init_db.init_jobs import init_jobs_content
 from ..config import settings
 
 
@@ -52,9 +52,8 @@ async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
-    if settings.PROJECT_MODE == settings.Mode.development:
-        async with get_session() as session:
-            pass
-            #await init_jobs_content(session)
+    async with get_session() as session:
+        await init_content(session)
+        await session.commit()
 
 

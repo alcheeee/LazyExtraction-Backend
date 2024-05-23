@@ -9,6 +9,10 @@ from . import (
     MyLogger,
     common_http_errors
 )
+from ..models import (
+    User,
+    Inventory
+)
 from ..schemas import (
     MedicalCreate,
     ClothingCreate,
@@ -19,11 +23,8 @@ from ..game_systems.items.ItemHandler import (
     MedicalCreator,
     ClothingCreator,
     WeaponCreator,
-    ArmorCreator
-)
-from ..models import (
-    User,
-    Inventory
+    ArmorCreator,
+    NewItem
 )
 
 error_log = MyLogger.errors()

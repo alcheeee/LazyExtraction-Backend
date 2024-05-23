@@ -25,10 +25,10 @@ weapon_items = {
             'armor_penetration': 0,
             'headshot_chance': 15,
             'agility_penalty': -0.5,
-            'allowed_attachments': '["Muzzle", "Magazine", "Laser"]',
-            'attachments': '',
+            'allowed_attachments': ["Muzzle", "Magazine", "Laser"],
+            'attachments': [],
         },
-        'beretta_m9': {
+        'Beretta M9': {
             'item_name': 'Beretta M9',
             'category': ItemType.Weapon,
             'tier': ItemTier.Tier2,
@@ -46,12 +46,12 @@ weapon_items = {
             'armor_penetration': 5,
             'headshot_chance': 18,
             'agility_penalty': -0.3,
-            'allowed_attachments': '["Muzzle", "Magazine", "Laser"]',
-            'attachments': '',
+            'allowed_attachments': ["Muzzle", "Magazine", "Laser"],
+            'attachments': [],
         },
     },
     'shotgun': {
-        'sawed_off': {
+        'Sawed-off Shotgun': {
             'item_name': 'Sawed-off Shotgun',
             'category': ItemType.Weapon,
             'tier': ItemTier.Tier1,
@@ -69,10 +69,10 @@ weapon_items = {
             'armor_penetration': 10,
             'headshot_chance': 25,
             'agility_penalty': -1.5,
-            'allowed_attachments': '["Muzzle"]',
-            'attachments': '',
+            'allowed_attachments': ["Muzzle"],
+            'attachments': [],
         },
-        'm890': {
+        'M890': {
             'item_name': 'M890',
             'category': ItemType.Weapon,
             'tier': ItemTier.Tier2,
@@ -90,12 +90,12 @@ weapon_items = {
             'armor_penetration': 12,
             'headshot_chance': 30,
             'agility_penalty': -1.2,
-            'allowed_attachments': '["Muzzle"]',
-            'attachments': '',
+            'allowed_attachments': ["Muzzle"],
+            'attachments': [],
         },
     },
     'assault_rifle': {
-        'm4A1_carbine': {
+        'M4A1 Carbine': {
             'item_name': 'M4A1 Carbine',
             'category': ItemType.Weapon,
             'tier': ItemTier.Tier3,
@@ -113,10 +113,10 @@ weapon_items = {
             'armor_penetration': 20,
             'headshot_chance': 35,
             'agility_penalty': -2.0,
-            'allowed_attachments': '["Muzzle", "Magazine", "Scope", "Stock", "Laser"]',
-            'attachments': '',
+            'allowed_attachments': ["Muzzle", "Magazine", "Scope", "Stock", "Laser"],
+            'attachments': [],
         },
-        'aac_honey_badger': {
+        'AAC Honey Badger': {
             'item_name': 'AAC Honey Badger',
             'category': ItemType.Weapon,
             'tier': ItemTier.Tier5,
@@ -134,9 +134,10 @@ weapon_items = {
             'armor_penetration': 25,
             'headshot_chance': 40,
             'agility_penalty': -1.5,
-            'allowed_attachments': '["Muzzle", "Magazine", "Scope", "Stock", "Laser"]',
-            'attachments': '',
+            'allowed_attachments': ["Muzzle", "Magazine", "Scope", "Stock", "Laser"],
+            'attachments': [],
         },
     },
 }
+
 

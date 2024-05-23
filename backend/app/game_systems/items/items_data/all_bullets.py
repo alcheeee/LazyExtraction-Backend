@@ -8,16 +8,16 @@ bullet_items = {
     '9x19mm': {
         '9x19mm': {
             'item_name': '9x19mm',
-            'category': ItemType.Weapon,
+            'category': ItemType.Bullets,
             'tier': ItemTier.Tier1,
             'quick_sell': 150,
             'armor_pen_bonus': 0,
             'accuracy_bonus': 0,
             'range_bonus': 0
         },
-        '9x19mm_ap': {
+        '9x19mm AP': {
             'item_name': '9x19mm AP',
-            'category': ItemType.Weapon,
+            'category': ItemType.Bullets,
             'tier': ItemTier.Tier2,
             'quick_sell': 200,
             'armor_pen_bonus': 5,
@@ -26,18 +26,18 @@ bullet_items = {
         },
     },
     '12 Gauge': {
-        '12_gauge': {
+        '12 Gauge': {
             'item_name': '12 Gauge',
-            'category': ItemType.Weapon,
+            'category': ItemType.Bullets,
             'tier': ItemTier.Tier1,
             'quick_sell': 100,
             'armor_pen_bonus': 0,
             'accuracy_bonus': 0,
             'range_bonus': 0
         },
-        '12_gauge_slug': {
+        '12 Gauge Slug': {
             'item_name': '12 Gauge Slug',
-            'category': ItemType.Weapon,
+            'category': ItemType.Bullets,
             'tier': ItemTier.Tier2,
             'quick_sell': 150,
             'armor_pen_bonus': 10,
@@ -46,18 +46,18 @@ bullet_items = {
         },
     },
     '5.56x45mm NATO': {
-        '5.56_nato': {
+        '5.56x45mm NATO': {
             'item_name': '5.56x45mm NATO',
-            'category': ItemType.Weapon,
+            'category': ItemType.Bullets,
             'tier': ItemTier.Tier2,
             'quick_sell': 300,
             'armor_pen_bonus': 10,
             'accuracy_bonus': 5,
             'range_bonus': 10
         },
-        '5.56_nato_ap': {
+        '5.56x45mm NATO AP': {
             'item_name': '5.56x45mm NATO AP',
-            'category': ItemType.Weapon,
+            'category': ItemType.Bullets,
             'tier': ItemTier.Tier3,
             'quick_sell': 400,
             'armor_pen_bonus': 15,
@@ -66,18 +66,18 @@ bullet_items = {
         },
     },
     '300 BLK': {
-        '300_blk': {
+        '300 BLK': {
             'item_name': '300 BLK',
-            'category': ItemType.Weapon,
+            'category': ItemType.Bullets,
             'tier': ItemTier.Tier3,
             'quick_sell': 350,
             'armor_pen_bonus': 10,
             'accuracy_bonus': 5,
             'range_bonus': 10
         },
-        '300_blk_ap': {
+        '300 BLK AP': {
             'item_name': '300 BLK AP',
-            'category': ItemType.Weapon,
+            'category': ItemType.Bullets,
             'tier': ItemTier.Tier4,
             'quick_sell': 500,
             'armor_pen_bonus': 20,

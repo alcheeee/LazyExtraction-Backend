@@ -18,7 +18,9 @@ from .item_schema import (
 from .weapon_schemas.weapon_schemas import (
     weapon_bonus_wrapper,
     WeaponCreate,
-    AttachmentTypes
+    AttachmentTypes,
+    BulletCreate,
+    AttachmentCreate
 )
 from .market_schema import (
     MarketNames,

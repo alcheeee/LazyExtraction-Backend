@@ -5,14 +5,14 @@ from .. import (
 
 medical_items = {
     'bandage': {
-        ItemTier.Tier1: {
+        'Gauze': {
             'item_name': 'Gauze',
             'category': ItemType.Medical,
             'tier': ItemTier.Tier1,
             'quick_sell': 6,
             'health_increase': 6
         },
-        ItemTier.Tier2: {
+        'Compression Bandage': {
             'item_name': 'Compression Bandage',
             'category': ItemType.Medical,
             'tier': ItemTier.Tier2,
@@ -21,7 +21,7 @@ medical_items = {
         }
     },
     'pain_killer': {
-        ItemTier.Tier1: {
+        'Tylopain': {
             'item_name': 'Tylopain',
             'category': ItemType.Medical,
             'tier': ItemTier.Tier1,
@@ -29,7 +29,7 @@ medical_items = {
             'pain_reduction': 6,
             'amount_of_actions': 3
         },
-        ItemTier.Tier2: {
+        'Morphine': {
             'item_name': 'Morphine',
             'category': ItemType.Medical,
             'tier': ItemTier.Tier2,

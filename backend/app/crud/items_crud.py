@@ -20,6 +20,15 @@ class ItemsCRUD(BaseCRUD):
         return result
 
 
+    async def check_item_exists(self, name: str):
+        """
+        :param name: str Items.item_name
+        :return: Optional[Items.item_name]
+        """
+        query = select(Items).where(Items.item_name == name)
+        return await self.execute_scalar_one_or_none(query)
+
+
     async def get_item_from_id(self, item_id: int):
         """
         :param item_id: Items.id

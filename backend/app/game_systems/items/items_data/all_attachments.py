@@ -6,7 +6,7 @@ from .. import (
 
 attachment_items = {
     'Bipod': {
-        'polymer_rifle_bipod': {
+        'Polymer Rifle Bipod': {
             'item_name': 'Polymer Rifle Bipod',
             'category': ItemType.Attachments,
             'tier': ItemTier.Tier4,
@@ -25,7 +25,7 @@ attachment_items = {
         },
     },
     'FrontGrip': {
-        'tactical_front_grip': {
+        'Tactical Front Grip': {
             'item_name': 'Tactical Front Grip',
             'category': ItemType.Attachments,
             'tier': ItemTier.Tier3,
@@ -44,7 +44,7 @@ attachment_items = {
         },
     },
     'Muzzle': {
-        'flash_suppressor': {
+        'Flash Suppressor': {
             'item_name': 'Flash Suppressor',
             'category': ItemType.Attachments,
             'tier': ItemTier.Tier2,
@@ -63,7 +63,7 @@ attachment_items = {
         },
     },
     'Magazine': {
-        'extended_magazine': {
+        'Extended Magazine': {
             'item_name': 'Extended Magazine',
             'category': ItemType.Attachments,
             'tier': ItemTier.Tier3,
@@ -82,7 +82,7 @@ attachment_items = {
         },
     },
     'Stock': {
-        'adjustable_stock': {
+        'Adjustable Stock': {
             'item_name': 'Adjustable Stock',
             'category': ItemType.Attachments,
             'tier': ItemTier.Tier2,
@@ -101,7 +101,7 @@ attachment_items = {
         },
     },
     'Scope': {
-        'sniper_scope': {
+        'Sniper Scope': {
             'item_name': 'Sniper Scope',
             'category': ItemType.Attachments,
             'tier': ItemTier.Tier4,
@@ -120,7 +120,7 @@ attachment_items = {
         },
     },
     'Laser': {
-        'tactical_laser': {
+        'Tactical Laser': {
             'item_name': 'Tactical Laser',
             'category': ItemType.Attachments,
             'tier': ItemTier.Tier3,
@@ -139,7 +139,7 @@ attachment_items = {
         },
     },
     'Barrel': {
-        'long_barrel': {
+        'Long Barrel': {
             'item_name': 'Long Barrel',
             'category': ItemType.Attachments,
             'tier': ItemTier.Tier3,
