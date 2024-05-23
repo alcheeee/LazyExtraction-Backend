@@ -1,4 +1,3 @@
-from typing import Optional, Union
 from sqlalchemy.ext.asyncio import AsyncSession
 from .ItemCreatorClasses import (
     MedicalCreator,
@@ -12,7 +11,6 @@ from . import (
     MedicalCreate,
     ClothingCreate,
     ArmorCreate,
-    ArmorType,
     WeaponCreate,
     ItemType,
     BulletCreate,

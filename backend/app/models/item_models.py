@@ -11,6 +11,7 @@ class Items(SQLModel, table=True):
     category: ItemType = Field(sa_column=Column(Enum(ItemType)))
     tier: ItemTier = Field(sa_column=Column(Enum(ItemTier)))
     quick_sell: int = Field(default=5)
+    texture: Optional[str] = Field(default=None, nullable=True)
 
     # Relationships
     market_items: List["MarketItems"] = Relationship(back_populates="item")

@@ -18,13 +18,13 @@ class Stats(SQLModel, table=True):
     # Combat related
     agility: float = Field(default=1.00)
     health: int = Field(default=100)
-    damage: int = Field(default=1)
+    damage: int = Field(default=0)
     strength: float = Field(default=1.00)
 
-    head_protection: int = Field(default=5)
-    chest_protection: int = Field(default=5)
-    stomach_protection: int = Field(default=5)
-    arm_protection: int = Field(default=5)
+    head_protection: int = Field(default=1)
+    chest_protection: int = Field(default=1)
+    stomach_protection: int = Field(default=1)
+    arm_protection: int = Field(default=1)
 
     user: Optional["User"] = Relationship(back_populates="stats")
     def round_stats(self):

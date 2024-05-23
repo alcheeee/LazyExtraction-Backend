@@ -5,7 +5,7 @@ from .. import (
 
 
 weapon_items = {
-    'pistol': {
+    'pistols': {
         'M1911': {
             'item_name': 'M1911',
             'category': ItemType.Weapon,
@@ -15,7 +15,7 @@ weapon_items = {
             'max_durability': 100.0,
             'current_durability': 100.0,
             'caliber': '9x19mm',
-            'damage_bonus': 7,
+            'damage': 7,
             'strength_bonus': 0.0,
             'range': 50,
             'accuracy': 60,
@@ -25,8 +25,12 @@ weapon_items = {
             'armor_penetration': 0,
             'headshot_chance': 15,
             'agility_penalty': -0.5,
-            'allowed_attachments': ["Muzzle", "Magazine", "Laser"],
-            'attachments': [],
+            'allowed_attachments': {
+                "Muzzle": "Flash Suppressor",
+                "Magazine": "Extended Magazine",
+                "Laser": "Tactical Laser"
+            },
+            'attachments': {},
         },
         'Beretta M9': {
             'item_name': 'Beretta M9',
@@ -37,7 +41,8 @@ weapon_items = {
             'max_durability': 120.0,
             'current_durability': 120.0,
             'caliber': '9x19mm',
-            'damage_bonus': 8,
+            'damage': 8,
+            'strength_bonus': 0.0,
             'range': 50,
             'accuracy': 65,
             'reload_speed': 1.7,
@@ -46,11 +51,15 @@ weapon_items = {
             'armor_penetration': 5,
             'headshot_chance': 18,
             'agility_penalty': -0.3,
-            'allowed_attachments': ["Muzzle", "Magazine", "Laser"],
-            'attachments': [],
+            'allowed_attachments': {
+                "Muzzle": "Flash Suppressor",
+                "Magazine": "Extended Magazine",
+                "Laser": "Tactical Laser"
+            },
+            'attachments': {},
         },
     },
-    'shotgun': {
+    'shotguns': {
         'Sawed-off Shotgun': {
             'item_name': 'Sawed-off Shotgun',
             'category': ItemType.Weapon,
@@ -60,7 +69,8 @@ weapon_items = {
             'max_durability': 80.0,
             'current_durability': 80.0,
             'caliber': '12 Gauge',
-            'damage_bonus': 15,
+            'damage': 15,
+            'strength_bonus': 0.0,
             'range': 20,
             'accuracy': 25,
             'reload_speed': 2.5,
@@ -69,8 +79,10 @@ weapon_items = {
             'armor_penetration': 10,
             'headshot_chance': 25,
             'agility_penalty': -1.5,
-            'allowed_attachments': ["Muzzle"],
-            'attachments': [],
+            'allowed_attachments': {
+                "Muzzle": "Flash Suppressor"
+            },
+            'attachments': {},
         },
         'M890': {
             'item_name': 'M890',
@@ -81,7 +93,8 @@ weapon_items = {
             'max_durability': 100.0,
             'current_durability': 100.0,
             'caliber': '12 Gauge',
-            'damage_bonus': 18,
+            'damage': 18,
+            'strength_bonus': 0.0,
             'range': 30,
             'accuracy': 30,
             'reload_speed': 2.3,
@@ -90,11 +103,13 @@ weapon_items = {
             'armor_penetration': 12,
             'headshot_chance': 30,
             'agility_penalty': -1.2,
-            'allowed_attachments': ["Muzzle"],
-            'attachments': [],
+            'allowed_attachments': {
+                "Muzzle": "Flash Suppressor"
+            },
+            'attachments': {},
         },
     },
-    'assault_rifle': {
+    'assault_rifles': {
         'M4A1 Carbine': {
             'item_name': 'M4A1 Carbine',
             'category': ItemType.Weapon,
@@ -104,7 +119,8 @@ weapon_items = {
             'max_durability': 150.0,
             'current_durability': 150.0,
             'caliber': '5.56x45mm NATO',
-            'damage_bonus': 20,
+            'damage': 20,
+            'strength_bonus': 0.0,
             'range': 300,
             'accuracy': 70,
             'reload_speed': 2.0,
@@ -113,8 +129,14 @@ weapon_items = {
             'armor_penetration': 20,
             'headshot_chance': 35,
             'agility_penalty': -2.0,
-            'allowed_attachments': ["Muzzle", "Magazine", "Scope", "Stock", "Laser"],
-            'attachments': [],
+            'allowed_attachments': {
+                "Muzzle": "Flash Suppressor",
+                "Magazine": "Extended Magazine",
+                "Scope": "Sniper Scope",
+                "Stock": "Adjustable Stock",
+                "Laser": "Tactical Laser"
+            },
+            'attachments': {},
         },
         'AAC Honey Badger': {
             'item_name': 'AAC Honey Badger',
@@ -125,7 +147,8 @@ weapon_items = {
             'max_durability': 200.0,
             'current_durability': 200.0,
             'caliber': '300 BLK',
-            'damage_bonus': 25,
+            'damage': 25,
+            'strength_bonus': 0.0,
             'range': 200,
             'accuracy': 75,
             'reload_speed': 1.5,
@@ -134,10 +157,14 @@ weapon_items = {
             'armor_penetration': 25,
             'headshot_chance': 40,
             'agility_penalty': -1.5,
-            'allowed_attachments': ["Muzzle", "Magazine", "Scope", "Stock", "Laser"],
-            'attachments': [],
+            'allowed_attachments': {
+                "Muzzle": "Flash Suppressor",
+                "Magazine": "Extended Magazine",
+                "Scope": "Sniper Scope",
+                "Stock": "Adjustable Stock",
+                "Laser": "Tactical Laser"
+            },
+            'attachments': {},
         },
     },
 }
-
-

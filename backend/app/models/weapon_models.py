@@ -7,8 +7,8 @@ from . import Items
 
 class Weapon(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    damage_bonus: int = Field(default=0, nullable=False)
-    strength_bonus: float = Field(default=0)
+    damage: int = Field(default=0, nullable=False)
+    strength: float = Field(default=0)
 
     weight: float = Field(default=5.0)  # in pounds
     max_durability: int = Field(default=100)
@@ -36,9 +36,12 @@ class Weapon(SQLModel, table=True):
 
 class Bullets(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    armor_pen_bonus: int = Field(default=0)
-    accuracy_bonus: int = Field(default=0)
-    range_bonus: int = Field(default=0)
+    armor_pen_adj: int = Field(default=0)
+    accuracy_adj: int = Field(default=0)
+    range_adj: int = Field(default=0)
+    damage_adj: int = Field(default=0)
+    fire_rate_adj: float = Field(default=0.0)
+    reload_speed_adj: float = Field(default=0.0)
 
     item_id: int = Field(default=None, foreign_key="items.id", index=True)
     item: Optional[Items] = Relationship(back_populates="bullet_details")

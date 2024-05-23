@@ -6,18 +6,20 @@ from ..game_systems.items.items_data import (
     weapon_items,
     bullet_items,
     medical_items,
-    attachment_items
+    attachment_items,
+    clothing_items
 )
 
 
 async def init_content(session):
     items_crud = ItemsCRUD(Items, session)
     item_collections = [
-        armor_items,
-        weapon_items,
+        armor_items,  # Will Remove
+        weapon_items,  # Will Remove
         bullet_items,
         medical_items,
-        attachment_items
+        attachment_items,
+        clothing_items
     ]
 
     for item_collection in item_collections:

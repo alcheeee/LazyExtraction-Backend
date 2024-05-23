@@ -14,7 +14,7 @@ class ItemType(str, Enum):
 
 class ClothingType(str, Enum):
     Mask = "Mask"
-    Body = "Body"
+    Shirt = "Shirt"
     Legs = "Legs"
 
 class ArmorType(str, Enum):
@@ -51,7 +51,7 @@ tier_multipliers = {
 equipment_map = {
     ItemType.Weapon: "equipped_weapon_id",
     ClothingType.Mask: "equipped_mask_id",
-    ClothingType.Body: "equipped_body_id",
+    ClothingType.Shirt: "equipped_body_id",
     ClothingType.Legs: "equipped_legs_id",
     ArmorType.Head: "equipped_head_armor_id",
     ArmorType.Body: "equipped_body_armor_id",
@@ -88,6 +88,8 @@ class ItemCreate(BaseModel):
     category: ItemType = ItemType.Weapon
     randomize_all: bool = False
     randomize_stats: bool = False
+    texture: Optional[str] = None
+
 
 class MedicalCreate(ItemCreate):
     health_increase: int = 0
@@ -96,29 +98,28 @@ class MedicalCreate(ItemCreate):
     agility_bonus: int = 0
     amount_of_actions: int = 1
 
+
 class ClothingCreate(ItemCreate):
     clothing_type: Optional[ClothingType]
     reputation_bonus: Optional[int] = 0
     max_energy_bonus: Optional[int] = 0
-    damage_bonus: Optional[int] = 0
     agility_bonus: Optional[float] = 0.00
     health_bonus: Optional[int] = 0
-    luck_bonus: Optional[float] = 0.00
     strength_bonus: Optional[float] = 0.00
     knowledge_bonus: Optional[float] = 0.00
+    luck_bonus: Optional[float] = 0.00
 
 
 class ArmorCreate(ItemCreate):
     type: ArmorType = ArmorType.Head
     max_durability: int = 100
     current_durability: float = 100.00
-    weight: float = 5.5
-
+    weight: float = 0.0
     head_protection: int = 0
     chest_protection: int = 0
     stomach_protection: int = 0
     arm_protection: int = 0
-    agility_penalty: float = -0.4
+    agility_penalty: float = -0.0
 
 
 class FilterItemStats:
@@ -141,8 +142,8 @@ class FilterItemStats:
         KNOWLEDGE_BONUS = "knowledge_bonus"
 
     class WeaponStats(Enum):
-        DAMAGE_BONUS = "damage_bonus"
-        STRENGTH_BONUS = "strength_bonus"
+        DAMAGE = "damage"
+        STRENGTH = "strength"
         WEIGHT = "weight"
         DURABILITY = "durability"
         RANGE = "range"

@@ -9,6 +9,7 @@ from ...schemas import (
     ItemType,
     AttachmentTypes,
     ArmorType,
+    ClothingType,
 
     clothing_bonus_wrapper,
     armor_bonus_wrapper,

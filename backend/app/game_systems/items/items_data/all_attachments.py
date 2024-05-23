@@ -4,6 +4,7 @@ from .. import (
     AttachmentTypes
 )
 
+
 attachment_items = {
     'Bipod': {
         'Polymer Rifle Bipod': {
@@ -158,4 +159,3 @@ attachment_items = {
         },
     },
 }
-
