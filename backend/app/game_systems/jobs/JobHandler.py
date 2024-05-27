@@ -20,8 +20,7 @@ class JobService:
         action_map = {
             JobActionType.Work: self.work_job,
             JobActionType.Apply: self.apply_to_job,
-            JobActionType.Quit: self.quit_job,
-            JobActionType.AskForPromo: self.ask_for_promotion
+            JobActionType.Quit: self.quit_job
         }
         if action in action_map:
             result = await action_map[action]()
@@ -78,10 +77,6 @@ class JobService:
         user.job = job_name
         self.session.add(user)
         return f"Congrats! You are now a {job_name}!"
-
-
-    async def ask_for_promotion(self):
-        pass
 
 
     async def get_user_job(self):

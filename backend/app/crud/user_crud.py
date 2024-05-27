@@ -6,7 +6,8 @@ from ..models import (
     User,
     Inventory,
     Stats,
-    TrainingProgress
+    TrainingProgress,
+    World
 )
 
 
@@ -19,6 +20,13 @@ class UserCRUD(BaseCRUD):
         """
         query = select(getattr(User, field)).where(User.id == user_id)
         return await self.execute_scalar_one_or_none(query)
+
+    async def get_user(self, user_id: int) -> Optional[User]:
+        """
+        :param user_id: User.id
+        :return: User
+        """
+        return await self.session.get(User, user_id)
 
     async def get_user_inventory_id_by_username(self, username: str) -> Optional[int]:
         """

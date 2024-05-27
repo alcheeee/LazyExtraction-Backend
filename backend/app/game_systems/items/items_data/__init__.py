@@ -4,6 +4,7 @@ from .all_weapons import weapon_items
 from .all_clothing import clothing_items
 from .all_bullets import bullet_items
 from .all_attachments import attachment_items
+from .all_valuables import valuable_items
 
 __all__ = [
     'medical_items',
@@ -11,5 +12,6 @@ __all__ = [
     'clothing_items',
     'weapon_items',
     'bullet_items',
-    'attachment_items'
+    'attachment_items',
+    'valuable_items'
 ]

@@ -43,6 +43,6 @@ from .world_schemas import (
     WorldTier,
     WorldNames,
     WorldCreator,
-    WorldInteraction
+    RoomInteraction
 )
 

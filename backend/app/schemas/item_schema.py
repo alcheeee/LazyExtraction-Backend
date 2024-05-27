@@ -123,47 +123,16 @@ class ArmorCreate(ItemCreate):
 
 
 class FilterItemStats:
-    class MedicalStats(Enum):
-        HEALTH_INCREASE = "health_increase"
-        PAIN_REDUCTION = "pain_reduction"
-        WEIGHT_BONUS = "weight_bonus"
-        AGILITY_BONUS ="agility_bonus"
-        AMOUNT_OF_ACTIONS = "amount_of_actions"
-
     class ClothingStats(Enum):
         CLOTHING_TYPE = "clothing_type"
         REPUTATION_BONUS = "reputation_bonus"
         MAX_ENERGY_BONUS = "max_energy_bonus"
-        DAMAGE_BONUS = "damage_bonus"
         AGILITY_BONUS = "agility_bonus"
         HEALTH_BONUS = "health_bonus"
         LUCK_BONUS = "luck_bonus"
         STRENGTH_BONUS = "strength_bonus"
         KNOWLEDGE_BONUS = "knowledge_bonus"
 
-    class WeaponStats(Enum):
-        DAMAGE = "damage"
-        STRENGTH = "strength"
-        WEIGHT = "weight"
-        DURABILITY = "durability"
-        RANGE = "range"
-        ACCURACY = "accuracy"
-        RELOAD_SPEED = "reload_speed"
-        FIRE_RATE = "fire_rate"
-        MAGAZINE_SIZE = "magazine_size"
-        ARMOR_PENETRATION = "armor_penetration"
-        HEADSHOT_CHANCE = "headshot_chance"
-        AGILITY_PENALTY = "agility_penalty"
-
-    class ArmorStats(Enum):
-        TYPE = "type"
-        DURABILITY = "durability"
-        WEIGHT = "weight"
-        HEAD_PROTECTION = "head_protection"
-        CHEST_PROTECTION = "chest_protection"
-        STOMACH_PROTECTION = "stomach_protection"
-        ARM_PROTECTION = "arm_protection"
-        AGILITY_PENALTY = "agility_penalty"
 
     def list(self, item_class: Enum) -> List[str]:
         return [stat.value for stat in item_class]
@@ -171,10 +140,6 @@ class FilterItemStats:
     def get_relevant_stats(self, category: ItemType) -> List[str]:
         if category == ItemType.Clothing:
             return self.list(self.ClothingStats)
-        elif category == ItemType.Weapon:
-            return self.list(self.WeaponStats)
-        elif category == ItemType.Armor:
-            return self.list(self.ArmorStats)
         return []
 
 filter_item_stats = FilterItemStats()

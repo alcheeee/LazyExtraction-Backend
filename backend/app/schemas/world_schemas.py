@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, UUID4
 
 
 class WorldTier(Enum):
@@ -10,25 +10,20 @@ class WorldTier(Enum):
 
 
 class WorldNames(str, Enum):
-    Forest = "forest"
-    Laboratory = "laboratory"
-    MilitaryBase = "military_base"
-
-
-class WorldInteraction(BaseModel):
-    """For node traversal"""
-    pass
+    Forest = "Forest"
+    Laboratory = "Laboratory"
+    MilitaryBase = "Military Base"
 
 
 class RoomInteraction(BaseModel):
     """For interacting with in-room options (items, pve, ect)"""
-    pass
+    uuid: UUID4
 
 
 class WorldCreator(BaseModel):
+    world_name: WorldNames
     world_tier: WorldTier = WorldTier.Tier1
     node_json: str
-    max_players: int = 8
 
 
 

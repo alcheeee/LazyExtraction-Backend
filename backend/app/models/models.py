@@ -1,6 +1,7 @@
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, JSON
 from typing import List, Optional
 from datetime import datetime
+from ..schemas.world_schemas import WorldNames
 
 
 class Stats(SQLModel, table=True):
@@ -58,6 +59,7 @@ class Inventory(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     bank: int = Field(default=1000)
     energy: int = Field(default=100)
+    current_weight: int = Field(default=0)
     equipped_weapon_id: Optional[int] = Field(default=None)
     equipped_mask_id: Optional[int] = Field(default=None)
     equipped_body_id: Optional[int] = Field(default=None)
@@ -73,6 +75,8 @@ class InventoryItem(SQLModel, table=True):
     Represents individual items within a user's inventory.
     """
     id: int = Field(default=None, primary_key=True)
+    in_stash: bool = Field(default=True)
+    weight: Optional[float] = Field(default=0.0)
     quantity: int = Field(default=0)
     inventory_id: int = Field(default=None, foreign_key="inventory.id", index=True)
     inventory: Optional["Inventory"] = Relationship(back_populates="items")
@@ -92,12 +96,15 @@ class User(SQLModel, table=True):
     username: str = Field(index=True, unique=True)
     password: str
     email: str = Field(index=True, unique=True)
-
     job: Optional[str] = Field(default=None)
-    job_chance_to_promo: float = Field(default=1.00)
-
     training: Optional[str] = Field(default=None)
 
+    # "Raid" information
+    in_raid: bool = Field(default=False)
+    current_world: Optional[WorldNames] = Field(default=None, sa_column=Column(Enum(WorldNames)))
+    current_room_data: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+
+    # Relationships
     training_progress_id: Optional[int] = Field(default=None, foreign_key="trainingprogress.id", index=True)
     training_progress: Optional["TrainingProgress"] = Relationship(back_populates="user")
 

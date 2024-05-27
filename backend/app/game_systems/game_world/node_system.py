@@ -1,51 +1,22 @@
 import json
+from uuid import uuid4
 from typing import Dict, Any
 from random import randint, choices, sample
-
-from room_types import RoomTypes
-from backend.app.schemas import WorldTier, WorldNames
-
-#from ...schemas import WorldTier, WorldNames
-
+from cachetools import cached, TTLCache
+from .room_types import RoomLootTables, room_tables
+from . import WorldTier, WorldNames
 
 # This will be RNG, rooms will randomly generate options based on a loot table I assign
 # Rooms will be assigned based on a room table
 
-room_tables = {
-    WorldNames.Forest: {
-        'room_amounts': (10, 16),
-        'max_players': 10,
-        'potential_rooms': [
-            ['medical', 15],
-            ['regular', 65]
-        ]
-    },
-    WorldNames.Laboratory: {
-        'room_amounts': (8, 14),
-        'max_players': 8,
-        'potential_rooms': [
-            ['medical', 35],
-            ['regular', 45],
-            ['military', 20]
-        ]
-    },
-    WorldNames.MilitaryBase: {
-        'room_amounts': (14, 18),
-        'max_players': 12,
-        'potential_rooms': [
-            ['medical', 30],
-            ['military', 35],
-            ['regular', 35]
-        ]
-    }
-}
+cache = TTLCache(maxsize=32, ttl=600)
 
 
 class NodeSystem:
-    def __init__(self, world_name: WorldNames, world_tier: WorldTier):
+    def __init__(self, world_name: WorldNames, world_tier: WorldTier = WorldTier.Tier1):
         self.world_name = world_name
         self.world_tier = world_tier
-        self.room_types = RoomTypes(world_name, world_tier)
+        self.room_types = RoomLootTables(world_name, world_tier)
         self.room_data = room_tables[world_name]
         self.rooms = []
 
@@ -57,7 +28,8 @@ class NodeSystem:
     def _generate_room(self) -> Dict[str, Any]:
         room_type = self._choose_room_type()
         room_items = getattr(self.room_types, room_type)()
-        return {"room_type": room_type, "items": room_items, "connections": []}
+        items_with_ids = [{"id": str(uuid4()), "name": item} for item in room_items]
+        return {"room_type": room_type, "items": items_with_ids, "connections": []}
 
     def _create_room_connections(self):
         for room_index, room in enumerate(self.rooms):
@@ -80,7 +52,7 @@ class NodeSystem:
             "name": f"{self.world_name.value} - {self.world_tier.value}",
             "rooms": self.rooms
         }
-        return json.dumps(world, indent=2)
+        return json.dumps(world)
 
     def get_connections(self):
         connections = {}
@@ -88,15 +60,6 @@ class NodeSystem:
             connections[index] = room["connections"]
         return connections
 
-
-# Example usage
-node_system = NodeSystem(WorldNames.Forest, WorldTier.Tier1)
-node_system.create_node()
-node_json = node_system.to_json()
-print(node_json)
-
-room_connections = node_system.get_connections()
-print(json.dumps(room_connections, indent=2))
 
 
 

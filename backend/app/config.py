@@ -28,6 +28,7 @@ class Settings:
     # Setup later
     GAME_BOT_USERNAME = 'Game Admin'
     GAME_MARKET_USERNAME = 'Market'
+    USE_NODE_SYSTEM = False # For the world setup, or per room setup
 
 
 settings = Settings()
