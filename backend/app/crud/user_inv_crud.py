@@ -91,12 +91,13 @@ class UserInventoryCRUD(BaseCRUD):
         return new_bank_balance
 
     async def update_user_inventory_item(self, inventory_id: int, item_id: int, quantity_change: int,
-                                         inventory_item: InventoryItem = None):
+                                         inventory_item: InventoryItem = None, in_stash=True):
         """
         :param inventory_id: User.inventory_id
         :param item_id: Items.id
         :param quantity_change: int
         :param inventory_item: Optional[InventoryItem] instance
+        :param in_stash: bool
         :return: New/Update/Delete InventoryItem instance
         :raise ValueError
         """
@@ -107,7 +108,7 @@ class UserInventoryCRUD(BaseCRUD):
             )
             inventory_item = (await self.session.execute(query)).scalars().first()
 
-        if inventory_item:
+        if inventory_item and inventory_item.in_stash == in_stash:
             if quantity_change < 0 and abs(quantity_change) > inventory_item.quantity:
                 raise ValueError("Insufficient quantity to remove")
 
@@ -117,7 +118,12 @@ class UserInventoryCRUD(BaseCRUD):
         else:
             if quantity_change <= 0:
                 raise ValueError("Cannot add zero or negative quantity")
-            new_inventory_item = InventoryItem(inventory_id=inventory_id, item_id=item_id, quantity=quantity_change)
+            new_inventory_item = InventoryItem(
+                inventory_id=inventory_id,
+                item_id=item_id,
+                quantity=quantity_change,
+                in_stash=in_stash
+            )
             self.session.add(new_inventory_item)
         return inventory_item
 

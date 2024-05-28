@@ -15,9 +15,14 @@ class WorldNames(str, Enum):
     MilitaryBase = "Military Base"
 
 
+class InteractionTypes(str, Enum):
+    Pickup = "pickup"
+    Traverse = "traverse"
+
+
 class RoomInteraction(BaseModel):
-    """For interacting with in-room options (items, pve, ect)"""
-    uuid: UUID4
+    action: InteractionTypes = InteractionTypes.Pickup
+    id: UUID4
 
 
 class WorldCreator(BaseModel):

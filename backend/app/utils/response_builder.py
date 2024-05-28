@@ -4,6 +4,7 @@ from enum import Enum
 class DataName(str, Enum):
     ItemDetails = "item-details"
     ItemGiven = "item-given"
+    RoomData = "room-data"
 
 
 class ResponseBuilder:

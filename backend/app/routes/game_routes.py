@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from ..game_systems.jobs.JobHandler import JobService
 from ..game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
 from ..game_systems.game_world.world_handler import CreateNodeWorld, RoomGenerator
+from ..game_systems.game_world.loot_handler import InteractionHandler
 from ..auth import current_user
 from ..config import settings
 from ..schemas import (
@@ -9,12 +10,14 @@ from ..schemas import (
     WorldNames,
     WorldTier,
     WorldCreator,
-    RoomInteraction
+    RoomInteraction,
+    InteractionTypes
 )
 from . import (
     AsyncSession,
     dependency_session,
     ResponseBuilder,
+    DataName,
     MyLogger,
     common_http_errors
 )
@@ -35,21 +38,10 @@ async def create_new_world(
         session: AsyncSession = Depends(dependency_session)
 ):
     try:
-        if settings.USE_NODE_SYSTEM:
-            world_data = WorldCreator(
-                world_name=world_name,
-                world_tier=WorldTier.Tier1,
-                node_json=''
-            )
-            create_user_world = CreateNodeWorld(world_data, user_id, session)
-            new_world = await create_user_world.create_world()
-
-            session.add(new_world)
-            await session.commit()
-            await session.refresh(new_world)
-            return new_world
-        else:
-            pass
+        generator = RoomGenerator(world_name, WorldTier.Tier1)
+        new_raid = await generator.assign_room_to_user(user_id, session)
+        await session.commit()
+        return ResponseBuilder.success("Entered a raid", DataName.RoomData, new_raid)
 
     except ValueError as e:
         await session.rollback()
@@ -62,13 +54,21 @@ async def create_new_world(
 
 
 @game_router.put("/interaction")
-async def current_interaction(
+async def world_interaction(
         interaction: RoomInteraction,
         user_id: int = Depends(current_user.ensure_user_exists),
         session: AsyncSession = Depends(dependency_session)
 ):
     try:
-        pass
+        handler = InteractionHandler(session, user_id)
+        msg = await handler.handle(interaction)
+        response = ResponseBuilder.success(msg)
+
+        if interaction.action == InteractionTypes.Traverse:
+            response = ResponseBuilder.success("New room entered", DataName.RoomData, msg)
+
+        await session.commit()
+        return response
 
     except ValueError as e:
         await session.rollback()

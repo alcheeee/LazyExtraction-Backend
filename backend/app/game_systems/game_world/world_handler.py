@@ -36,6 +36,18 @@ class RoomGenerator:
         return self._generate_room()
 
 
+    async def assign_room_to_user(self, user_id: int, session: AsyncSession):
+        user_crud = UserCRUD(None, session)
+        user = await user_crud.get_user(user_id)
+        if user.in_raid:
+            raise ValueError("Already in a raid")
+
+        room_data = self.generate_next_room()
+        user.current_room_data = room_data
+        user.current_world = self.world_name
+        return room_data
+
+
 
 class CreateNodeWorld:
     def __init__(self, world_data: WorldCreator, user_id: int, session: AsyncSession):
@@ -44,6 +56,17 @@ class CreateNodeWorld:
         self.session = session
         self.user_crud = UserCRUD(None, session)
         self.world_crud = WorldCRUD(None, session)
+
+    # Will stay here until I decide what to do with this system
+    async def node_creator_for_route(self):
+        world_data = WorldCreator(
+            world_name=self.world_data.world_name,
+            world_tier=WorldTier.Tier1,
+            node_json=''
+        )
+        create_user_world = CreateNodeWorld(world_data, self.user_id, self.session)
+        new_world = await create_user_world.create_world()
+        return new_world
 
     async def create_world(self):
         user = await self.user_crud.get_user(self.user_id)
