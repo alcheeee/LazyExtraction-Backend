@@ -5,6 +5,9 @@ class DataName(str, Enum):
     ItemDetails = "item-details"
     ItemGiven = "item-given"
     RoomData = "room-data"
+    UserStats = "user-stats"
+    UserInventory = "user-inventory"
+    InventoryItem = "inventory-item"
 
 
 class ResponseBuilder:

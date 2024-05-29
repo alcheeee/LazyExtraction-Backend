@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy import select, update, values, delete
 from sqlalchemy.orm import joinedload, selectinload
 from .base_crud import BaseCRUD
@@ -167,3 +167,15 @@ class UserInventoryCRUD(BaseCRUD):
 
         except Exception as e:
             raise e
+
+
+    async def get_all_items_by_inventory_id(self, inventory_id: int) -> List[InventoryItem]:
+        """
+        Fetch all inventory items by inventory ID
+        :param inventory_id: int
+        :return: List of InventoryItem
+        """
+        query = select(InventoryItem).where(InventoryItem.inventory_id == inventory_id)
+        result = await self.session.execute(query)
+        return result.scalars().all()
+

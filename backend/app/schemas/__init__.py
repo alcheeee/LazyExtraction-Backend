@@ -46,4 +46,4 @@ from .world_schemas import (
     RoomInteraction,
     InteractionTypes
 )
-
+from .getter_schema import UserInfoNeeded
