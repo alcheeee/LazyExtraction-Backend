@@ -45,6 +45,8 @@ class RoomGenerator:
         room_data = self.generate_next_room()
         user.current_room_data = room_data
         user.current_world = self.world_name
+        user.actions_left = 20
+        user.in_raid = True
         return room_data
 
 

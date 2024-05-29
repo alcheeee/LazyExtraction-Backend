@@ -1,15 +1,13 @@
 from fastapi import APIRouter, Depends
 from ..game_systems.jobs.JobHandler import JobService
 from ..game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
-from ..game_systems.game_world.world_handler import CreateNodeWorld, RoomGenerator
-from ..game_systems.game_world.loot_handler import InteractionHandler
+from ..game_systems.game_world.world_handler import RoomGenerator
+from ..game_systems.game_world.world_interactions import InteractionHandler
 from ..auth import current_user
-from ..config import settings
 from ..schemas import (
     JobRequest,
     WorldNames,
     WorldTier,
-    WorldCreator,
     RoomInteraction,
     InteractionTypes
 )

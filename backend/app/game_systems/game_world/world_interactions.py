@@ -1,5 +1,6 @@
 from uuid import uuid4
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified
 from pydantic import UUID4
 from ...crud import UserCRUD, WorldCRUD, UserInventoryCRUD, ItemsCRUD
 from ...schemas import RoomInteraction, WorldTier, InteractionTypes
@@ -22,6 +23,9 @@ class InteractionHandler:
         elif interaction.action == InteractionTypes.Traverse:
             new_room_data = await self.traverse_room(interaction.id)
             return new_room_data
+        elif interaction.action == InteractionTypes.Extract:
+            extraction = await self.extract_from_raid()
+            return extraction
         else:
             raise ValueError("Invalid action")
 
@@ -32,22 +36,28 @@ class InteractionHandler:
 
     async def item_pickup(self, item_id: UUID4):
         user = await self.get_user()
-        current_room_data = user.current_room_data
+        room_data = user.current_room_data
 
-        item = next((item for item in current_room_data["items"] if item["id"] == str(item_id)), None)
+        item = next((item for item in room_data["items"] if item["id"] == str(item_id)), None)
+        if not item:
+            raise ValueError("Item not in room")
+
         item_db = await self.item_crud.check_item_exists(item['name'])
+        if not item_db:
+            raise ValueError("Couldn't find a reference to that item")
 
-        if item and item_db:
-            current_room_data["items"].remove(item)
-            await self.user_inv_crud.update_user_inventory_item(
-                user.inventory_id,
-                item_db.id,
-                1,
-                in_stash=False
-            )
-            user.current_room_data = current_room_data
-            return item
-        raise ValueError("Item not found in the current room")
+        room_data["items"].remove(item)
+        user.current_room_data = room_data
+        flag_modified(user, "current_room_data")
+
+        await self.user_inv_crud.update_user_inventory_item(
+            user.inventory_id,
+            item_db.id,
+            1,
+            in_stash=False
+        )
+        user.actions_left -= 1
+        return item
 
 
     async def traverse_room(self, new_room_id: UUID4):
@@ -59,10 +69,23 @@ class InteractionHandler:
             new_room_data = room_generator.generate_next_room()
 
             user.current_room_data = new_room_data
+            user.actions_left -= 1
             return new_room_data
+
         raise ValueError("New room is not connected to the current room")
 
 
+    async def extract_from_raid(self):
+        user = await self.get_user()
+        if user.actions_left > 0:
+            raise ValueError(f"You still need to perform {user.actions_left} actions")
+
+        user.in_raid = False
+        user.actions_left = None
+        user.current_world = None
+        user.current_room_data = None
+
+        return "Successfully extract from the raid"
 
 
 

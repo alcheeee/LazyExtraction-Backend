@@ -18,6 +18,7 @@ class WorldNames(str, Enum):
 class InteractionTypes(str, Enum):
     Pickup = "pickup"
     Traverse = "traverse"
+    Extract = "extract"
 
 
 class RoomInteraction(BaseModel):

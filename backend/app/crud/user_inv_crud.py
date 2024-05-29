@@ -104,28 +104,45 @@ class UserInventoryCRUD(BaseCRUD):
         if inventory_item is None:
             query = select(InventoryItem).join(Inventory).where(
                 Inventory.id == inventory_id,
-                InventoryItem.item_id == item_id
+                InventoryItem.item_id == item_id,
+                InventoryItem.in_stash == (not in_stash)
             )
             inventory_item = (await self.session.execute(query)).scalars().first()
 
-        if inventory_item and inventory_item.in_stash == in_stash:
+        if inventory_item:
             if quantity_change < 0 and abs(quantity_change) > inventory_item.quantity:
                 raise ValueError("Insufficient quantity to remove")
 
             inventory_item.quantity += quantity_change
             if inventory_item.quantity <= 0:
                 await self.session.delete(inventory_item)
+            else:
+                self.session.add(inventory_item)
         else:
             if quantity_change <= 0:
                 raise ValueError("Cannot add zero or negative quantity")
-            new_inventory_item = InventoryItem(
-                inventory_id=inventory_id,
-                item_id=item_id,
-                quantity=quantity_change,
-                in_stash=in_stash
+
+            query_target = select(InventoryItem).join(Inventory).where(
+                Inventory.id == inventory_id,
+                InventoryItem.item_id == item_id,
+                InventoryItem.in_stash == in_stash
             )
-            self.session.add(new_inventory_item)
+            target_inventory_item = (await self.session.execute(query_target)).scalars().first()
+
+            if target_inventory_item:
+                target_inventory_item.quantity += quantity_change
+                self.session.add(target_inventory_item)
+            else:
+                new_inventory_item = InventoryItem(
+                    inventory_id=inventory_id,
+                    item_id=item_id,
+                    quantity=quantity_change,
+                    in_stash=in_stash
+                )
+                self.session.add(new_inventory_item)
+
         return inventory_item
+
 
     async def get_inv_stats_invitem(self, user_id: int, item_id: int):
         try:

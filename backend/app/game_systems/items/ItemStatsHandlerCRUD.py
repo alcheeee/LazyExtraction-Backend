@@ -54,6 +54,7 @@ class ItemStatsHandler:
 
             setattr(inventory, item_slot_attr, item.id)
             inventory_item.quantity -= 1
+            inventory_item.in_stash = False
             self.adjust_user_stats(stats, item_details, equip=True)
             status = "Item Equipped"
 

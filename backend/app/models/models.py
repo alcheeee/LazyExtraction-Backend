@@ -101,6 +101,7 @@ class User(SQLModel, table=True):
 
     # "Raid" information
     in_raid: bool = Field(default=False)
+    actions_left: Optional[int] = Field(default=None)
     current_world: Optional[WorldNames] = Field(default=None, sa_column=Column(Enum(WorldNames)))
     current_room_data: Optional[dict] = Field(default=None, sa_column=Column(JSON))
 
