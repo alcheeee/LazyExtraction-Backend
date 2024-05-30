@@ -1,15 +1,8 @@
-// ignore_for_file: unused_import
 import 'package:flutter/material.dart';
-import 'common_imports.dart';
-import 'providers/user_info_provider.dart';
+import 'routes.dart';
 
 void main() {
-  runApp(
-    ChangeNotifierProvider(
-      create: (context) => UserStatsProvider(),
-      child: const MyApp(),
-    ),
-  );
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -18,53 +11,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'API Tester',
+      title: 'My Game App',
       theme: ThemeData(
-        scaffoldBackgroundColor: UIColors.primaryBackgroundColor,
-        primaryTextTheme: Typography(platform: TargetPlatform.iOS).white,
-        textTheme: Typography(platform: TargetPlatform.iOS).white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: UIColors.primaryBackgroundColor,
-          foregroundColor: UIColors.primaryTextColor
-        ),
+        primarySwatch: Colors.blue,
       ),
-      initialRoute: SessionManager.isAuthenticated ? AppRoutes.userProfile : AppRoutes.login,
+      initialRoute: AppRoutes.login,
       routes: AppRoutes.getRoutes(),
-    );
-  }
-}
-
-class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
-
-  @override
-  _MainScreenState createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<MainScreen> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(() =>
-      Provider.of<UserStatsProvider>(context, listen: false).fetchUserInfo()
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-
-    return Scaffold(
-      key: _scaffoldKey,
-      appBar: commonAppBar('API Testing', _scaffoldKey, context, showMenuIcon: true),
-      drawer: commonDrawer(context, 'HomeScreenRoute'),
-      body: Center(
-        child: Text(
-          SessionManager.isAuthenticated ? "Welcome" : "Log in",
-          style: const TextStyle(color: UIColors.primaryTextColor, fontSize: 24),
-        ),
-      ),
     );
   }
 }
