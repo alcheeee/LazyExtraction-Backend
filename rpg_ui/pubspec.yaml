@@ -28,4 +28,7 @@ flutter:
 
 
   assets:
-    - assets/placeholder_item.png
+    - assets/items/placeholder_item.png
+    - assets/worlds/forest.jpg
+    - assets/worlds/laboratory.jpg
+    - assets/worlds/military-base.jpg
