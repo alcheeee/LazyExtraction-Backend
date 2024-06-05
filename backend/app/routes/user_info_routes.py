@@ -11,6 +11,7 @@ from . import (
 from ..get_handlers.get_user_info import GetUserInfo
 from ..schemas import UserInfoNeeded
 
+error_log = MyLogger.errors()
 
 user_info_router = APIRouter(
     prefix="/user-info",
@@ -39,6 +40,7 @@ async def get_user_info(
         return ResponseBuilder.success("", data_name, get_info)
 
     except Exception as e:
+        error_log.error(str(e))
         raise common_http_errors.server_error()
 
 

@@ -171,11 +171,17 @@ class UserInventoryCRUD(BaseCRUD):
 
     async def get_all_items_by_inventory_id(self, inventory_id: int) -> List[InventoryItem]:
         """
-        Fetch all inventory items by inventory ID
+        Fetch all inventory items by inventory ID, including item names.
         :param inventory_id: int
-        :return: List of InventoryItem
+        :return: List of InventoryItem with item names
         """
-        query = select(InventoryItem).where(InventoryItem.inventory_id == inventory_id)
+        query = (
+            select(InventoryItem)
+            .options(joinedload(InventoryItem.item))  # Ensure item relationship is loaded
+            .where(InventoryItem.inventory_id == inventory_id)
+        )
         result = await self.session.execute(query)
-        return result.scalars().all()
+        inventory_items = result.scalars().all()
+
+        return inventory_items
 

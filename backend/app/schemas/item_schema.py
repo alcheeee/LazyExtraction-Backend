@@ -88,7 +88,6 @@ class ItemCreate(BaseModel):
     category: ItemType = ItemType.Weapon
     randomize_all: bool = False
     randomize_stats: bool = False
-    texture: Optional[str] = None
 
 
 class MedicalCreate(ItemCreate):

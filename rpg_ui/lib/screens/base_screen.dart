@@ -14,7 +14,7 @@ class BaseScreen extends StatefulWidget {
 }
 
 class _BaseScreenState extends State<BaseScreen> {
-  int _selectedIndex = 2; // Default to the middle button
+  int _selectedIndex = 0; // Default to the main menu
   late PageController _pageController;
 
   bool inRaid = false;
@@ -77,10 +77,10 @@ class _BaseScreenState extends State<BaseScreen> {
             });
           },
           children: <Widget>[
-            const MainScreen(), // Safe-House icon
-            const MainScreen(), // Search icon
+            MainScreen(onNavigate: _onItemTapped), // Safe-House icon
+            MainScreen(onNavigate: _onItemTapped), // Search icon
             inRaid ? RaidScreen(onExtract: extract) : RaidSelectionScreen(onStartRaid: startRaid), // Middle icon
-            const MainScreen(), // Notifications icon
+            MainScreen(onNavigate: _onItemTapped), // Notifications icon
             ProfileScreen(stats: exampleUserStats, inventory: exampleInventory), // Profile icon
           ],
         ),

@@ -49,6 +49,21 @@ class GetUserInfo:
     async def get_all_inventory_items(self):
         inventory_id = await self.user_crud.get_user_field_from_id(self.user_id, 'inventory_id')
         inventory_items = await self.inventory_crud.get_all_items_by_inventory_id(inventory_id)
-        return inventory_items
+
+        inventory_items_with_names = [
+            {
+                'in_stash': item.in_stash,
+                'quantity': item.quantity,
+                'inventory_id': item.inventory_id,
+                'weight': item.weight,
+                'id': item.id,
+                'item_id': item.item_id,
+                'item_name': item.item.item_name,
+                'category': item.item.category
+            }
+            for item in inventory_items
+        ]
+
+        return inventory_items_with_names
 
 

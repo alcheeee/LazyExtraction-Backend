@@ -20,29 +20,30 @@ room_tables = {
         'room_amounts': (10, 16),
         'max_players': 10,
         'potential_rooms': [
-            ['medical_room', 15],
-            ['regular_room', 65]
+            ['Medical Room', 15],
+            ['Regular Room', 65]
         ]
     },
     WorldNames.Laboratory: {
         'room_amounts': (8, 14),
         'max_players': 8,
         'potential_rooms': [
-            ['medical_room', 35],
-            ['regular_room', 45],
-            ['military_room', 20]
+            ['Medical Room', 35],
+            ['Regular Room', 45],
+            ['Military Room', 20]
         ]
     },
     WorldNames.MilitaryBase: {
         'room_amounts': (14, 18),
         'max_players': 12,
         'potential_rooms': [
-            ['medical_room', 30],
-            ['military_room', 35],
-            ['regular_room', 35]
+            ['Medical Room', 30],
+            ['Military Room', 35],
+            ['Regular Room', 35]
         ]
     }
 }
+
 
 class RoomLootTables:
     def __init__(self, world_name: WorldNames, room_tier: WorldTier):

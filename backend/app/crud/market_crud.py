@@ -39,6 +39,7 @@ class MarketCRUD(BaseCRUD):
         return result.one_or_none()
 
 
+
     async def find_or_create_market(self, item_name, market_name):
         """
         :param item_name: Items.item_name

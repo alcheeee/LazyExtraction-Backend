@@ -1,15 +1,43 @@
 import 'package:flutter/material.dart';
 
-class UIColors {
-  static const Color primaryBackgroundColor = Color(0xff373737);
-  static const Color secondaryBackgroundColor = Color(0xff474747);
-  static const Color primaryOutlineColor = Color(0xff515151);
-  static const Color primaryTextColor = Color(0xffffffff);
-  static const Color secondaryTextColor = Color(0xffbababa);
-}
+final ThemeData darkTheme = ThemeData(
+  brightness: Brightness.dark,
+  primaryColor: Colors.blue,
+  scaffoldBackgroundColor: Colors.grey[900],
+  appBarTheme: const AppBarTheme(
+    color: Colors.black,
+    iconTheme: IconThemeData(color: Colors.white),
+    titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
+  ),
+  textTheme: const TextTheme(
+    bodyLarge: TextStyle(color: Colors.white),
+    bodyMedium: TextStyle(color: Colors.white),
+  ),
+  buttonTheme: const ButtonThemeData(
+    buttonColor: Colors.blue,
+    textTheme: ButtonTextTheme.primary,
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      foregroundColor: Colors.white, backgroundColor: Colors.blue,
+    ),
+  ),
+);
 
-class ButtonColors {
-  static const Color primaryColor = Color(0xff515151);
-  static const Color primaryTextColor = Color(0xffffffff);
-  static const Color secondaryColor = Color(0xff737373);
+
+Color getTierColor(String tier) {
+  switch (tier) {
+    case 'ItemTier.Tier1':
+      return Colors.grey;
+    case 'ItemTier.Tier2':
+      return Colors.green;
+    case 'ItemTier.Tier3':
+      return Colors.blue;
+    case 'ItemTier.Tier4':
+      return Colors.purple;
+    case 'ItemTier.Tier5':
+      return Colors.yellow;
+    default:
+      return Colors.grey;
+  }
 }
