@@ -65,7 +65,7 @@ class _BaseScreenState extends State<BaseScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('My Game App'),
+          title: const Text('Escape From Menus'),
           automaticallyImplyLeading: false, // Remove the back button
         ),
         body: PageView(
