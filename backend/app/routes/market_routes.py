@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from ..game_systems.markets.MarketHandler import MarketTransactionHandler
 from ..schemas import MarketTransactionRequest
 from ..auth import current_user
+from ..crud import MarketCRUD
 from . import (
     AsyncSession,
     dependency_session,
@@ -12,7 +13,6 @@ from . import (
 
 error_log = MyLogger.errors()
 game_log = MyLogger.game()
-
 
 market_router = APIRouter(
     prefix="/market",
@@ -26,7 +26,7 @@ async def all_market_transactions(
         request: MarketTransactionRequest,
         user_id: int = Depends(current_user.ensure_user_exists),
         session: AsyncSession = Depends(dependency_session)
-    ):
+):
     try:
         if request.amount <= 0:
             raise ValueError("Invalid amount")
@@ -47,3 +47,16 @@ async def all_market_transactions(
         error_log.error(str(e))
         raise common_http_errors.server_error()
 
+
+@market_router.get("/market-items-by-name")
+async def get_market_items(
+        item_name: str,
+        offset: int = 0,
+        user_id: int = Depends(current_user.ensure_user_exists),
+        session: AsyncSession = Depends(dependency_session)
+):
+    market_crud = MarketCRUD(None, session)
+    items = await market_crud.get_all_market_items_by_name(item_name, offset=offset)
+    if not items:
+        raise common_http_errors.mechanics_error("No items found")
+    return items

@@ -42,11 +42,22 @@ class RoomGenerator:
         if user.in_raid:
             raise ValueError("Already in a raid")
 
+        user_stats = await user_crud.get_user_stats(user)
+        user_stats.level += 0.1
+        user_stats.knowledge += 0.1
+        user_stats.round_stats()
+
         room_data = self.generate_next_room()
         user.current_room_data = room_data
         user.current_world = self.world_name
         user.actions_left = 20
         user.in_raid = True
+
+        room_data['skill-adjustments'] = {
+            "level-adjustment": 0.1,
+            "knowledge-adjustment": 0.1
+        }
+
         return room_data
 
 

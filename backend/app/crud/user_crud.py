@@ -28,6 +28,15 @@ class UserCRUD(BaseCRUD):
         """
         return await self.session.get(User, user_id)
 
+
+    async def get_user_stats(self, user: User):
+        """
+        :param user: User
+        :return: Stats
+        """
+        return await self.session.get(Stats, user.stats_id)
+
+
     async def get_user_inventory_id_by_username(self, username: str) -> Optional[int]:
         """
         :param username: str = User.username

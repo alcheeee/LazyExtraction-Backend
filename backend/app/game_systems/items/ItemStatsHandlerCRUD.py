@@ -68,7 +68,7 @@ class ItemStatsHandler:
             inventory_item=None,
             stats=None
     ):
-        if inventory is None or inventory_item is None or stats is None:
+        if None in [inventory, inventory_item, stats]:
             inventory, inventory_item, stats = await self.get_needed_info(equipped_item_id)
 
         item = inventory_item.item

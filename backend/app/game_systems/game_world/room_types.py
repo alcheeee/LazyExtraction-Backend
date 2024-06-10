@@ -20,26 +20,26 @@ room_tables = {
         'room_amounts': (10, 16),
         'max_players': 10,
         'potential_rooms': [
-            ['Medical Room', 15],
-            ['Regular Room', 65]
+            ['medical_room', 15],
+            ['regular_room', 65]
         ]
     },
     WorldNames.Laboratory: {
         'room_amounts': (8, 14),
         'max_players': 8,
         'potential_rooms': [
-            ['Medical Room', 35],
-            ['Regular Room', 45],
-            ['Military Room', 20]
+            ['medical_room', 35],
+            ['regular_room', 45],
+            ['military_room', 20]
         ]
     },
     WorldNames.MilitaryBase: {
         'room_amounts': (14, 18),
         'max_players': 12,
         'potential_rooms': [
-            ['Medical Room', 30],
-            ['Military Room', 35],
-            ['Regular Room', 35]
+            ['medical_room', 30],
+            ['military_room', 35],
+            ['regular_room', 35]
         ]
     }
 }

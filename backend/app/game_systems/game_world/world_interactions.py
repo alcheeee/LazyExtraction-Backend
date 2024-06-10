@@ -50,6 +50,10 @@ class InteractionHandler:
         user.current_room_data = room_data
         flag_modified(user, "current_room_data")
 
+        user_stats = await self.user_crud.get_user_stats(user)
+        user_stats.knowledge += 0.05
+        user_stats.round_stats()
+
         await self.user_inv_crud.update_user_inventory_item(
             user.inventory_id,
             item_db.id,
@@ -57,6 +61,11 @@ class InteractionHandler:
             in_stash=False
         )
         user.actions_left -= 1
+
+        item['skill-adjustments'] = {
+            "knowledge-adjustment": 0.05
+        }
+
         return item
 
 
@@ -68,8 +77,18 @@ class InteractionHandler:
             room_generator = RoomGenerator(user.current_world, WorldTier.Tier1)
             new_room_data = room_generator.generate_next_room()
 
+            user_stats = await self.user_crud.get_user_stats(user)
+            user_stats.knowledge += 0.1
+            user_stats.level += 0.1
+            user_stats.round_stats()
+
             user.current_room_data = new_room_data
             user.actions_left -= 1
+
+            new_room_data["skill-adjustments"] = {
+                "knowledge-adjustment": 0.1,
+                "level-adjustment": 0.1
+            }
             return new_room_data
 
         raise ValueError("New room is not connected to the current room")
@@ -85,7 +104,15 @@ class InteractionHandler:
         user.current_world = None
         user.current_room_data = None
 
-        return "Successfully extract from the raid"
+        user_stats = await self.user_crud.get_user_stats(user)
+        user_stats.level += 0.75
+        user_stats.round_stats()
+
+        skill_adjustments = {
+            "level-adjustment": 0.75
+        }
+
+        return skill_adjustments
 
 
 

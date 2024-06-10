@@ -4,12 +4,14 @@ from ..game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
 from ..game_systems.game_world.world_handler import RoomGenerator
 from ..game_systems.game_world.world_interactions import InteractionHandler
 from ..auth import current_user
+from ..crud import UserInventoryCRUD
 from ..schemas import (
     JobRequest,
     WorldNames,
     WorldTier,
     RoomInteraction,
-    InteractionTypes
+    InteractionTypes,
+    StashStatusSwitch
 )
 from . import (
     AsyncSession,
@@ -118,6 +120,45 @@ async def job_actions(
         error_log.error(str(e))
         await session.rollback()
         raise common_http_errors.server_error()
+
+
+@game_router.post("/item-stash-status")
+async def change_stash_status(
+        request: StashStatusSwitch,
+        user_id: int = Depends(current_user.ensure_user_exists),
+        session: AsyncSession = Depends(dependency_session)
+):
+    try:
+        inv_crud = UserInventoryCRUD(None, session)
+        await inv_crud.switch_item_stash_status(user_id, request.item_id, request.to_stash, request.quantity)
+        await session.commit()
+        return ResponseBuilder.success("Item transferred")
+
+    except ValueError as e:
+        await session.rollback()
+        return ResponseBuilder.error(str(e))
+    except Exception as e:
+        error_log.error(str(e))
+        await session.rollback()
+        raise common_http_errors.server_error()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -23,6 +23,23 @@ class MarketCRUD(BaseCRUD):
         return market_item
 
 
+    async def get_all_market_items_by_name(self, item_name: str, limit: int = 10, offset: int = 0):
+        """
+        :param item_name: Market.item_name
+        :param limit: Number of items to return
+        :param offset: Number of items to skip
+        :return: List of MarketItems
+        """
+        query = (select(MarketItems)
+                 .join(Market)
+                 .where(Market.item_name == item_name)
+                 .order_by(MarketItems.item_cost)
+                 .limit(limit)
+                 .offset(offset))
+        result = await self.session.execute(query)
+        return result.scalars().all()
+
+
     async def get_exact_market_item(self, details: MarketTransactionRequest, by_user: str = None):
         """
         :param details: MarketTransactionRequest

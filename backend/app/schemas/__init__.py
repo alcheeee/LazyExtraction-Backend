@@ -13,7 +13,8 @@ from .item_schema import (
     clothing_bonus_wrapper,
     armor_bonus_wrapper,
     medical_bonus_wrapper,
-    filter_item_stats
+    filter_item_stats,
+    StashStatusSwitch
 )
 from .weapon_schemas.weapon_schemas import (
     weapon_bonus_wrapper,

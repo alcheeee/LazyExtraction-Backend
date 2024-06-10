@@ -81,6 +81,12 @@ medical_bonus_wrapper = {
 }
 
 
+class StashStatusSwitch(BaseModel):
+    item_id: int
+    to_stash: bool
+    quantity: int
+
+
 class ItemCreate(BaseModel):
     item_name: str = "AR"
     tier: ItemTier = ItemTier.Tier1
