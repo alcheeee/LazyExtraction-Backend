@@ -1,19 +1,38 @@
 import 'package:flutter/material.dart';
 import '../item_data/item_utils.dart';
 
-class ItemDetailWidget extends StatelessWidget {
+class ItemDetailWidget extends StatefulWidget {
   final String itemName;
   final List<Widget> actions;
+  final int? maxQuantity;
+  final Function(int quantity)? onTransfer;
 
   const ItemDetailWidget({
     required this.itemName,
     this.actions = const [],
+    this.maxQuantity,
+    this.onTransfer,
     super.key,
   });
 
   @override
+  _ItemDetailWidgetState createState() => _ItemDetailWidgetState();
+}
+
+class _ItemDetailWidgetState extends State<ItemDetailWidget> {
+  int _currentQuantity = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.maxQuantity != null && widget.maxQuantity! > 0) {
+      _currentQuantity = 1;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final item = getItemByName(itemName);
+    final item = getItemByName(widget.itemName);
 
     if (item == null) {
       return const Center(
@@ -179,11 +198,26 @@ class ItemDetailWidget extends StatelessWidget {
           Text('Est Value: ${item['quick_sell']}', style: const TextStyle(fontSize: 18, color: Colors.white)),
           ...getItemDetails(item['category']),
           const SizedBox(height: 20),
-          if (actions.isNotEmpty) ...[
+          if (widget.maxQuantity != null && widget.maxQuantity! > 1) ...[
+            Text('Quantity to Transfer: $_currentQuantity', style: const TextStyle(fontSize: 18, color: Colors.white)),
+            Slider(
+              value: _currentQuantity.toDouble(),
+              min: 1,
+              max: widget.maxQuantity!.toDouble(),
+              divisions: (widget.maxQuantity! - 1) > 0 ? widget.maxQuantity! - 1 : 1,
+              label: '$_currentQuantity',
+              onChanged: (value) {
+                setState(() {
+                  _currentQuantity = value.toInt();
+                });
+              },
+            ),
+          ],
+          if (widget.actions.isNotEmpty) ...[
             const Divider(color: Colors.white),
             ButtonBar(
               alignment: MainAxisAlignment.end,
-              children: actions,
+              children: widget.actions,
             ),
           ],
         ],

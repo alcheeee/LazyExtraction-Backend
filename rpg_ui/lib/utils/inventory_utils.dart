@@ -13,15 +13,10 @@ class InventoryUtils {
       categorizedItems[item.category]!.add(item);
     }
 
-    // Log categorized items
-    categorizedItems.forEach((category, items) {
-      print('Category: $category, Items: ${items.map((e) => e.itemName).toList()}');
-    });
-
     return categorizedItems;
   }
 
-  static Widget buildCategorySection(BuildContext context, String category, List<InventoryItem> items, Function showItemDetailsPopup) {
+  static Widget buildCategorySection(BuildContext context, String category, List<InventoryItem> items, Function(InventoryItem) showItemDetailsPopup) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -36,12 +31,9 @@ class InventoryUtils {
           children: items.map((item) {
             final itemDetails = getItemByName(item.itemName);
 
-            // Log item details fetching
-            print('Fetching details for: ${item.itemName}, Details: $itemDetails');
-
             return GestureDetector(
               onTap: () {
-                showItemDetailsPopup(context, item.itemName);
+                showItemDetailsPopup(item);
               },
               child: Column(
                 children: [

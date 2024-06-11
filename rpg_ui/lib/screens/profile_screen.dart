@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/user_stats.dart';
 import '../models/user_inventory.dart';
-import '../widgets/item_details_widget.dart';
-import '../utils/inventory_utils.dart';
 
 class ProfileScreen extends StatelessWidget {
   final UserStats stats;
@@ -10,36 +8,9 @@ class ProfileScreen extends StatelessWidget {
 
   const ProfileScreen({super.key, required this.stats, required this.inventory});
 
-  void showItemDetailsPopup(BuildContext context, String itemName) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.grey[900],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Container(
-            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
-            padding: const EdgeInsets.all(16.0),
-            child: ItemDetailWidget(itemName: itemName),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final categorizedItems = InventoryUtils.sortItemsByCategory(inventory.items);
-
-    // Log categorized items
-    print('Categorized Items: $categorizedItems');
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -63,6 +34,20 @@ class ProfileScreen extends StatelessWidget {
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ],
+              ),
+              const Divider(height: 20, thickness: 2),
+              const Text(
+                'Bank and Energy',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Bank: \$${inventory.bank}',
+                style: const TextStyle(fontSize: 18),
+              ),
+              Text(
+                'Energy: ${inventory.energy}',
+                style: const TextStyle(fontSize: 18),
               ),
               const Divider(height: 20, thickness: 2),
               ExpansionTile(
@@ -109,24 +94,6 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const Divider(height: 20, thickness: 2),
-              const Text(
-                'Bank and Energy',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Bank: \$${inventory.bank}',
-                style: const TextStyle(fontSize: 18),
-              ),
-              Text(
-                'Energy: ${inventory.energy}',
-                style: const TextStyle(fontSize: 18),
-              ),
-              const Divider(height: 20, thickness: 2),
-              ...categorizedItems.entries.map((entry) {
-                return InventoryUtils.buildCategorySection(context, entry.key, entry.value, showItemDetailsPopup);
-              }),
             ],
           ),
         ),

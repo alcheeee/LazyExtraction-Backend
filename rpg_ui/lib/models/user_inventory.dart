@@ -1,26 +1,73 @@
-import 'package:flutter/material.dart';
+// lib/models/user_inventory.dart
 
 class Inventory {
-  final int bank;
-  final int energy;
-  final int currentWeight;
-  final List<InventoryItem> items;
+  List<InventoryItem> items;
+  InventoryItem? _equippedWeapon;
+  InventoryItem? _equippedHelmet;
+  InventoryItem? _equippedChest;
+  InventoryItem? _equippedLegs;
+  int bank;
+  int energy;
+  double currentWeight;
 
   Inventory({
+    required this.items,
+    InventoryItem? equippedWeapon,
+    InventoryItem? equippedHelmet,
+    InventoryItem? equippedChest,
+    InventoryItem? equippedLegs,
     required this.bank,
     required this.energy,
     required this.currentWeight,
-    required this.items,
-  });
+  })  : _equippedWeapon = equippedWeapon,
+        _equippedHelmet = equippedHelmet,
+        _equippedChest = equippedChest,
+        _equippedLegs = equippedLegs;
 
+  // Define setters for the equipped items
+  set equippedWeapon(InventoryItem? item) {
+    _equippedWeapon = item;
+  }
+
+  set equippedHelmet(InventoryItem? item) {
+    _equippedHelmet = item;
+  }
+
+  set equippedChest(InventoryItem? item) {
+    _equippedChest = item;
+  }
+
+  set equippedLegs(InventoryItem? item) {
+    _equippedLegs = item;
+  }
+
+  // Define getters for the equipped items
+  InventoryItem? get equippedWeapon => _equippedWeapon;
+  InventoryItem? get equippedHelmet => _equippedHelmet;
+  InventoryItem? get equippedChest => _equippedChest;
+  InventoryItem? get equippedLegs => _equippedLegs;
+
+  // Define fromJson method
   factory Inventory.fromJson(Map<String, dynamic> json) {
     return Inventory(
-      bank: json['bank'] ?? 0,
-      energy: json['energy'] ?? 0,
-      currentWeight: json['currentWeight'] ?? 0,
-      items: (json['user-inventory'] as List)
+      items: (json['user-inventory'] as List<dynamic>)
           .map((item) => InventoryItem.fromJson(item))
           .toList(),
+      equippedWeapon: json['equipped_weapon'] != null
+          ? InventoryItem.fromJson(json['equipped_weapon'])
+          : null,
+      equippedHelmet: json['equipped_helmet'] != null
+          ? InventoryItem.fromJson(json['equipped_helmet'])
+          : null,
+      equippedChest: json['equipped_chest'] != null
+          ? InventoryItem.fromJson(json['equipped_chest'])
+          : null,
+      equippedLegs: json['equipped_legs'] != null
+          ? InventoryItem.fromJson(json['equipped_legs'])
+          : null,
+      bank: json['bank'] ?? 0,
+      energy: json['energy'] ?? 0,
+      currentWeight: (json['currentWeight'] ?? 0).toDouble(),
     );
   }
 }
@@ -32,7 +79,7 @@ class InventoryItem {
   final int itemId;
   final bool inStash;
   final double weight;
-  final int quantity;
+  int quantity;
   final int inventoryId;
 
   InventoryItem({
@@ -63,6 +110,40 @@ class InventoryItem {
 final Map<String, dynamic> sampleJson = {
   "status": "success",
   "message": "",
+  "bank": 1000,
+  "energy": 100,
+  "currentWeight": 0,
+  "equipped_helmet": {
+    "id": 10,
+    "item_name": "Tactical Helmet",
+    "category": "Armor",
+    "item_id": 30,
+    "in_stash": false,
+    "weight": 1.5,
+    "quantity": 1,
+    "inventory_id": 1,
+  },
+  "equipped_chest": {
+    "id": 11,
+    "item_name": "Heavy Duty Vest",
+    "category": "Armor",
+    "item_id": 31,
+    "in_stash": false,
+    "weight": 3.0,
+    "quantity": 1,
+    "inventory_id": 1,
+  },
+  "equipped_legs": null,
+  "equipped_weapon": {
+    "id": 13,
+    "item_name": "M4A1 Carbine",
+    "category": "Weapon",
+    "item_id": 33,
+    "in_stash": false,
+    "weight": 3.5,
+    "quantity": 1,
+    "inventory_id": 1,
+  },
   "user-inventory": [
     {
       "in_stash": false,

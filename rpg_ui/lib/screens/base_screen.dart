@@ -5,6 +5,7 @@ import 'profile_screen.dart';
 import 'main_screen.dart';
 import 'raid_screen.dart';
 import 'raid_selection_screen.dart';
+import 'inventory_screen.dart';
 
 class BaseScreen extends StatefulWidget {
   const BaseScreen({super.key});
@@ -80,7 +81,7 @@ class _BaseScreenState extends State<BaseScreen> {
             MainScreen(onNavigate: _onItemTapped), // Safe-House icon
             MainScreen(onNavigate: _onItemTapped), // Search icon
             inRaid ? RaidScreen(onExtract: extract) : RaidSelectionScreen(onStartRaid: startRaid), // Middle icon
-            MainScreen(onNavigate: _onItemTapped), // Notifications icon
+            InventoryScreen(inventory: exampleInventory),
             ProfileScreen(stats: exampleUserStats, inventory: exampleInventory), // Profile icon
           ],
         ),
@@ -95,7 +96,7 @@ class _BaseScreenState extends State<BaseScreen> {
                 buildNavBarItem(Icons.home, 0, isDisabled: inRaid), // Safe-House icon
                 buildNavBarItem(Icons.search, 1, isDisabled: inRaid), // Search icon
                 const SizedBox(width: 80.0), // Space for the middle button
-                buildNavBarItem(Icons.notifications, 3, isDisabled: inRaid), // Notifications icon
+                buildNavBarItem(Icons.backpack, 3, isDisabled: inRaid), // Backpack icon
                 buildNavBarItem(Icons.person, 4, isDisabled: inRaid), // Profile icon
               ],
             ),
