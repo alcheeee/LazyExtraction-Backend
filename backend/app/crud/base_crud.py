@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 from sqlalchemy.exc import NoResultFound
+from ..utils import RetryDecorators
 
 
 class BaseCRUD:
@@ -8,6 +9,7 @@ class BaseCRUD:
         self.model = model
         self.session = session
 
+    @RetryDecorators.db_retry_decorator()
     async def execute_scalar_one_or_none(self, query):
         """
         :param query: SQLAlchemy Statement
@@ -16,17 +18,7 @@ class BaseCRUD:
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
-    async def get_by_id(self, id, options=None):
-        """
-        :param id: Model.id
-        :param options: Model(*fields)
-        :return: Optional[Model.[fields]]
-        """
-        query = select(self.model).where(self.model.id == id)
-        if options:
-            query = query.options(*options)
-        return await self.execute_scalar_one_or_none(query)
-
+    @RetryDecorators.db_retry_decorator()
     async def check_fields_exist(self, **conditions):
         """Check if a record exists."""
         if not conditions:

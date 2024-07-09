@@ -1,34 +1,32 @@
 import os
-#from os import environ as env # Use in production
+
 
 class Settings:
-    class Mode:
-        development = "Development"
-        production = "Production"
-        testing = "testing"
-
-    PROJECT_MODE = Mode.development
 
     # FastAPI
     TOKEN_URL = "/user/login"
     PROJECT_NAME = os.getenv('PROJECT_NAME')
     VERSION = os.getenv('PROJECT_VERSION')
 
+    # Redis
+    redis_host = os.getenv('REDIS_HOST')
+    redis_port = os.getenv('REDIS_PORT')
+    redis_tte = 30
+
     # Security
     SECRET_KEY = os.getenv('SECRET_KEY')
-    ACCESS_TOKEN_EXPIRE_MINUTES = 60*1000 # Hours
+    ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
     # Database
-    DB_NAME = os.getenv('DATABASE_NAME')
-    DB_USERNAME = os.getenv('DATABASE_USERNAME')
-    DB_PASSWORD = os.getenv('DATABASE_PASSWORD')
+    TESTING = False
+    SHOULD_ECHO = False
     DATABASE_URL = os.getenv('DATABASE_URL')
+
 
     # Game setup variables
     # Setup later
     GAME_BOT_USERNAME = 'Game Admin'
     GAME_MARKET_USERNAME = 'Market'
-    USE_NODE_SYSTEM = False # For the world setup, or per room setup
 
 
 settings = Settings()

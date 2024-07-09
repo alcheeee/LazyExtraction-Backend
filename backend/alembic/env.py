@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 import sqlmodel
-from app.models.corp_models import *
+from app.models.crew_models import *
 from app.models.models import *
 from app.models.item_models import *
 from app.models.other_models import *

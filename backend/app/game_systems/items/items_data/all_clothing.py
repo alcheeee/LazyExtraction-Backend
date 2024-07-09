@@ -18,9 +18,7 @@ clothing_items = {
             'health_bonus': 0,
             'luck_bonus': 0.0,
             'strength_bonus': 0.0,
-            'knowledge_bonus': 0.0,
-            'randomize_all': False,
-            'randomize_stats': True
+            'knowledge_bonus': 0.0
         },
         'Recon Bandana': {
             'item_name': 'Recon Bandana',
@@ -34,9 +32,7 @@ clothing_items = {
             'health_bonus': 0,
             'luck_bonus': 0.0,
             'strength_bonus': 0.0,
-            'knowledge_bonus': 0.0,
-            'randomize_all': False,
-            'randomize_stats': True
+            'knowledge_bonus': 0.0
         }
     },
     'body': {
@@ -52,9 +48,7 @@ clothing_items = {
             'health_bonus': 0,
             'luck_bonus': 0.0,
             'strength_bonus': 0.0,
-            'knowledge_bonus': 0.0,
-            'randomize_all': False,
-            'randomize_stats': True
+            'knowledge_bonus': 0.0
         },
         'Tactical Hoodie': {
             'item_name': 'Tactical Hoodie',
@@ -68,9 +62,7 @@ clothing_items = {
             'health_bonus': 0,
             'luck_bonus': 0.0,
             'strength_bonus': 0.0,
-            'knowledge_bonus': 0.0,
-            'randomize_all': False,
-            'randomize_stats': True
+            'knowledge_bonus': 0.0
         }
     },
     'legs': {
@@ -86,9 +78,7 @@ clothing_items = {
             'health_bonus': 0,
             'luck_bonus': 0.0,
             'strength_bonus': 0.0,
-            'knowledge_bonus': 0.0,
-            'randomize_all': False,
-            'randomize_stats': True
+            'knowledge_bonus': 0.0
         },
         'Stealth Ops Cargo Pants': {
             'item_name': 'Stealth Ops Cargo Pants',
@@ -102,9 +92,7 @@ clothing_items = {
             'health_bonus': 0,
             'luck_bonus': 0.0,
             'strength_bonus': 0.0,
-            'knowledge_bonus': 0.0,
-            'randomize_all': False,
-            'randomize_stats': True
+            'knowledge_bonus': 0.0
         }
     }
 }

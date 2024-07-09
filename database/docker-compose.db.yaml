@@ -1,0 +1,23 @@
+services:
+  database:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    command: ["postgres", "-c", "config_file=/etc/postgresql.conf"]
+    volumes:
+      - ./postgresql.conf:/etc/postgresql.conf
+      - ./pg-data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    external: true
+
+volumes:
+  pg-data:

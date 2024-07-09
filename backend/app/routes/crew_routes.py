@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends
-from ..schemas import NewCorporationInfo
-from ..game_systems.corporations.CorporationHandler import CorporationHandler
+from ..schemas import NewCrewInfo
+from ..game_systems.crews.crew_handler import CrewHandler
 from ..auth import current_user
 from . import (
     AsyncSession,
-    dependency_session,
+    get_db,
     ResponseBuilder,
     MyLogger,
     common_http_errors
@@ -12,25 +12,25 @@ from . import (
 
 error_log = MyLogger.errors()
 
-corporation_router = APIRouter(
-    prefix="/corporations",
-    tags=["corporations"],
+crew_router = APIRouter(
+    prefix="/crews",
+    tags=["crews"],
     responses={404: {"description": "Not Found"}}
 )
 
 
-@corporation_router.post("/create-corporation")
-async def create_corporation(
-        request: NewCorporationInfo,
-        session: AsyncSession = Depends(dependency_session),
+@crew_router.post("/create-crew")
+async def create_crew(
+        request: NewCrewInfo,
+        session: AsyncSession = Depends(get_db),
         user_id: int = Depends(current_user.ensure_user_exists)
     ):
-    corp_manager = CorporationHandler(session)
+    crew_manager = CrewHandler(session)
     try:
-        new_corporation = await corp_manager.create_corporation(request, user_id)
+        new_crew = await crew_manager.create_crew(request, user_id)
         await session.commit()
 
-        await corp_manager.add_user_to_corporation(user_id, new_corporation.id)
+        await crew_manager.add_user_to_crew(user_id, new_crew.id)
         await session.commit()
         msg = f"{request.name} created successfully!"
         return ResponseBuilder.success(msg)
@@ -44,19 +44,19 @@ async def create_corporation(
         raise common_http_errors.server_error()
 
 
-@corporation_router.post("/add-user")
-async def add_user_to_corporation(
+@crew_router.post("/add-user")
+async def add_user_to_crew(
         user_id_to_add: int,
-        corp_id: int,
+        crew_id: int,
         user_id: int = Depends(current_user.ensure_user_exists),
-        session: AsyncSession = Depends(dependency_session)
+        session: AsyncSession = Depends(get_db)
     ):
     try:
-        corp_manager = CorporationHandler(session)
-        await corp_manager.check_if_user_is_leader(corp_id, user_id)
+        crew_manager = CrewHandler(session)
+        await crew_manager.check_if_user_is_leader(crew_id, user_id)
         if user_id_to_add == user_id:
             raise ValueError("You can't add yourself!")
-        msg = await corp_manager.add_user_to_corporation(user_id_to_add, corp_id)
+        msg = await crew_manager.add_user_to_crew(user_id_to_add, crew_id)
         await session.commit()
         return ResponseBuilder.success(msg)
 
@@ -69,20 +69,20 @@ async def add_user_to_corporation(
         raise common_http_errors.server_error()
 
 
-@corporation_router.post("/remove-user")
-async def remove_user_from_corporation(
+@crew_router.post("/remove-user")
+async def remove_user_from_crew(
         user_id_to_remove: int,
-        corp_id: int,
+        crew_id: int,
         user_id: int = Depends(current_user.ensure_user_exists),
-        session: AsyncSession = Depends(dependency_session)
+        session: AsyncSession = Depends(get_db)
     ):
     try:
-        corp_manager = CorporationHandler(session)
-        await corp_manager.check_if_user_is_leader(user_id, corp_id)
+        crew_manager = CrewHandler(session)
+        await crew_manager.check_if_user_is_leader(user_id, crew_id)
         if user_id_to_remove == user_id:
-            raise ValueError("Cannot remove yourself, disband the Corporation first")
+            raise ValueError("Cannot remove yourself, disband the Crew first")
 
-        msg = await corp_manager.remove_player_from_corporation(user_id_to_remove, corp_id)
+        msg = await crew_manager.remove_player_from_crew(user_id_to_remove, crew_id)
         await session.commit()
         return ResponseBuilder.success(msg)
 

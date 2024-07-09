@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....crud import UserInventoryCRUD, ItemsCRUD
 from ..items_data.all_attachments import attachment_items
 
+
 class AttachmentsHandler:
     def __init__(self, user_id: int, session: AsyncSession):
         self.allowed_attachments = None

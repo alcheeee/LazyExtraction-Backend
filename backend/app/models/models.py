@@ -115,11 +115,8 @@ class User(SQLModel, table=True):
     inventory_id: Optional[int] = Field(default=None, foreign_key="inventory.id", index=True)
     inventory: Optional["Inventory"] = Relationship(back_populates="user")
 
-    corp_id: Optional[int] = Field(default=None, foreign_key="corporation.id", index=True)
-    corporation: Optional["Corporation"] = Relationship(back_populates="employees")
-
-    world_id: Optional[int] = Field(default=None, foreign_key="world.id", index=True)
-    world: Optional["World"] = Relationship(back_populates="players")
+    crew_id: Optional[int] = Field(default=None, foreign_key="crew.id", index=True)
+    crew: Optional["Crew"] = Relationship(back_populates="employees")
 
     # I will clean this up in the future, for now I just cant be bothered. Not enough content yet
     sent_messages: List["PrivateMessage"] = Relationship(back_populates="sender",sa_relationship_kwargs={"primaryjoin": "User.id == PrivateMessage.sender_id"})
@@ -127,9 +124,6 @@ class User(SQLModel, table=True):
     friend_requests_sent: List["FriendRequest"] = Relationship(back_populates="requester",sa_relationship_kwargs={"primaryjoin": "User.id == FriendRequest.requester_id"})
     friend_requests_received: List["FriendRequest"] = Relationship(back_populates="requestee",sa_relationship_kwargs={"primaryjoin": "User.id == FriendRequest.requestee_id"})
     friends: List["User"] = Relationship(back_populates="friends",link_model=FriendsLink,sa_relationship_kwargs={"primaryjoin": "User.id == FriendsLink.user2_id","secondaryjoin": "User.id == FriendsLink.user1_id"})
-
-
-
 
 
 class PrivateMessage(SQLModel, table=True):

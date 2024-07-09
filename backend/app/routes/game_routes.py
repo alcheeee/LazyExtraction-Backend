@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from ..game_systems.jobs.JobHandler import JobService
-from ..game_systems.items.ItemStatsHandlerCRUD import ItemStatsHandler
+from ..game_systems.jobs.job_handler import JobService
+from ..game_systems.items.item_stats_handler import ItemStatsHandler
 from ..game_systems.game_world.world_handler import RoomGenerator
 from ..game_systems.game_world.world_interactions import InteractionHandler
 from ..auth import current_user
@@ -8,14 +8,13 @@ from ..crud import UserInventoryCRUD
 from ..schemas import (
     JobRequest,
     WorldNames,
-    WorldTier,
     RoomInteraction,
     InteractionTypes,
     StashStatusSwitch
 )
 from . import (
     AsyncSession,
-    dependency_session,
+    get_db,
     ResponseBuilder,
     DataName,
     MyLogger,
@@ -35,10 +34,10 @@ game_router = APIRouter(
 async def create_new_world(
         world_name: WorldNames,
         user_id: int = Depends(current_user.ensure_user_exists),
-        session: AsyncSession = Depends(dependency_session)
+        session: AsyncSession = Depends(get_db)
 ):
     try:
-        generator = RoomGenerator(world_name, WorldTier.Tier1)
+        generator = RoomGenerator(world_name)
         new_raid = await generator.assign_room_to_user(user_id, session)
         await session.commit()
         return ResponseBuilder.success("Entered a raid", DataName.RoomData, new_raid)
@@ -53,11 +52,11 @@ async def create_new_world(
         raise common_http_errors.server_error()
 
 
-@game_router.put("/interaction")
+@game_router.post("/interaction")
 async def world_interaction(
         interaction: RoomInteraction,
         user_id: int = Depends(current_user.ensure_user_exists),
-        session: AsyncSession = Depends(dependency_session)
+        session: AsyncSession = Depends(get_db)
 ):
     try:
         handler = InteractionHandler(session, user_id)
@@ -75,7 +74,7 @@ async def world_interaction(
         return ResponseBuilder.error(str(e))
 
     except Exception as e:
-        error_log.error(str(e))
+        error_log.error(f"Unexpected error in world_interaction: {str(e)}")
         await session.rollback()
         raise common_http_errors.server_error()
 
@@ -84,7 +83,7 @@ async def world_interaction(
 async def equip_unequip_inventory_item(
         item_id: int,
         user_id: int = Depends(current_user.ensure_user_exists),
-        session: AsyncSession = Depends(dependency_session)
+        session: AsyncSession = Depends(get_db)
 ):
     try:
         item_stats_handler = ItemStatsHandler(user_id, item_id, session)
@@ -105,7 +104,7 @@ async def equip_unequip_inventory_item(
 async def job_actions(
         request: JobRequest,
         user_id: int = Depends(current_user.ensure_user_exists),
-        session: AsyncSession = Depends(dependency_session)
+        session: AsyncSession = Depends(get_db)
 ):
     try:
         job_handler = JobService(request, user_id, session)
@@ -126,7 +125,7 @@ async def job_actions(
 async def change_stash_status(
         request: StashStatusSwitch,
         user_id: int = Depends(current_user.ensure_user_exists),
-        session: AsyncSession = Depends(dependency_session)
+        session: AsyncSession = Depends(get_db)
 ):
     try:
         inv_crud = UserInventoryCRUD(None, session)

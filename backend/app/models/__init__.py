@@ -1,11 +1,7 @@
-from .other_models import (
-    Jobs,
-    World
-)
-from .corp_models import (
-    Corporation,
-    CorporationItems,
-    CorporationType
+from .other_models import Jobs
+from .crew_models import (
+    Crew,
+    CrewItems
 )
 from .item_models import (
     Items,
@@ -30,11 +26,9 @@ from .models import (
 
 
 __all__ = [
-    'World',
     'Jobs',
-    'Corporation',
-    'CorporationItems',
-    'CorporationType',
+    'Crew',
+    'CrewItems',
     'Items',
     'Medical',
     'Armor',

@@ -18,7 +18,8 @@ class LogManager:
             'errors': 'app/logs/error_logs.log',
             'game': 'app/logs/game_logs.log',
             'admin': 'app/logs/admin_logs.log',
-            'user': 'app/logs/user_logs.log'
+            'user': 'app/logs/user_logs.log',
+            'database': 'app/logs/db_logs.log',
         }
         for name, path in logs.items():
             handler = RotatingFileHandler(path, maxBytes=10000000, backupCount=5)
@@ -53,7 +54,9 @@ class MyLogger:
     @staticmethod
     def user():
         return MyLogger.get_logger('user')
-
+    @staticmethod
+    def database():
+        return MyLogger.get_logger('database')
 
 
 

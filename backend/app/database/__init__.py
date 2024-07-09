@@ -1,8 +1,10 @@
-from .db import dependency_session, get_session
+from .db import get_db, get_session
 from sqlalchemy.ext.asyncio import AsyncSession
+from .redis_handler import redis_client
 
 __all__ = [
-    'dependency_session',
+    'get_db',
     'get_session',
-    'AsyncSession'
+    'AsyncSession',
+    'redis_client'
 ]

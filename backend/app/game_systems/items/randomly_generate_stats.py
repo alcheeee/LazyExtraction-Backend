@@ -3,6 +3,12 @@ from math import sqrt
 from typing import List, Dict, Tuple
 from . import ItemTier, ItemType, filter_item_stats, tier_weights
 
+"""
+Randomly generates Item tier, and stats based on tier
+This is not in use right now.
+Was initially implemented but I decided to go a direction with hard-coded stats
+"""
+
 class GenerateItemTier:
 
     def __init__(self, luck_stat):

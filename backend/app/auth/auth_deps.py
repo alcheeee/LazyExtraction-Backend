@@ -1,25 +1,19 @@
 from .auth_bearer import SECRET_KEY, ACCESS_TOKEN_EXPIRE_MINUTES
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
+from passlib.hash import argon2
 from jose import jwt
-import asyncio
-import bcrypt
+from ..database import redis_client
 
-executor = ThreadPoolExecutor()
 
 class PasswordSecurity:
-    async def hash_password(self, password):
-        loop = asyncio.get_running_loop()
-        hashed_password = await loop.run_in_executor(executor, bcrypt.hashpw,
-                                                     password.encode('utf-8'), bcrypt.gensalt())
-        return hashed_password.decode('utf-8')
+    @staticmethod
+    async def hash_password(password: str) -> str:
+        return argon2.using(time_cost=1, memory_cost=65536, parallelism=2).hash(password)
 
-    async def check_pass_hash(self, password, hashed_password):
-        loop = asyncio.get_running_loop()
-        check_hash = await loop.run_in_executor(executor, bcrypt.checkpw,
-                                                password.encode('utf-8'),
-                                                hashed_password.encode('utf-8'))
-        return check_hash
+    @staticmethod
+    async def check_pass_hash(password: str, hashed_password: str) -> bool:
+        return argon2.verify(password, hashed_password)
+
 
 class TokenHandler:
     def __init__(self):
@@ -27,25 +21,25 @@ class TokenHandler:
         self.algorithm = 'HS256'
         self.expiry_minutes = ACCESS_TOKEN_EXPIRE_MINUTES
 
-    def create_token(self, user_id: int):
-        data = {"sub": str(user_id)}
-        return self.encode_token(data)
-
-    def encode_token(self, data: dict):
+    def _create_token_payload(self, user_id: int) -> dict:
         expire = datetime.now(timezone.utc) + timedelta(minutes=self.expiry_minutes)
-        to_encode = data.copy()
-        to_encode.update({"exp": expire})
-        return jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
+        return {"sub": str(user_id), "exp": expire}
 
-    def decode_token(self, token: str):
+    async def create_token(self, user_id: int) -> str:
+        payload = self._create_token_payload(user_id)
+        token = jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
+        return token
+
+    async def decode_token(self, token: str) -> dict:
+        cached_payload = await redis_client.get_cache(f"token:{token}")
+        if cached_payload:
+            return cached_payload
         try:
-            return jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            await redis_client.set_cache(f"token:{token}", payload, expire=self.expiry_minutes)
+            return payload
         except jwt.JWTError:
             raise ValueError("Could not validate login")
 
 
-password_security = PasswordSecurity()
 token_handler = TokenHandler()
-
-
-

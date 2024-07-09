@@ -1,53 +1,65 @@
-from uuid import uuid4
-from random import choices, randint
+import asyncio
+from functools import lru_cache
+from concurrent.futures import ThreadPoolExecutor
+
+from random import randint, choices
 from typing import Dict, Any
+from itertools import count
 from sqlalchemy.ext.asyncio import AsyncSession
-from ...crud import UserCRUD, WorldCRUD
-from . import (
-    WorldCreator,
-    WorldNames,
-    WorldTier
-)
-from .node_system import NodeSystem
-from .room_types import RoomLootTables, room_tables
+
+from .room_types import RoomLootTables
+from .world_data import room_tables
+from . import WorldNames
+from . import UserCRUD
+from . import RetryDecorators
 
 
 class RoomGenerator:
-    def __init__(self, world_name: WorldNames, world_tier: WorldTier = WorldTier.Tier1):
+    def __init__(self, world_name: WorldNames):
+        self.loot_generator = RoomLootTables(world_name)
         self.world_name = world_name
-        self.world_tier = world_tier
-        self.room_types = RoomLootTables(world_name, world_tier)
         self.room_data = room_tables[world_name]
+        self.room_id_counter = count()
+        self.executor = ThreadPoolExecutor()
 
-    def _choose_room_type(self) -> str:
-        room_names = [room[0] for room in self.room_data['potential_rooms']]
-        room_weights = [room[1] for room in self.room_data['potential_rooms']]
+    @lru_cache(maxsize=100)
+    def _get_room_types_and_weights(self):
+        return zip(*self.room_data['potential_rooms'])
+
+    def _choose_room_type(self):
+        room_names, room_weights = self._get_room_types_and_weights()
         return choices(room_names, room_weights, k=1)[0]
 
-    def _generate_room(self) -> Dict[str, Any]:
-        room_id = str(uuid4())
+    def _generate_room_sync(self) -> Dict[str, Any]:
         room_type = self._choose_room_type()
-        room_items = getattr(self.room_types, room_type)()
-        items_with_ids = [{"id": str(uuid4()), "name": item} for item in room_items]
-        connections = [str(uuid4()) for _ in range(randint(1, 3))]  # Generate between 1 and 3 next rooms
-        return {"id": room_id, "room_type": room_type, "items": items_with_ids, "connections": connections}
+        room_items = self.loot_generator.pick_drops(room_type)
+        room_id = next(self.room_id_counter)
+        connections = [next(self.room_id_counter) for _ in range(randint(1, 3))]
 
-    def generate_next_room(self) -> Dict[str, Any]:
-        return self._generate_room()
+        return {
+            "room_type": room_type,
+            "items": [{"id": room_id, "name": item} for item in room_items],
+            "connections": connections
+        }
 
+    async def generate_room(self) -> Dict[str, Any]:
+        loop = asyncio.get_running_loop()
+        room_data = await loop.run_in_executor(self.executor, self._generate_room_sync)
+        return room_data
 
+    @RetryDecorators.function_retry_decorator()
     async def assign_room_to_user(self, user_id: int, session: AsyncSession):
         user_crud = UserCRUD(None, session)
-        user = await user_crud.get_user(user_id)
-        if user.in_raid:
-            raise ValueError("Already in a raid")
+        user = await user_crud.get_user_for_interaction(user_id)
 
-        user_stats = await user_crud.get_user_stats(user)
-        user_stats.level += 0.1
-        user_stats.knowledge += 0.1
-        user_stats.round_stats()
+        #if user.in_raid:
+        #    raise ValueError("Already in a raid")
 
-        room_data = self.generate_next_room()
+        user.stats.level += 0.1
+        user.stats.knowledge += 0.1
+        user.stats.round_stats()
+
+        room_data = await self.generate_room()
         user.current_room_data = room_data
         user.current_world = self.world_name
         user.actions_left = 20
@@ -59,48 +71,4 @@ class RoomGenerator:
         }
 
         return room_data
-
-
-
-class CreateNodeWorld:
-    def __init__(self, world_data: WorldCreator, user_id: int, session: AsyncSession):
-        self.world_data = world_data
-        self.user_id = user_id
-        self.session = session
-        self.user_crud = UserCRUD(None, session)
-        self.world_crud = WorldCRUD(None, session)
-
-    # Will stay here until I decide what to do with this system
-    async def node_creator_for_route(self):
-        world_data = WorldCreator(
-            world_name=self.world_data.world_name,
-            world_tier=WorldTier.Tier1,
-            node_json=''
-        )
-        create_user_world = CreateNodeWorld(world_data, self.user_id, self.session)
-        new_world = await create_user_world.create_world()
-        return new_world
-
-    async def create_world(self):
-        user = await self.user_crud.get_user(self.user_id)
-
-        #if user.in_raid:
-        #    raise ValueError("Already in a raid")
-
-        node_system = NodeSystem(self.world_data.world_name, self.world_data.world_tier)
-        node_system.create_node()
-        node_json = node_system.to_json()
-
-        new_world_data = WorldCreator(
-            world_name=self.world_data.world_name,
-            world_tier=self.world_data.world_tier,
-            node_json=node_json
-        )
-
-        new_world = await self.world_crud.create_node_world(new_world_data, user)
-        user.in_raid = True
-        return new_world
-
-
-
 

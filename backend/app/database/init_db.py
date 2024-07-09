@@ -1,6 +1,6 @@
 from ..crud import ItemsCRUD
 from ..models import Items
-from ..game_systems.items.ItemHandler import NewItem
+from ..game_systems.items.item_handler import NewItem
 from ..game_systems.items.items_data import (
     armor_items,
     weapon_items,

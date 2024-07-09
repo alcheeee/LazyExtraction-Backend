@@ -9,10 +9,12 @@ from ..models import (
     User,
     Items
 )
+from ..utils import RetryDecorators
 
 
 class UserInventoryCRUD(BaseCRUD):
 
+    @RetryDecorators.db_retry_decorator()
     async def get_inventory_item_by_userid(self, user_id: int, item_id: int) -> InventoryItem:
         """
         :param user_id: User.id
@@ -37,6 +39,7 @@ class UserInventoryCRUD(BaseCRUD):
         query = select(Inventory.id).join(User).where(User.id == user_id)
         return await self.execute_scalar_one_or_none(query)
 
+    @RetryDecorators.db_retry_decorator()
     async def get_user_bank_from_userid(self, user_id) -> Optional[int]:
         """
         :param user_id: User.id
@@ -54,6 +57,7 @@ class UserInventoryCRUD(BaseCRUD):
             raise Exception("Failed to get user Inventory or Bank")
         return inventory_details
 
+    @RetryDecorators.db_retry_decorator()
     async def update_bank_balance(self, inventory_id: int, new_balance: int):
         """
         :param inventory_id: Inventory.id
@@ -66,6 +70,7 @@ class UserInventoryCRUD(BaseCRUD):
         result = await self.session.execute(update_)
         return result
 
+    @RetryDecorators.db_retry_decorator()
     async def update_bank_balance_by_username(self, username: str, balance_adjustment: int):
         """
         :param username: User.username
@@ -90,6 +95,7 @@ class UserInventoryCRUD(BaseCRUD):
         await self.session.execute(update_stmt)
         return new_bank_balance
 
+    @RetryDecorators.db_retry_decorator()
     async def switch_item_stash_status(self, user_id: int, item_id: int, stash_status: bool, quantity: int):
         """
         :param user_id: User.id
@@ -147,7 +153,7 @@ class UserInventoryCRUD(BaseCRUD):
 
         return inventory_item if inventory_item.quantity > 0 else new_inventory_item if new_inventory_item and new_inventory_item.quantity > 0 else existing_item
 
-
+    @RetryDecorators.db_retry_decorator()
     async def update_user_inventory_item(self, inventory_id: int, item_id: int, quantity_change: int,
                                          inventory_item: InventoryItem = None, in_stash=True):
         """
@@ -201,7 +207,7 @@ class UserInventoryCRUD(BaseCRUD):
 
         return inventory_item
 
-
+    @RetryDecorators.db_retry_decorator()
     async def get_inv_stats_invitem(self, user_id: int, item_id: int):
         try:
             result = await self.session.execute(
@@ -226,7 +232,7 @@ class UserInventoryCRUD(BaseCRUD):
         except Exception as e:
             raise e
 
-
+    @RetryDecorators.db_retry_decorator()
     async def get_all_items_by_inventory_id(self, inventory_id: int) -> List[InventoryItem]:
         """
         Fetch all inventory items by inventory ID, including item names.
@@ -242,4 +248,6 @@ class UserInventoryCRUD(BaseCRUD):
         inventory_items = result.scalars().all()
 
         return inventory_items
+
+
 

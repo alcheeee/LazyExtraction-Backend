@@ -1,32 +1,32 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...models import (
     User,
-    Corporation,
-    CorporationItems
+    Crew,
+    CrewItems
 )
 
 
 class ActivityHandler:
-    def __init__(self, corporation, session: AsyncSession):
+    def __init__(self, crew, session: AsyncSession):
         self.session = session
-        self.corporation = corporation
+        self.crew = crew
 
     def new_activity(self, activity_name, progress_required, activity_reward=None, required_rep=None, activity_cost=None):
-        new_activity = CorpActivities(activity_name=activity_name,
+        new_activity = CrewActivities(activity_name=activity_name,
                                   activity_cost=activity_cost,
                                   activity_reward=activity_reward,
                                   progress_required=progress_required,
                                   required_rep=required_rep,
-                                  corporation_id=self.corporation.id)
+                                  crew=self.crew.id)
         return new_activity
 
     async def check_if_finished(self, activity_id: int):
-        activity = await self.session.get(CorpActivities, activity_id)
+        activity = await self.session.get(CrewActivities, activity_id)
         if not activity:
             raise ValueError("No activity found")
 
-        if activity.corporation_id != self.corporation.id:
-            raise ValueError("Activity does not belong to this corporation")
+        if activity.crew_id != self.crew.id:
+            raise ValueError("Activity does not belong to this crew")
 
         if activity.progress < activity.required_progress:
             return False
@@ -43,9 +43,9 @@ class ActivityHandler:
 
         # DELETE ACTIVITY FROM DATABASE IN ROUTE IF SUCCESS
         if reward_type == "Capital":
-            return ("Capital", self.corporation.capital + amount_int)
+            return ("Capital", self.crew.capital + amount_int)
         elif reward_type == "Reputation":
-            return ("Reputation", self.corporation.reputation + amount_int)
+            return ("Reputation", self.crew.reputation + amount_int)
         elif reward_type == "Item":
             item_details = amount.split()
             if len(item_details) != 2:

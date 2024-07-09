@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 
 from sqlmodel import SQLModel
 from fastapi import Depends
@@ -10,42 +11,48 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession
 )
 from .init_db import init_content
-
 from ..config import settings
 
 
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=True,
+    isolation_level="READ COMMITTED",
+    echo=settings.SHOULD_ECHO,
     poolclass=AsyncAdaptedQueuePool,
-    pool_size=30,
+    pool_size=20,
     max_overflow=10,
-    pool_recycle=1800
+    pool_recycle=300
 )
 
 async_session = async_sessionmaker(
     bind=engine,
     autocommit=False,
-    autoflush=False,
+    autoflush=True,
     expire_on_commit=False
 )
 
 
-@asynccontextmanager
-async def get_session() -> AsyncSession:
-    async with async_session() as session:
-        try:
+if settings.TESTING:
+    from unittest.mock import AsyncMock
+
+    async def get_db():
+        yield AsyncMock(spec=AsyncSession)
+
+    @asynccontextmanager
+    async def get_session():
+        yield AsyncMock(spec=AsyncSession)
+
+else:
+    async def get_db() -> AsyncGenerator[AsyncSession, None]:
+        async with async_session() as session:
             yield session
-        finally:
             await session.close()
 
-
-async def dependency_session() -> Depends(AsyncSession):
-    db_session = async_session()
-    try:
-        yield db_session
-    finally:
-        await db_session.close()
+    @asynccontextmanager
+    async def get_session() -> AsyncSession:
+        async with async_session() as session:
+            yield session
+            await session.close()
 
 
 async def init_db():

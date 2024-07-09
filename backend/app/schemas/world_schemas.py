@@ -1,12 +1,5 @@
 from enum import Enum
-from typing import Optional, List
-from pydantic import BaseModel, UUID4
-
-
-class WorldTier(Enum):
-    Tier1 = 'Tier 1'
-    Tier2 = 'Tier 2'
-    Tier3 = 'Tier 3'
+from pydantic import BaseModel
 
 
 class WorldNames(str, Enum):
@@ -23,12 +16,11 @@ class InteractionTypes(str, Enum):
 
 class RoomInteraction(BaseModel):
     action: InteractionTypes = InteractionTypes.Pickup
-    id: UUID4
+    id: int
 
 
 class WorldCreator(BaseModel):
     world_name: WorldNames
-    world_tier: WorldTier = WorldTier.Tier1
     node_json: str
 
 

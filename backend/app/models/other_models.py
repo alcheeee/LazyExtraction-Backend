@@ -1,17 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Column, Enum, Relationship
-from ..schemas import JobTypes, WorldTier
-
-
-class World(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
-    world_tier: WorldTier = Field(sa_column=Column(Enum(WorldTier)))
-    max_players: int = Field(default=8)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    node_json: str = Field(default='')
-    players: List["User"] = Relationship(back_populates="world")
-
+from ..schemas import JobTypes
 
 
 class Jobs(SQLModel, table=True):

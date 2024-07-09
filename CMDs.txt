@@ -1,0 +1,34 @@
+
+
+Startup:
+
+docker network create app_network
+
+cd database
+docker-compose --env-file ../.env -f docker-compose.db.yaml up -d
+
+cd ..
+docker-compose -f docker-compose.app.yaml up --build
+
+
+docker exec -it rpgapi-gameapi_server-1 /bin/bash
+pytest app/tests/route_tests.py -v
+
+
+Alembic:
+
+docker-compose exec gameapi_server alembic revision --autogenerate -m ""
+
+docker-compose exec gameapi_server alembic upgrade head
+
+
+Revision code for updating an Enum column:
+def upgrade():
+    op.execute("ALTER TYPE itemtype ADD VALUE 'Medical';")
+
+
+
+Profiling:
+
+locust -f locustfile.py
+

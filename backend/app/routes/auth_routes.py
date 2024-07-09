@@ -8,19 +8,27 @@ from ..crud import BaseCRUD
 from ..models import User
 from . import (
     AsyncSession,
-    dependency_session,
+    get_db,
     ResponseBuilder,
     MyLogger,
     common_http_errors
 )
 
+
 user_log = MyLogger.user()
+error_log = MyLogger.errors()
+
 
 user_router = APIRouter(
     prefix="/user",
     tags=["user"],
     responses={404: {"description": "Not Found"}}
 )
+
+
+@user_router.get("/")
+async def root():
+    return {"message": "User Router Ready"}
 
 
 class UserCreateRequest(BaseModel):
@@ -32,8 +40,8 @@ class UserCreateRequest(BaseModel):
 @user_router.post("/register")
 async def register_new_user(
         request: UserCreateRequest,
-        session: AsyncSession = Depends(dependency_session)
-    ):
+        session: AsyncSession = Depends(get_db)
+):
     user_crud = BaseCRUD(model=User, session=session)
     exists = await user_crud.check_fields_exist(username=request.username, email=request.email)
     if exists:
@@ -54,17 +62,15 @@ async def register_new_user(
 async def login_for_access_token(
         username: str = Form(...),
         password: str = Form(...),
-        session: AsyncSession = Depends(dependency_session)
-    ):
+        session: AsyncSession = Depends(get_db)
+):
     auth_service = UserService(session=session)
     user_id = await auth_service.authenticate_user(username, password)
     if not user_id:
         raise common_http_errors.mechanics_error("Incorrect username or password")
 
-    access_token = token_handler.create_token(user_id=user_id)
+    access_token = await token_handler.create_token(user_id=user_id)
     return {"access_token": access_token, "token_type": "bearer"}
-
-
 
 
 

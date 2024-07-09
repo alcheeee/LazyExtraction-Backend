@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from ..auth import current_user
 from . import (
     AsyncSession,
-    dependency_session,
+    get_db,
     ResponseBuilder,
     DataName,
     MyLogger,
@@ -24,7 +24,7 @@ user_info_router = APIRouter(
 async def get_user_info(
         option: UserInfoNeeded,
         user_id: int = Depends(current_user.ensure_user_exists),
-        session: AsyncSession = Depends(dependency_session)
+        session: AsyncSession = Depends(get_db)
 ):
 
     data_name = None

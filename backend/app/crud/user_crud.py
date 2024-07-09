@@ -5,10 +5,9 @@ from .base_crud import BaseCRUD
 from ..models import (
     User,
     Inventory,
-    Stats,
-    TrainingProgress,
-    World
+    Stats
 )
+from ..utils import RetryDecorators
 
 
 class UserCRUD(BaseCRUD):
@@ -21,22 +20,22 @@ class UserCRUD(BaseCRUD):
         query = select(getattr(User, field)).where(User.id == user_id)
         return await self.execute_scalar_one_or_none(query)
 
-    async def get_user(self, user_id: int) -> Optional[User]:
-        """
-        :param user_id: User.id
-        :return: User
-        """
-        return await self.session.get(User, user_id)
+    @RetryDecorators.db_retry_decorator()
+    async def get_user_for_interaction(self, user_id: int) -> Optional[User]:
+        query = (
+            select(User)
+            .options(selectinload(User.stats))
+            .where(User.id == user_id)
+            .with_for_update()
+        )
+        result = await self.session.execute(query)
+        return result.scalars().first()
 
+    @RetryDecorators.db_retry_decorator()
+    async def update_user_after_interaction(self, user: User):
+        self.session.add(user)
 
-    async def get_user_stats(self, user: User):
-        """
-        :param user: User
-        :return: Stats
-        """
-        return await self.session.get(Stats, user.stats_id)
-
-
+    @RetryDecorators.db_retry_decorator()
     async def get_user_inventory_id_by_username(self, username: str) -> Optional[int]:
         """
         :param username: str = User.username
@@ -45,17 +44,19 @@ class UserCRUD(BaseCRUD):
         query = select(Inventory.id).join(User).where(User.username == username)
         return await self.execute_scalar_one_or_none(query)
 
-    async def change_user_corp_id(self, user_id: int, corp_id: Optional[int] = None) -> True or Exception:
+    @RetryDecorators.db_retry_decorator()
+    async def change_user_crew_id(self, user_id: int, crew_id: Optional[int] = None) -> True or Exception:
         """
         :param user_id: int = User.id
-        :param corp_id: int = Corporation.id
+        :param crew_id: int = Crew.id
         :return: True
         :raise Exception
         """
-        update_stmt = update(User).where(User.id == user_id).values(corp_id=corp_id)
+        update_stmt = update(User).where(User.id == user_id).values(crew_id=crew_id)
         await self.session.execute(update_stmt)
         return True
 
+    @RetryDecorators.db_retry_decorator()
     async def is_user_admin(self, user_id: int) -> Union[str, bool]:
         """
         :param user_id: int = User.id
@@ -69,6 +70,7 @@ class UserCRUD(BaseCRUD):
             return username if is_admin else False
         return False
 
+    @RetryDecorators.db_retry_decorator()
     async def get_stats_inv_ids_and_jobname(self, user_id: int) -> Union[(int, int, str)]:
         """
         :param user_id: int = User.id
@@ -85,7 +87,7 @@ class UserCRUD(BaseCRUD):
             raise Exception("User info not found")
         return user
 
-
+    @RetryDecorators.db_retry_decorator()
     async def get_stats_education(self, user_id: int) -> Optional[User]:
         """
         :param user_id: int = User.id

@@ -2,10 +2,10 @@ from pydantic import BaseModel
 from sqlmodel import select
 from fastapi import APIRouter, Depends
 from ..models.models import User, FriendsLink, FriendRequest, PrivateMessage
-from ..auth.auth_handler import get_current_user
+from ..auth import current_user
 from . import (
     AsyncSession,
-    dependency_session,
+    get_db,
     ResponseBuilder,
     MyLogger,
     common_http_errors
@@ -25,8 +25,8 @@ social_router = APIRouter(
 @social_router.post("/send-friend-request/{target_user_id}")
 async def send_friend_request(
         target_user_id: int,
-        user: User = Depends(get_current_user),
-        session: AsyncSession = Depends(dependency_session)
+        user: str = Depends(current_user.ensure_user_exists),
+        session: AsyncSession = Depends(get_db)
     ):
     target_user = await session.get(User, target_user_id)
     if not target_user:
@@ -62,8 +62,8 @@ async def send_friend_request(
 @social_router.delete("/remove-friend/{friend_id}")
 async def remove_friend(
         friend_id: int,
-        user: User = Depends(get_current_user),
-        session: AsyncSession = Depends(dependency_session)
+        user: User = Depends(current_user.ensure_user_exists),
+        session: AsyncSession = Depends(get_db)
     ):
     friendship = (await session.execute(
         select(FriendsLink).where(
@@ -92,8 +92,8 @@ async def remove_friend(
 async def respond_friend_request(
         request_user_id: int,
         response: str,
-        user: User = Depends(get_current_user),
-        session: AsyncSession = Depends(dependency_session)
+        user: User = Depends(current_user.ensure_user_exists),
+        session: AsyncSession = Depends(get_db)
     ):
     try:
         friend_request = await session.get(FriendRequest, request_user_id)
@@ -129,8 +129,8 @@ class MessageCreate(BaseModel):
 async def send_message(
         receiver_id: int,
         message_data: MessageCreate,
-        user: User = Depends(get_current_user),
-        session: AsyncSession = Depends(dependency_session)
+        user: User = Depends(current_user.ensure_user_exists),
+        session: AsyncSession = Depends(get_db)
     ):
 
     friends_link = (await session.execute(
@@ -160,8 +160,8 @@ async def send_message(
 
 @social_router.get("/friend-requests/")
 async def get_friend_requests(
-        user: User = Depends(get_current_user),
-        session: AsyncSession = Depends(dependency_session)
+        user: User = Depends(current_user.ensure_user_exists),
+        session: AsyncSession = Depends(get_db)
     ):
     try:
         friend_requests = (await session.execute(
@@ -189,8 +189,8 @@ async def get_friend_requests(
 
 @social_router.get("/friends/")
 async def get_friends(
-        user: User = Depends(get_current_user),
-        session: AsyncSession = Depends(dependency_session)
+        user: User = Depends(current_user.ensure_user_exists),
+        session: AsyncSession = Depends(get_db)
     ):
     try:
         friend_links = (await session.execute(
@@ -217,8 +217,8 @@ async def get_friends(
 
 @social_router.get("/messages/")
 async def get_messages(
-        user: User = Depends(get_current_user),
-        session: AsyncSession = Depends(dependency_session)
+        user: User = Depends(current_user.ensure_user_exists),
+        session: AsyncSession = Depends(get_db)
     ):
     try:
         messages = (await session.execute(
