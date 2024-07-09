@@ -1,7 +1,0 @@
-2024-06-05 16:49:24,447 - ERROR - "InventoryItem" object has no field "item_name"
-2024-06-05 16:52:04,741 - ERROR - list indices must be integers or slices, not str
-2024-06-10 14:52:25,784 - ERROR - UserInventoryCRUD.switch_item_stash_status() missing 1 required positional argument: 'quantity'
-2024-06-10 14:58:45,859 - ERROR - cannot access local variable 'new_inventory_item' where it is not associated with a value
-2024-06-10 15:00:00,069 - ERROR - cannot access local variable 'new_inventory_item' where it is not associated with a value
-2024-06-10 15:01:41,105 - ERROR - 'NoneType' object has no attribute 'quantity'
-2024-06-10 15:26:23,256 - ERROR - 'RoomLootTables' object has no attribute 'Military Room'
