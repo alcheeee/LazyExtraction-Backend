@@ -1,6 +1,5 @@
 from fastapi import Depends
 from jose import JWTError
-from functools import lru_cache
 from sqlalchemy import select
 
 from .auth_bearer import oauth2_scheme

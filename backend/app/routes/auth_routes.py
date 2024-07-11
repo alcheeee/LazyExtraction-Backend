@@ -28,7 +28,7 @@ user_router = APIRouter(
 
 @user_router.get("/")
 async def root():
-    return {"message": "User Router Ready"}
+    return ResponseBuilder.success("User Router Ready")
 
 
 class UserCreateRequest(BaseModel):

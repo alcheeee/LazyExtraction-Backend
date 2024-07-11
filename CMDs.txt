@@ -1,16 +1,18 @@
 
-
-Startup:
+-- Create network --
 
 docker network create app_network
 
+-- Database Startup --
+
 cd database
 docker-compose --env-file ../.env -f docker-compose.db.yaml up -d
-
 cd ..
+
+-- Server Startup --
 docker-compose -f docker-compose.app.yaml up --build
 
-
+-- Pytest --
 docker exec -it rpgapi-gameapi_server-1 /bin/bash
 pytest app/tests/route_tests.py -v
 
