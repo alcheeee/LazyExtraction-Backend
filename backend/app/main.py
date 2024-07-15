@@ -7,7 +7,7 @@ from .routes import (
     crew_router,
     market_router,
     game_router,
-    user_info_router,
+    info_router,
     social_router
 )
 
@@ -17,12 +17,13 @@ def create_app() -> FastAPI:
 
     # Routers
     app.include_router(user_router)
-    app.include_router(user_info_router)
+    app.include_router(info_router)
     app.include_router(crew_router)
     app.include_router(social_router)
     app.include_router(game_router)
     app.include_router(market_router)
     app.include_router(admin_router)
+    app.router.on_startup.append(startup)
 
     return app
 
@@ -32,4 +33,3 @@ async def startup():
 
 
 app = create_app()
-app.router.on_startup.append(startup)

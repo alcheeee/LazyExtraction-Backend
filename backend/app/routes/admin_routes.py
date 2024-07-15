@@ -26,6 +26,11 @@ admin_router = APIRouter(
 )
 
 
+@admin_router.get("/")
+async def root(admin_username: str = Depends(current_user.check_if_admin)):
+    return ResponseBuilder.success("Admin routes ready")
+
+
 @admin_router.post("/create-item")
 async def create_item_endpoint(
         request: Annotated[ItemCreate, Body(openapi_examples=openapi_item_examples)],

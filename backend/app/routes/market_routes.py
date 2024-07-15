@@ -21,6 +21,11 @@ market_router = APIRouter(
 )
 
 
+@market_router.get("/")
+async def root():
+    return ResponseBuilder.success("Market routes ready")
+
+
 @market_router.post("/market-transaction")
 async def all_market_transactions(
         request: MarketTransactionRequest,

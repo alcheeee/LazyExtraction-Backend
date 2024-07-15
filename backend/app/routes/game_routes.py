@@ -30,6 +30,11 @@ game_router = APIRouter(
 )
 
 
+@game_router.get("/")
+async def root():
+    return ResponseBuilder.success("Game routes ready")
+
+
 @game_router.put("/new-world")
 async def create_new_world(
         world_name: WorldNames,

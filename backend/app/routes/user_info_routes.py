@@ -13,14 +13,19 @@ from ..schemas import UserInfoNeeded
 
 error_log = MyLogger.errors()
 
-user_info_router = APIRouter(
-    prefix="/user-info",
+info_router = APIRouter(
+    prefix="/info",
     tags=["info"],
     responses={404: {"description": "Not Found"}}
 )
 
 
-@user_info_router.get("/get-user-info")
+@info_router.get("/")
+async def root():
+    return ResponseBuilder.success("Info routes ready")
+
+
+@info_router.get("/get-user-info")
 async def get_user_info(
         option: UserInfoNeeded,
         user_id: int = Depends(current_user.ensure_user_exists),

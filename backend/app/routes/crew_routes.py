@@ -19,6 +19,11 @@ crew_router = APIRouter(
 )
 
 
+@crew_router.get("/")
+async def root():
+    return ResponseBuilder.success("Crew routes ready")
+
+
 @crew_router.post("/create-crew")
 async def create_crew(
         request: NewCrewInfo,
