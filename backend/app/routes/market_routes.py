@@ -45,7 +45,7 @@ async def all_market_transactions(
 
     except ValueError as e:
         await session.rollback()
-        return ResponseBuilder.error(str(e))
+        raise common_http_errors.mechanics_error(str(e))
 
     except Exception as e:
         await session.rollback()

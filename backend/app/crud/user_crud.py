@@ -11,6 +11,7 @@ from ..utils import RetryDecorators
 
 
 class UserCRUD(BaseCRUD):
+    @RetryDecorators.db_retry_decorator()
     async def get_user_field_from_id(self, user_id: int, field: str) -> Optional[User]:
         """
         :param user_id: int = User.id
@@ -18,6 +19,16 @@ class UserCRUD(BaseCRUD):
         :return: Optional[field]
         """
         query = select(getattr(User, field)).where(User.id == user_id)
+        return await self.execute_scalar_one_or_none(query)
+
+    @RetryDecorators.db_retry_decorator()
+    async def get_user_field_from_username(self, username: str, field: str) -> Optional[User]:
+        """
+        :param username: str = User.username
+        :param field: User.(field)
+        :return: Optional[field]
+        """
+        query = select(getattr(User, field)).where(User.username == username)
         return await self.execute_scalar_one_or_none(query)
 
     @RetryDecorators.db_retry_decorator()
@@ -32,10 +43,6 @@ class UserCRUD(BaseCRUD):
         return result.scalars().first()
 
     @RetryDecorators.db_retry_decorator()
-    async def update_user_after_interaction(self, user: User):
-        self.session.add(user)
-
-    @RetryDecorators.db_retry_decorator()
     async def get_user_inventory_id_by_username(self, username: str) -> Optional[int]:
         """
         :param username: str = User.username
@@ -45,14 +52,14 @@ class UserCRUD(BaseCRUD):
         return await self.execute_scalar_one_or_none(query)
 
     @RetryDecorators.db_retry_decorator()
-    async def change_user_crew_id(self, user_id: int, crew_id: Optional[int] = None) -> True or Exception:
+    async def change_user_crew_id(self, username: str, crew_id: Optional[int] = None) -> True or Exception:
         """
-        :param user_id: int = User.id
+        :param username: str = User.username
         :param crew_id: int = Crew.id
         :return: True
         :raise Exception
         """
-        update_stmt = update(User).where(User.id == user_id).values(crew_id=crew_id)
+        update_stmt = update(User).where(User.username == username).values(crew_id=crew_id)
         await self.session.execute(update_stmt)
         return True
 

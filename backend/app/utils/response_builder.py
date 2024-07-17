@@ -1,4 +1,5 @@
 from enum import Enum
+from .common_HTTP_errors import common_http_errors
 
 
 class DataName(str, Enum):
@@ -18,8 +19,3 @@ class ResponseBuilder:
         if data:
             response[data_name.value] = data
         return response
-
-
-    @staticmethod
-    def error(message: str, error_code: int = 400) -> dict:
-        return {"status": "error", "message": message, "error_code": error_code}

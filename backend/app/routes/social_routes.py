@@ -52,7 +52,7 @@ async def send_friend_request(
 
     except ValueError as e:
         await session.rollback()
-        return ResponseBuilder.error(str(e))
+        raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
         await session.rollback()
         error_log.error(str(e))
@@ -81,7 +81,7 @@ async def remove_friend(
 
     except ValueError as e:
         await session.rollback()
-        return ResponseBuilder.error(str(e))
+        raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
         await session.rollback()
         error_log.error(str(e))
@@ -114,7 +114,7 @@ async def respond_friend_request(
 
     except ValueError as e:
         await session.rollback()
-        return ResponseBuilder.error(str(e))
+        raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
         await session.rollback()
         error_log.error(str(e))
@@ -151,7 +151,7 @@ async def send_message(
 
     except ValueError as e:
         await session.rollback()
-        return ResponseBuilder.error(str(e))
+        raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
         await session.rollback()
         error_log.error(str(e))
@@ -180,7 +180,7 @@ async def get_friend_requests(
 
     except ValueError as e:
         await session.rollback()
-        return ResponseBuilder.error(str(e))
+        raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
         await session.rollback()
         error_log.error(str(e))

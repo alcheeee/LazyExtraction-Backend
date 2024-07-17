@@ -49,7 +49,7 @@ async def create_new_world(
 
     except ValueError as e:
         await session.rollback()
-        return ResponseBuilder.error(str(e))
+        raise common_http_errors.mechanics_error(str(e))
 
     except Exception as e:
         error_log.error(str(e))
@@ -76,7 +76,7 @@ async def world_interaction(
 
     except ValueError as e:
         await session.rollback()
-        return ResponseBuilder.error(str(e))
+        raise common_http_errors.mechanics_error(str(e))
 
     except Exception as e:
         error_log.error(f"Unexpected error in world_interaction: {str(e)}")
@@ -98,7 +98,7 @@ async def equip_unequip_inventory_item(
 
     except ValueError as e:
         await session.rollback()
-        return ResponseBuilder.error(str(e))
+        raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
         error_log.error(str(e))
         await session.rollback()
@@ -119,7 +119,7 @@ async def job_actions(
 
     except ValueError as e:
         await session.rollback()
-        return ResponseBuilder.error(str(e))
+        raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
         error_log.error(str(e))
         await session.rollback()
@@ -140,7 +140,7 @@ async def change_stash_status(
 
     except ValueError as e:
         await session.rollback()
-        return ResponseBuilder.error(str(e))
+        raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
         error_log.error(str(e))
         await session.rollback()

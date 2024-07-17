@@ -18,7 +18,7 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
     # Database
-    TESTING = True
+    TESTING = True # Wipes DB on reloads
     SHOULD_ECHO = False
     DATABASE_URL = os.getenv('DATABASE_URL')
 

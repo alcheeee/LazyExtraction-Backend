@@ -28,7 +28,7 @@ class InteractionHandler:
         else:
             raise ValueError("Invalid action")
 
-        await self.user_crud.update_user_after_interaction(user)
+        await self.session.add(user)
         return result
 
     async def item_pickup(self, user, item_id: int):

@@ -79,7 +79,7 @@ async def add_an_item_to_user(
 
     except ValueError as e:
         await session.rollback()
-        return ResponseBuilder.error(str(e))
+        raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
         await session.rollback()
         error_log.error(str(e))

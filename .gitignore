@@ -1,5 +1,5 @@
 # My ignore
-/CMDs.txt
+/cmds.txt
 /backend/test/
 /backend/alembic/versions/
 /backend/app/logs/
