@@ -35,7 +35,7 @@ async def root():
     return ResponseBuilder.success("Game routes ready")
 
 
-@game_router.put("/new-world")
+@game_router.post("/new-world")
 async def create_new_world(
         world_name: WorldNames,
         user_id: int = Depends(current_user.ensure_user_exists),
@@ -52,7 +52,7 @@ async def create_new_world(
         raise common_http_errors.mechanics_error(str(e))
 
     except Exception as e:
-        error_log.error(str(e))
+        MyLogger.log_exception(error_log, e, user_id, world_name)
         await session.rollback()
         raise common_http_errors.server_error()
 
@@ -65,12 +65,9 @@ async def world_interaction(
 ):
     try:
         handler = InteractionHandler(session, user_id)
-        msg = await handler.handle(interaction)
-        response = ResponseBuilder.success(msg)
+        msg, data = await handler.handle(interaction)
 
-        if interaction.action == InteractionTypes.Traverse:
-            response = ResponseBuilder.success("New room entered", DataName.RoomData, msg)
-
+        response = ResponseBuilder.success(message=msg, data_name=DataName.ItemGiven, data=data)
         await session.commit()
         return response
 
@@ -79,7 +76,7 @@ async def world_interaction(
         raise common_http_errors.mechanics_error(str(e))
 
     except Exception as e:
-        error_log.error(f"Unexpected error in world_interaction: {str(e)}")
+        MyLogger.log_exception(error_log, e, user_id, interaction)
         await session.rollback()
         raise common_http_errors.server_error()
 
@@ -100,7 +97,7 @@ async def equip_unequip_inventory_item(
         await session.rollback()
         raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
-        error_log.error(str(e))
+        MyLogger.log_exception(error_log, e, user_id, item_id)
         await session.rollback()
         raise common_http_errors.server_error()
 
@@ -121,7 +118,7 @@ async def job_actions(
         await session.rollback()
         raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
-        error_log.error(str(e))
+        MyLogger.log_exception(error_log, e, user_id, request)
         await session.rollback()
         raise common_http_errors.server_error()
 
@@ -142,7 +139,7 @@ async def change_stash_status(
         await session.rollback()
         raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
-        error_log.error(str(e))
+        MyLogger.log_exception(error_log, e, user_id, request)
         await session.rollback()
         raise common_http_errors.server_error()
 

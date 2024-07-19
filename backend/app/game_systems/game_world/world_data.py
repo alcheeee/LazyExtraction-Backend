@@ -26,15 +26,15 @@ room_tables = {
 room_drops_json = {
     "regular_room_drops": {
         WorldNames.Forest: {
-            '9x19mm': 50,
-            '9x19mm AP': 25,
+            '9x19mm': 20,
+            '9x19mm AP': 20,
             '12 Gauge': 30,
             '12 Gauge Slug': 20,
             '5.56x45mm NATO': 10,
             '5.56x45mm NATO AP': 5,
-            '300 BLK': 2,
-            '300 BLK AP': 1,
-            'Stealth Balaclava': 1,
+            '300 BLK': 14,
+            '300 BLK AP': 12,
+            'Stealth Balaclava': 15,
             'Recon Bandana': 0.5,
             'Commando Jacket': 1,
             'Tactical Hoodie': 0.5,

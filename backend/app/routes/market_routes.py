@@ -49,7 +49,7 @@ async def all_market_transactions(
 
     except Exception as e:
         await session.rollback()
-        error_log.error(str(e))
+        MyLogger.log_exception(error_log, e, user_id, request)
         raise common_http_errors.server_error()
 
 

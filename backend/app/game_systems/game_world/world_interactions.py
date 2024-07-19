@@ -15,9 +15,10 @@ class InteractionHandler:
         self.item_crud = ItemsCRUD(None, session)
         self.user_inv_crud = UserInventoryCRUD(None, session)
 
-    @RetryDecorators.function_retry_decorator(retry_exceptions=(IntegrityError,))
     async def handle(self, interaction: RoomInteraction):
         user = await self.user_crud.get_user_for_interaction(self.user_id)
+        if not user:
+            raise ValueError("User data not found")
 
         if interaction.action == InteractionTypes.Pickup:
             result = await self.item_pickup(user, interaction.id)
@@ -28,44 +29,55 @@ class InteractionHandler:
         else:
             raise ValueError("Invalid action")
 
-        await self.session.add(user)
+        self.session.add(user)
         return result
 
     async def item_pickup(self, user, item_id: int):
-        room_data = user.current_room_data
-        item = next((item for item in room_data["items"] if item["id"] == item_id), None)
-        if not item:
-            raise ValueError("Item not in room")
+        try:
+            room_data = user.current_room_data
+            item = next((item for item in room_data["items"] if item["id"] == item_id), None)
+            if item is None:
+                raise ValueError("Item not in room")
 
-        item_db = await self.item_crud.check_item_exists(item['name'])
-        if not item_db:
-            raise ValueError("Couldn't find a reference to that item")
+            item_db_id = await self.item_crud.check_item_exists(item['name'])
 
-        room_data["items"].remove(item)
-        user.current_room_data = room_data
-        flag_modified(user, "current_room_data")
+            if item_db_id is None:
+                raise ValueError("Couldn't find a reference to that item")
 
-        await self.user_inv_crud.update_user_inventory_item(
-            user.inventory_id,
-            item_db.id,
-            1,
-            in_stash=False
-        )
+            room_data["items"].remove(item)
+            user.current_room_data = room_data
+            flag_modified(user, "current_room_data")
 
-        user.stats.knowledge += 0.05
-        user.stats.round_stats()
-        user.actions_left -= 1
+            try:
+                await self.user_inv_crud.update_user_inventory_item(
+                    user.inventory_id,
+                    item_db_id,
+                    1,
+                    in_stash=False
+                )
+            except Exception as e:
+                raise Exception(f"Error in world_interactions.item_pickup.update_user_inventory_item:\n{e}")
 
-        item['skill-adjustments'] = {
-            "knowledge-adjustment": 0.05
-        }
-        return item
+            user.stats.knowledge += 0.05
+            user.stats.round_stats()
+            user.actions_left -= 1
+            item['skill-adjustments'] = {
+                "knowledge-adjustment": 0.05
+            }
+            return f"You picked up {item['name']}", item
+        except ValueError:
+            raise
+        except Exception as e:
+            raise Exception(f"Unexpected error in item_pickup: {e}")
 
     @staticmethod
     async def traverse_room(user, new_room_id: int):
-        current_room_data = user.current_room_data
+        try:
+            current_room_data = user.current_room_data
 
-        if new_room_id in current_room_data["connections"]:
+            if new_room_id not in current_room_data["connections"]:
+                raise ValueError("New room is not connected to the current room")
+
             room_generator = RoomGenerator(user.current_world)
             new_room_data = await room_generator.generate_room()
 
@@ -80,24 +92,34 @@ class InteractionHandler:
                 "knowledge-adjustment": 0.1,
                 "level-adjustment": 0.1
             }
-            return new_room_data
-        raise ValueError("New room is not connected to the current room")
+            return "Entered a new room", new_room_data
+
+        except ValueError:
+            raise
+        except Exception as e:
+            raise Exception(f"Unexpected error in traverse_room: {e}")
 
     @staticmethod
     async def extract_from_raid(user):
-        if user.actions_left > 0:
-            raise ValueError(f"You still need to perform {user.actions_left} actions")
+        try:
+            if user.actions_left > 0:
+                raise ValueError(f"You still need to perform {user.actions_left} actions")
 
-        user.in_raid = False
-        user.actions_left = None
-        user.current_world = None
-        user.current_room_data = None
+            user.in_raid = False
+            user.actions_left = None
+            user.current_world = None
+            user.current_room_data = None
 
-        user.stats.level += 0.75
-        user.stats.round_stats()
+            user.stats.level += 0.75
+            user.stats.round_stats()
 
-        skill_adjustments = {
-            "level-adjustment": 0.75
-        }
+            skill_adjustments = {
+                "level-adjustment": 0.75
+            }
 
-        return skill_adjustments
+            return "Successfully Extracted!", skill_adjustments
+
+        except ValueError:
+            raise
+        except Exception as e:
+            raise Exception(f"Unexpected error in extract_from_raid: {e}")

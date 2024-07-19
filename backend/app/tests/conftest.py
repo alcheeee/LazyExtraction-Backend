@@ -1,20 +1,8 @@
-from typing import Optional
 import pytest
 from fastapi.testclient import TestClient
+
+from .account_util import UserAccount
 from ..main import app
-
-
-class UserAccount:
-    def __init__(self, username="test-user"):
-        self.username: str = f"{username}"
-        self.email: str = f"{self.username}@test.com"
-        self.password: str = f"123456"
-        self.auth_token: Optional[str] = None
-        self.headers: json = {"Authorization": ""}
-
-    def set_auth_token(self, token: str):
-        self.auth_token = token
-        self.headers["Authorization"] = f"Bearer {self.auth_token}"
 
 
 user = UserAccount()

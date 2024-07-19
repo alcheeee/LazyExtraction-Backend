@@ -20,15 +20,14 @@ class ItemsCRUD(BaseCRUD):
             raise Exception("Item not found")
         return result
 
-    @RetryDecorators.db_retry_decorator()
     async def check_item_exists(self, name: str):
         """
         :param name: str Items.item_name
         :return: Optional[Items.item_name]
         """
-        query = select(Items).where(Items.item_name == name)
+        query = select(Items.id).where(Items.item_name == name)
         result = await self.session.execute(query)
-        return result.scalars().first()
+        return result.scalar_one_or_none()
 
     async def get_item_name_by_id(self, item_id: int):
         """

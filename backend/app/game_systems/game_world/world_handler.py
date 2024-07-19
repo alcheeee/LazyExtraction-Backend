@@ -38,7 +38,7 @@ class RoomGenerator:
 
         return {
             "room_type": room_type,
-            "items": [{"id": room_id, "name": item} for item in room_items],
+            "items": [{"id": next(self.room_id_counter), "name": item} for item in room_items],
             "connections": connections
         }
 
@@ -52,8 +52,8 @@ class RoomGenerator:
         user_crud = UserCRUD(None, session)
         user = await user_crud.get_user_for_interaction(user_id)
 
-        #if user.in_raid:
-        #    raise ValueError("Already in a raid")
+        if user.in_raid:
+            raise ValueError("Already in a raid")
 
         user.stats.level += 0.1
         user.stats.knowledge += 0.1

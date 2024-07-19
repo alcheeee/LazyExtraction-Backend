@@ -37,7 +37,8 @@ from .job_schema import (
 )
 from .crew_schema import (
     CrewDefaults,
-    NewCrewInfo
+    NewCrewInfo,
+    AddRemoveCrewRequest
 )
 from .world_schemas import (
     WorldNames,

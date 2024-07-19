@@ -16,7 +16,7 @@ class InteractionTypes(str, Enum):
 
 class RoomInteraction(BaseModel):
     action: InteractionTypes = InteractionTypes.Pickup
-    id: int
+    id: int = 0
 
 
 class WorldCreator(BaseModel):

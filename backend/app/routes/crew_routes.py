@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from ..schemas import NewCrewInfo
+from ..schemas import NewCrewInfo, AddRemoveCrewRequest
 from ..game_systems.crews.crew_handler import CrewHandler
 from ..auth import current_user
 from . import (
@@ -46,23 +46,23 @@ async def create_crew(
         raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
         await session.rollback()
-        error_log.error(str(e))
+        MyLogger.log_exception(error_log, e, user_id, request)
         raise common_http_errors.server_error()
 
 
 @crew_router.post("/add-user")
 async def add_user_to_crew(
-        username_to_add: str,
-        crew_id: int,
+        request: AddRemoveCrewRequest,
         user_id: int = Depends(current_user.ensure_user_exists),
         session: AsyncSession = Depends(get_db)
 ):
     try:
         crew_manager = CrewHandler(session)
-        leader_username = await crew_manager.crew_leader_check(user_id, crew_id)
-        if username_to_add == leader_username:
+        leader_username = await crew_manager.crew_leader_check(user_id, request.crew_id)
+        if request.user_to_add_remove == leader_username:
             raise ValueError("You can't add yourself!")
-        msg = await crew_manager.add_user_to_crew(username_to_add, crew_id)
+
+        msg = await crew_manager.add_user_to_crew(request.user_to_add_remove, request.crew_id)
         await session.commit()
         return ResponseBuilder.success(msg)
 
@@ -71,24 +71,23 @@ async def add_user_to_crew(
         raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
         await session.rollback()
-        error_log.error(str(e))
+        MyLogger.log_exception(error_log, e, user_id, request)
         raise common_http_errors.server_error()
 
 
 @crew_router.post("/remove-user")
 async def remove_user_from_crew(
-        user_to_remove: str,
-        crew_id: int,
+        request: AddRemoveCrewRequest,
         user_id: int = Depends(current_user.ensure_user_exists),
         session: AsyncSession = Depends(get_db)
 ):
     try:
         crew_manager = CrewHandler(session)
-        leader_username = await crew_manager.crew_leader_check(user_id, crew_id)
-        if user_to_remove == leader_username:
+        leader_username = await crew_manager.crew_leader_check(user_id, request.crew_id)
+        if request.user_to_add_remove == leader_username:
             raise ValueError("Cannot remove yourself, disband the Crew first")
 
-        msg = await crew_manager.remove_player_from_crew(user_to_remove, crew_id)
+        msg = await crew_manager.remove_player_from_crew(request.user_to_add_remove, request.crew_id)
         await session.commit()
         return ResponseBuilder.success(msg)
 
@@ -97,5 +96,5 @@ async def remove_user_from_crew(
         raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
         await session.rollback()
-        error_log.error(str(e))
+        MyLogger.log_exception(error_log, e, user_id, request)
         raise common_http_errors.server_error()

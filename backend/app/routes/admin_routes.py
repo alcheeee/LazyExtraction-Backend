@@ -49,7 +49,7 @@ async def create_item_endpoint(
 
     except Exception as e:
         await session.rollback()
-        error_log.error(f"Error in create_item_endpoint: {str(e)}")
+        MyLogger.log_exception(error_log, e, admin_username, request)
         raise common_http_errors.server_error()
 
 
@@ -82,7 +82,7 @@ async def add_an_item_to_user(
         raise common_http_errors.mechanics_error(str(e))
     except Exception as e:
         await session.rollback()
-        error_log.error(str(e))
+        MyLogger.log_exception(error_log, e, admin_username, {'username': username, 'item_id': item_id, 'quantity': quantity})
         raise common_http_errors.server_error()
 
 

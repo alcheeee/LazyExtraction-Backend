@@ -19,9 +19,6 @@ class RoomLootTables:
         }
         self.num_drops_range = self.drop_ranges.get(world_name, (0, 0))
 
-    def _determine_num_drops(self):
-        return random.randint(*self.num_drops_range)
-
     @lru_cache(maxsize=1000)
     def _prepare_drops(self, room_type: str):
         drops = self.base_drops[room_type]
@@ -33,10 +30,10 @@ class RoomLootTables:
         return random.choices(items, weights, k=num_drops)
 
     def regular_room(self):
-        return self.pick_drops(self.base_drops["regular_room"], self._determine_num_drops())
+        return self.pick_drops(self.base_drops["regular_room"])
 
     def medical_room(self):
-        return self.pick_drops(self.base_drops["medical_room"], self._determine_num_drops())
+        return self.pick_drops(self.base_drops["medical_room"])
 
     def military_room(self):
-        return self.pick_drops(self.base_drops["military_room"], self._determine_num_drops())
+        return self.pick_drops(self.base_drops["military_room"])

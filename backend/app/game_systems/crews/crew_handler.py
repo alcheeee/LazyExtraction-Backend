@@ -71,8 +71,12 @@ class CrewHandler:
         """
         Add a user to a crew based on their username
         """
-        user_crew = await self.user_crud.get_user_field_from_username(username, 'crew_id')
-        if user_crew:
+        users_id = await self.user_crud.get_user_field_from_username(username, 'id')
+        if not users_id:
+            raise ValueError("No user with that name found.")
+
+        user_crew = await self.user_crud.get_user_field_from_id(users_id, 'crew_id')
+        if user_crew is not None:
             raise ValueError("They are already in a crew.")
         await self.user_crud.change_user_crew_id(username, crew_id)
         return "Successfully added to the crew"

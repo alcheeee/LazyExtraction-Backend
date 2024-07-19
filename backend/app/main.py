@@ -23,6 +23,7 @@ def create_app() -> FastAPI:
     app.include_router(game_router)
     app.include_router(market_router)
     app.include_router(admin_router)
+
     return app
 
 
