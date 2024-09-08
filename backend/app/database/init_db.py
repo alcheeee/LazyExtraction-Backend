@@ -23,13 +23,12 @@ async def init_content(session):
     ]
 
     for item_collection in item_collections:
-        for item_variants in item_collection.values():
-            for item_data in item_variants.values():
-                existing_item = await items_crud.check_item_exists(item_data['item_name'])
-                if not existing_item:
-                    created_item = await NewItem.initialize_static_items(item_data, session)
-                    if not created_item:
-                        print(f"Failed to create item: {item_data['item_name']}")
+        for item_data in item_collection.values():
+            existing_item = await items_crud.check_item_exists(item_data['item_name'])
+            if not existing_item:
+                created_item = await NewItem.initialize_static_items(item_data, session)
+                if not created_item:
+                    print(f"Failed to create item: {item_data['item_name']}")
     return True
 
 
@@ -40,9 +39,11 @@ async def create_game_account(session):
     from ..config import settings
     from ..database.user_handler import UserHandler
     from ..crud import UserCRUD, UserInventoryCRUD
+    from ..game_systems.items.item_stats_handler import ItemStatsHandler
 
     user_handler = UserHandler(session)
 
+    bot_id = 1
     username = settings.GAME_BOT_USERNAME
     password = settings.GAME_BOT_PASSWORD
     email = settings.GAME_BOT_EMAIL
@@ -62,7 +63,6 @@ async def create_game_account(session):
         items_to_give = [
             'Tactical Helmet',
             'Tactical Vest',
-            'Beretta M9',
             'M4A1 Carbine',
             'Recon Bandana',
             'Tactical Hoodie',
@@ -71,11 +71,15 @@ async def create_game_account(session):
         for item in items_to_give:
             item_db_id = await items_crud.check_item_exists(item)
             await user_inv_crud.update_user_inventory_item(
-                inventory_id=1,
+                inventory_id=bot_id,
                 item_id=item_db_id,
                 quantity_change=1,
                 to_stash=False
             )
+
+            item_stats_handler = ItemStatsHandler(bot_id, item_db_id, session)
+            await item_stats_handler.user_equip_unequip_item()
+
     except Exception as e:
         print(str(e))
 

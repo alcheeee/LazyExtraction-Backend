@@ -50,7 +50,7 @@ class ItemStatsHandler:
             status = "Item Unequipped"
         else:
             if inventory_item.amount_in_inventory < 1:
-                raise ValueError("Not enough quantity to equip")
+                raise ValueError("You don't have that item in your inventory")
 
             setattr(inventory, item_slot_attr, item.id)
             inventory_item.amount_in_inventory -= 1
@@ -103,9 +103,8 @@ class ItemStatsHandler:
 
         for stat_key, attr_name in bonus_wrapper.items():
             bonus_value = getattr(item_details, attr_name, 0)
-            if bonus_value:
-                current_value = getattr(stats, stat_key, 0)
-                setattr(stats, stat_key, current_value + bonus_value * multiplier)
+            current_value = getattr(stats, stat_key, 0)
+            setattr(stats, stat_key, current_value + bonus_value * multiplier)
         stats.round_stats()
 
     @staticmethod

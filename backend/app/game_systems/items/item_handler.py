@@ -35,10 +35,9 @@ class NewItem:
 
     @staticmethod
     def get_item_data(item_name: str, item_dict: Dict[str, Dict[str, Any]]):
-        for category_dict in item_dict.values():
-            item_data = category_dict.get(item_name)
-            if item_data:
-                return item_data
+        item_data = item_dict.get(item_name)
+        if item_data:
+            return item_data
         raise Exception(f"Item {item_name} not found")
 
     @staticmethod
@@ -61,13 +60,12 @@ class NewItem:
         if item_category not in category_mapping:
             raise ValueError(f"Unsupported item category: {item_category}")
 
-        _, schema_class, detail_class = category_mapping[item_category]
+        data_dictionary, schema_class, detail_class = category_mapping[item_category]
 
         if admin_request:
             request = self.create_request(item_data, schema_class)
         else:
-            item_dict = category_mapping[item_category][0]
-            static_item_data = self.get_item_data(item_name, item_dict)
+            static_item_data = self.get_item_data(item_name, data_dictionary)
             request = self.create_request(static_item_data, schema_class)
 
         return await self.creator.create_item(request, detail_class)

@@ -60,13 +60,13 @@ class MyLogger:
         return MyLogger.get_logger('database')
 
     @staticmethod
-    def log_exception(error_log, e, user_id, input_data):
+    def log_exception(logger, e, user_id, input_data):
         function_name = inspect.stack()[1].function
         error_message = (
             f"Unexpected error in {function_name}: {str(e)}\n"
             f"-> User id: {user_id} - Input: {input_data}"
         )
-        error_log.error(error_message)
+        logger.error(error_message)
 
 
 
