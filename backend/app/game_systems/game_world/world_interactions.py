@@ -22,8 +22,10 @@ class InteractionHandler:
 
         if interaction.action == InteractionTypes.Pickup:
             result = await self.item_pickup(user, interaction.id)
+
         elif interaction.action == InteractionTypes.Traverse:
             result = await self.traverse_room(user, interaction.id)
+
         elif interaction.action == InteractionTypes.Extract:
             result = await self.extract_from_raid(user)
         else:
@@ -53,10 +55,10 @@ class InteractionHandler:
                     user.inventory_id,
                     item_db_id,
                     1,
-                    in_stash=False
+                    to_stash=False
                 )
             except Exception as e:
-                raise Exception(f"Error in world_interactions.item_pickup.update_user_inventory_item:\n{e}")
+                raise Exception(f"Error in world_interactions.item_pickup.update_user_inventory_item: {e}")
 
             user.stats.knowledge += 0.05
             user.stats.round_stats()
@@ -122,4 +124,4 @@ class InteractionHandler:
         except ValueError:
             raise
         except Exception as e:
-            raise Exception(f"Unexpected error in extract_from_raid: {e}")
+            raise Exception(f"Unexpected error in world_interactions.extract_from_raid: {e}")

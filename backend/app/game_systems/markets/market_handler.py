@@ -142,7 +142,7 @@ class MarketTransactionHandler:
     async def quick_sell(self, selling_details: dict):
         # Checks
         inv_item = await self.inv_crud.get_inventory_item_by_userid(self.user_id, selling_details['item_id'])
-        if inv_item.quantity < selling_details['amount']:
+        if inv_item.amount_in_stash < selling_details['amount']:
             raise ValueError("Invalid amount")
 
         # Getting fields for adjustments

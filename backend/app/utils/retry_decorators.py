@@ -45,26 +45,3 @@ class RetryDecorators:
                     raise
             return wrapper
         return decorator
-
-    @staticmethod
-    def function_retry_decorator(max_attempts=3, wait_min=1, wait_max=10, retry_exceptions=(Exception,)):
-        def decorator(func):
-            @wraps(func)
-            async def wrapper(*args, **kwargs):
-                retryer = retry(
-                    stop=stop_after_attempt(max_attempts),
-                    wait=wait_exponential(multiplier=1, min=wait_min, max=wait_max),
-                    retry=retry_if_exception_type(retry_exceptions),
-                    before_sleep=lambda retry_state: error_log.warning(
-                        f"Retrying {func.__name__} due to {retry_state.outcome.exception()}. "
-                        f"Attempt {retry_state.attempt_number} of {max_attempts}"
-                    ),
-                )
-                try:
-                    return await retryer(func)(*args, **kwargs)
-                except RetryError as e:
-                    error_log.error(f"All retry attempts failed for {func.__name__}: {str(e)}")
-                    raise
-
-            return wrapper
-        return decorator

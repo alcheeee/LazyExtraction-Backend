@@ -23,7 +23,6 @@ class Attachments(SQLModel, table=True):
 
     type: AttachmentTypes = Field(sa_column=Column(Enum(AttachmentTypes)))
     weight_adj: float = Field(default=0.0)
-    max_durability_adj: int = Field(default=0)
     damage_adj: int = Field(default=0)
     range_adj: int = Field(default=0)
     accuracy_adj: int = Field(default=0)
@@ -43,8 +42,6 @@ class Weapon(SQLModel, table=True):
     strength: float = Field(default=0)
 
     weight: float = Field(default=5.0)  # in pounds
-    max_durability: int = Field(default=100)
-    current_durability: float = Field(default=100.00)
 
     # For Guns only
     attachments: Optional[dict] = Field(default=None, sa_column=Column(JSON))
@@ -69,8 +66,6 @@ class Weapon(SQLModel, table=True):
         self.damage += attachment_data.get('damage_adj', 0)
         self.strength += attachment_data.get('strength_adj', 0.0)
         self.weight += attachment_data.get('weight_adj', 0.0)
-        self.max_durability += attachment_data.get('max_durability_adj', 0)
-        self.current_durability += attachment_data.get('max_durability_adj', 0)
         self.range += attachment_data.get('range_adj', 0)
         self.accuracy += attachment_data.get('accuracy_adj', 0)
         self.reload_speed += attachment_data.get('reload_speed_adj', 0.0)
@@ -84,8 +79,6 @@ class Weapon(SQLModel, table=True):
         self.damage -= attachment_data.get('damage_adj', 0)
         self.strength -= attachment_data.get('strength_adj', 0.0)
         self.weight -= attachment_data.get('weight_adj', 0.0)
-        self.max_durability -= attachment_data.get('max_durability_adj', 0)
-        self.current_durability -= attachment_data.get('max_durability_adj', 0)
         self.range -= attachment_data.get('range_adj', 0)
         self.accuracy -= attachment_data.get('accuracy_adj', 0)
         self.reload_speed -= attachment_data.get('reload_speed_adj', 0.0)

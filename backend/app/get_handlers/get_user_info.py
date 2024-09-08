@@ -52,8 +52,8 @@ class GetUserInfo:
 
         inventory_items_with_names = [
             {
-                'in_stash': item.in_stash,
-                'quantity': item.quantity,
+                'amount_in_inventory': item.amount_in_inventory,
+                'amount_in_stash': item.amount_in_stash,
                 'inventory_id': item.inventory_id,
                 'weight': item.weight,
                 'id': item.id,

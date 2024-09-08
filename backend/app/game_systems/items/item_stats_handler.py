@@ -45,16 +45,15 @@ class ItemStatsHandler:
 
         if equipped_item_id == item.id:
             setattr(inventory, item_slot_attr, None)
-            inventory_item.quantity += 1
+            inventory_item.amount_in_inventory += 1
             self.adjust_user_stats(stats, item_details, equip=False)
             status = "Item Unequipped"
         else:
-            if inventory_item.quantity < 1:
+            if inventory_item.amount_in_inventory < 1:
                 raise ValueError("Not enough quantity to equip")
 
             setattr(inventory, item_slot_attr, item.id)
-            inventory_item.quantity -= 1
-            inventory_item.in_stash = False
+            inventory_item.amount_in_inventory -= 1
             self.adjust_user_stats(stats, item_details, equip=True)
             status = "Item Equipped"
 
@@ -82,7 +81,7 @@ class ItemStatsHandler:
 
         if inventory_item:
             setattr(inventory, item_slot_attr, None)
-            inventory_item.quantity += 1
+            inventory_item.amount_in_inventory += 1
             self.adjust_user_stats(stats, item_details, equip=False)
             status = "Item Unequipped"
             return status

@@ -115,8 +115,6 @@ class ClothingCreate(ItemCreate):
 
 class ArmorCreate(ItemCreate):
     type: ArmorType = ArmorType.Head
-    max_durability: int = 100
-    current_durability: float = 100.00
     weight: float = 0.0
     head_protection: int = 0
     chest_protection: int = 0
@@ -189,8 +187,6 @@ openapi_item_examples = {
             'tier': ItemTier.Tier3,
             'quick_sell': 1500,
             'weight': 3.1,
-            'max_durability': 150.0,
-            'current_durability': 150.0,
             'caliber': '5.56x45mm NATO',
             'damage': 20,
             'strength': 0.0,
@@ -237,7 +233,6 @@ openapi_item_examples = {
             'quick_sell': 800,
             'type': "front_grip",
             'weight_adj': 0.0,
-            'max_durability_adj': 0,
             'damage_adj': 0,
             'range_adj': 0,
             'accuracy_adj': 0,
@@ -257,8 +252,6 @@ openapi_item_examples = {
             'tier': ItemTier.Tier2,
             'quick_sell': 1500,
             'type': ArmorType.Body,
-            'max_durability': 150,
-            'current_durability': 150,
             'weight': 4.0,
             'head_protection': 0,
             'chest_protection': 30,

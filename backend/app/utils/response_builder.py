@@ -1,5 +1,5 @@
 from enum import Enum
-from .common_HTTP_errors import common_http_errors
+from .HTTP_errors import common_http_errors
 
 
 class DataName(str, Enum):

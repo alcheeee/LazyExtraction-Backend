@@ -2,7 +2,7 @@
 
 echo "Waiting for PostgreSQL to be ready..."
 while ! nc -z ${DATABASE_HOST} ${DATABASE_PORT}; do
-  sleep 0.1
+  sleep 3.0
 done
 
 echo "Running Alembic Migrations"

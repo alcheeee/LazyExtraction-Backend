@@ -27,8 +27,6 @@ class WeaponCreate(ItemCreate):
     attachments: Optional[Dict[str, str]] = {}
 
     weight: float = 3.5
-    max_durability: int = 100
-    current_durability: float = 100.0
     caliber: Optional[str]
     damage: int = 0
     strength: float = 0.0
@@ -54,7 +52,6 @@ class BulletCreate(ItemCreate):
 class AttachmentCreate(ItemCreate):
     type: AttachmentTypes = AttachmentTypes.Bipod
     weight_adj: float = 0.0
-    max_durability_adj: int = 0
     damage_adj: int = 0
     range_adj: int = 0
     accuracy_adj: int = 0

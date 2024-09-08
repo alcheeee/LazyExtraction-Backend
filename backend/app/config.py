@@ -22,11 +22,10 @@ class Settings:
     SHOULD_ECHO = False
     DATABASE_URL = os.getenv('DATABASE_URL')
 
-
     # Game setup variables
-    # Setup later
-    GAME_BOT_USERNAME = 'Game Admin'
-    GAME_MARKET_USERNAME = 'Market'
+    GAME_BOT_USERNAME = os.getenv('GAME_BOT_USERNAME')
+    GAME_BOT_PASSWORD = os.getenv('GAME_BOT_PASSWORD')
+    GAME_BOT_EMAIL = os.getenv('GAME_BOT_EMAIL')
 
 
 settings = Settings()

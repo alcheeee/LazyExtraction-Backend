@@ -14,15 +14,14 @@ class TestRoutes:
             ('crews', 200),
             ('game', 200),
             ('market', 200),
-            ('info', 200)
+            ('info', 200),
+            ('admin', 401)
         ]
     )
     def test_routes(self, client, route, expected_status_code):
         response = client.get(f"/{route}")
         assert response.status_code == expected_status_code
-        Check.valid_request(response)
-
-
-    def test_admin_route(self, client, test_user):
-        response = client.get('/admin')
-        assert response.status_code == 401
+        if expected_status_code != 401:
+            Check.valid_request(response)
+        else:
+            assert response.status_code == 401

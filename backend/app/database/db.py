@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     AsyncSession
 )
-from .init_db import init_content
+from .redis_handler import redis_client
+from .init_db import init_content, create_game_account
 from ..config import settings
 
 
@@ -46,15 +47,22 @@ async def get_session() -> AsyncSession:
         yield session
         await session.close()
 
-
-async def init_db():
+async def wipe_db():
     if settings.TESTING:
         async with engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.drop_all)
+            await redis_client.clear_all_cached()
+
+async def init_db():
+    await wipe_db()
 
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
     async with get_session() as session:
         await init_content(session)
+        await session.commit()
+
+    async with get_session() as session:
+        await create_game_account(session)
         await session.commit()

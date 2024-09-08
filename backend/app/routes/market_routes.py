@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from ..game_systems.markets.market_handler import MarketTransactionHandler
 from ..schemas import MarketTransactionRequest
 from ..auth import current_user
-from ..crud import MarketCRUD
+from ..crud import MarketCRUD, UserCRUD
 from . import (
     AsyncSession,
     get_db,
@@ -33,6 +33,10 @@ async def all_market_transactions(
         session: AsyncSession = Depends(get_db)
 ):
     try:
+        user_in_raid = UserCRUD(None, session).get_user_field_from_id(user_id, 'in_raid')
+        if user_in_raid:
+            raise ValueError("Can't do that while in a raid")
+
         if request.amount <= 0:
             raise ValueError("Invalid amount")
 

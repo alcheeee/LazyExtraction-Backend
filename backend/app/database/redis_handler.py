@@ -3,7 +3,6 @@ from typing import Optional, Any
 import redis.asyncio as redis
 from ..config import settings
 from ..utils import MyLogger
-db_log = MyLogger.database()
 
 
 class RedisClient:
@@ -27,6 +26,9 @@ class RedisClient:
 
     async def delete_cache(self, key: str):
         await self._redis.delete(key)
+
+    async def clear_all_cached(self):
+        await self._redis.flushdb()
 
 
 redis_client = RedisClient()

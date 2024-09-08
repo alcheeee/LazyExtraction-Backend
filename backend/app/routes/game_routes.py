@@ -18,7 +18,8 @@ from . import (
     ResponseBuilder,
     DataName,
     MyLogger,
-    common_http_errors
+    common_http_errors,
+    exception_decorator
 )
 
 error_log = MyLogger.errors()
@@ -36,130 +37,68 @@ async def root():
 
 
 @game_router.post("/new-world")
+@exception_decorator
 async def create_new_world(
-        world_name: WorldNames,
+        request: WorldNames,
         user_id: int = Depends(current_user.ensure_user_exists),
         session: AsyncSession = Depends(get_db)
 ):
-    try:
-        generator = RoomGenerator(world_name)
-        new_raid = await generator.assign_room_to_user(user_id, session)
-        await session.commit()
-        return ResponseBuilder.success("Entered a raid", DataName.RoomData, new_raid)
-
-    except ValueError as e:
-        await session.rollback()
-        raise common_http_errors.mechanics_error(str(e))
-
-    except Exception as e:
-        MyLogger.log_exception(error_log, e, user_id, world_name)
-        await session.rollback()
-        raise common_http_errors.server_error()
+    generator = RoomGenerator(request)
+    new_raid = await generator.assign_room_to_user(user_id, session)
+    await session.commit()
+    return ResponseBuilder.success("Entered a raid", DataName.RoomData, new_raid)
 
 
 @game_router.post("/interaction")
+@exception_decorator
 async def world_interaction(
-        interaction: RoomInteraction,
+        request: RoomInteraction,
         user_id: int = Depends(current_user.ensure_user_exists),
         session: AsyncSession = Depends(get_db)
 ):
-    try:
-        handler = InteractionHandler(session, user_id)
-        msg, data = await handler.handle(interaction)
+    handler = InteractionHandler(session, user_id)
+    msg, data = await handler.handle(request)
 
-        response = ResponseBuilder.success(message=msg, data_name=DataName.ItemGiven, data=data)
-        await session.commit()
-        return response
-
-    except ValueError as e:
-        await session.rollback()
-        raise common_http_errors.mechanics_error(str(e))
-
-    except Exception as e:
-        MyLogger.log_exception(error_log, e, user_id, interaction)
-        await session.rollback()
-        raise common_http_errors.server_error()
+    response = ResponseBuilder.success(message=msg, data_name=DataName.RoomData, data=data)
+    await session.commit()
+    return response
 
 
-@game_router.post("/equip-item/{item_id:int}")
+@game_router.post("/equip-item")
+@exception_decorator
 async def equip_unequip_inventory_item(
-        item_id: int,
+        request: int,
         user_id: int = Depends(current_user.ensure_user_exists),
         session: AsyncSession = Depends(get_db)
 ):
-    try:
-        item_stats_handler = ItemStatsHandler(user_id, item_id, session)
-        result = await item_stats_handler.user_equip_unequip_item()
-        await session.commit()
-        return ResponseBuilder.success(f"Item {result}")
+    item_stats_handler = ItemStatsHandler(user_id, request, session)
+    result = await item_stats_handler.user_equip_unequip_item()
+    await session.commit()
+    return ResponseBuilder.success(f"Item {result}")
 
-    except ValueError as e:
-        await session.rollback()
-        raise common_http_errors.mechanics_error(str(e))
-    except Exception as e:
-        MyLogger.log_exception(error_log, e, user_id, item_id)
-        await session.rollback()
-        raise common_http_errors.server_error()
 
 
 @game_router.post("/job-action")
+@exception_decorator
 async def job_actions(
         request: JobRequest,
         user_id: int = Depends(current_user.ensure_user_exists),
         session: AsyncSession = Depends(get_db)
 ):
-    try:
-        job_handler = JobService(request, user_id, session)
-        msg = await job_handler.handle_job_action()
-        await session.commit()
-        return ResponseBuilder.success(msg)
-
-    except ValueError as e:
-        await session.rollback()
-        raise common_http_errors.mechanics_error(str(e))
-    except Exception as e:
-        MyLogger.log_exception(error_log, e, user_id, request)
-        await session.rollback()
-        raise common_http_errors.server_error()
+    job_handler = JobService(request, user_id, session)
+    msg = await job_handler.handle_job_action()
+    await session.commit()
+    return ResponseBuilder.success(msg)
 
 
 @game_router.post("/item-stash-status")
+@exception_decorator
 async def change_stash_status(
         request: StashStatusSwitch,
         user_id: int = Depends(current_user.ensure_user_exists),
         session: AsyncSession = Depends(get_db)
 ):
-    try:
-        inv_crud = UserInventoryCRUD(None, session)
-        await inv_crud.switch_item_stash_status(user_id, request.item_id, request.to_stash, request.quantity)
-        await session.commit()
-        return ResponseBuilder.success("Item transferred")
-
-    except ValueError as e:
-        await session.rollback()
-        raise common_http_errors.mechanics_error(str(e))
-    except Exception as e:
-        MyLogger.log_exception(error_log, e, user_id, request)
-        await session.rollback()
-        raise common_http_errors.server_error()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    inv_crud = UserInventoryCRUD(None, session)
+    await inv_crud.switch_item_stash_status(user_id, request.item_id, request.to_stash, request.quantity)
+    await session.commit()
+    return ResponseBuilder.success("Item transferred")

@@ -19,7 +19,7 @@ class AttachmentsHandler:
 
         # Ensure the user has the attachment
         attachment_item = await self.inv_crud.get_inventory_item_by_userid(self.user_id, attachment_id)
-        if not attachment_item or attachment_item.quantity < 1:
+        if not attachment_item or attachment_item.amount_in_stash < 1:
             raise ValueError("You do not have the required attachment")
 
         user_inv_id = await self.inv_crud.get_user_inventory_id_by_userid(self.user_id)

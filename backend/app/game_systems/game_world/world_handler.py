@@ -33,7 +33,6 @@ class RoomGenerator:
     def _generate_room_sync(self) -> Dict[str, Any]:
         room_type = self._choose_room_type()
         room_items = self.loot_generator.pick_drops(room_type)
-        room_id = next(self.room_id_counter)
         connections = [next(self.room_id_counter) for _ in range(randint(1, 3))]
 
         return {
@@ -47,7 +46,6 @@ class RoomGenerator:
         room_data = await loop.run_in_executor(self.executor, self._generate_room_sync)
         return room_data
 
-    @RetryDecorators.function_retry_decorator()
     async def assign_room_to_user(self, user_id: int, session: AsyncSession):
         user_crud = UserCRUD(None, session)
         user = await user_crud.get_user_for_interaction(user_id)

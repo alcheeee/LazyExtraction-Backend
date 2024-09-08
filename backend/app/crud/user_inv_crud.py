@@ -96,11 +96,11 @@ class UserInventoryCRUD(BaseCRUD):
         return new_bank_balance
 
     @RetryDecorators.db_retry_decorator()
-    async def switch_item_stash_status(self, user_id: int, item_id: int, stash_status: bool, quantity: int):
+    async def switch_item_stash_status(self, user_id: int, item_id: int, to_stash: bool, quantity: int):
         """
         :param user_id: User.id
         :param item_id: InventoryItem.item_id
-        :param stash_status: bool
+        :param to_stash: bool
         :param quantity: int
         :return: Updated InventoryItem instance
         """
@@ -108,101 +108,99 @@ class UserInventoryCRUD(BaseCRUD):
 
         query = select(InventoryItem).where(
             InventoryItem.inventory_id == inventory_id,
-            InventoryItem.item_id == item_id,
-            InventoryItem.in_stash != stash_status
-        )
-
-        existing_item_query = select(InventoryItem).where(
-            InventoryItem.inventory_id == inventory_id,
-            InventoryItem.item_id == item_id,
-            InventoryItem.in_stash == stash_status
+            InventoryItem.item_id == item_id
         )
 
         inventory_item = (await self.session.execute(query)).scalars().first()
-        existing_item = (await self.session.execute(existing_item_query)).scalars().first()
-        new_inventory_item = None
 
         if not inventory_item:
             raise ValueError("Item not found")
 
-        if existing_item:
-            existing_item.quantity += quantity
-            inventory_item.quantity -= quantity
+        if to_stash:
+            to_stash_change = inventory_item.amount_in_stash + quantity
+            from_inventory_change = inventory_item.amount_in_inventory - quantity
 
-            if inventory_item.quantity <= 0:
-                await self.session.delete(inventory_item)
-            self.session.add(existing_item)
+            if from_inventory_change <= 0 or to_stash_change <= 0:
+                raise ValueError("Invalid amount")
+
+            inventory_item.amount_in_stash = to_stash_change
+            inventory_item.amount_in_inventory = from_inventory_change
+
+            self.session.add(inventory_item)
         else:
-            new_quantity = inventory_item.quantity - quantity
-            if new_quantity <= 0:
-                await self.session.delete(inventory_item)
-            else:
-                new_inventory_item = InventoryItem(
-                    inventory_id=inventory_id,
-                    item_id=item_id,
-                    quantity=quantity,
-                    in_stash=stash_status
-                )
-                self.session.add(new_inventory_item)
+            from_stash_change = inventory_item.amount_in_stash - quantity
+            to_inventory_change = inventory_item.amount_in_inventory + quantity
 
-            inventory_item.quantity = new_quantity
-            if inventory_item.quantity <= 0:
-                await self.session.delete(inventory_item)
-            else:
-                self.session.add(inventory_item)
+            if to_inventory_change <= 0 or from_stash_change <= 0:
+                raise ValueError("Invalid amount")
 
-        return inventory_item if inventory_item.quantity > 0 else new_inventory_item if new_inventory_item and new_inventory_item.quantity > 0 else existing_item
+            inventory_item.amount_in_stash = from_stash_change
+            inventory_item.amount_in_inventory = to_inventory_change
+
+            self.session.add(inventory_item)
+
+        return inventory_item
 
     @RetryDecorators.db_retry_decorator()
     async def update_user_inventory_item(self, inventory_id: int, item_id: int, quantity_change: int,
-                                         inventory_item: InventoryItem = None, in_stash=True):
+                                         inventory_item: InventoryItem = None, to_stash=True):
         """
         :param inventory_id: User.inventory_id
         :param item_id: Items.id
         :param quantity_change: int
         :param inventory_item: Optional[InventoryItem] instance
-        :param in_stash: bool
+        :param to_stash: bool
         :return: New/Update/Delete InventoryItem instance
         :raise ValueError
         """
         if inventory_item is None:
             query = select(InventoryItem).join(Inventory).where(
                 Inventory.id == inventory_id,
-                InventoryItem.item_id == item_id,
-                InventoryItem.in_stash != in_stash
+                InventoryItem.item_id == item_id
             )
             inventory_item = (await self.session.execute(query)).scalars().first()
 
         if inventory_item:
-            if quantity_change < 0 and abs(quantity_change) > inventory_item.quantity:
+            amount_to_change = inventory_item.amount_in_stash if to_stash else inventory_item.amount_in_inventory
+            if quantity_change < 0 and abs(quantity_change) > amount_to_change:
                 raise ValueError("Insufficient quantity to remove")
 
-            inventory_item.quantity += quantity_change
-            if inventory_item.quantity <= 0:
-                await self.session.delete(inventory_item)
-            else:
-                self.session.add(inventory_item)
+            amount_to_change += quantity_change
+
         else:
             if quantity_change <= 0:
                 raise ValueError("Cannot add zero or negative quantity")
 
             query_target = select(InventoryItem).join(Inventory).where(
                 Inventory.id == inventory_id,
-                InventoryItem.item_id == item_id,
-                InventoryItem.in_stash == in_stash
+                InventoryItem.item_id == item_id
             )
             target_inventory_item = (await self.session.execute(query_target)).scalars().first()
 
             if target_inventory_item:
-                target_inventory_item.quantity += quantity_change
+                amount_to_change = (
+                    target_inventory_item.amount_in_stash
+                    if to_stash else
+                    target_inventory_item.amount_in_inventory
+                )
+
+                amount_to_change += quantity_change
+                if to_stash:
+                    inventory_item.amount_in_stash = amount_to_change
+                else:
+                    inventory_item.amount_in_inventory = amount_to_change
+
                 self.session.add(target_inventory_item)
             else:
                 new_inventory_item = InventoryItem(
                     inventory_id=inventory_id,
-                    item_id=item_id,
-                    quantity=quantity_change,
-                    in_stash=in_stash
+                    item_id=item_id
                 )
+                if to_stash:
+                    new_inventory_item.amount_in_stash = quantity_change
+                else:
+                    new_inventory_item.amount_in_inventory = quantity_change
+
                 self.session.add(new_inventory_item)
 
         return inventory_item

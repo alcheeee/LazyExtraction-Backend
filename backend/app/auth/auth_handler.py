@@ -28,7 +28,6 @@ class UserService:
         except Exception:
             return None
 
-    @RetryDecorators.function_retry_decorator()
     async def authenticate_user(self, username: str, password: str):
         user_pass_id = await self.get_user_pass_id_by_username(username)
         if not user_pass_id:
