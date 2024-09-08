@@ -11,7 +11,8 @@ from . import (
     get_db,
     ResponseBuilder,
     MyLogger,
-    common_http_errors
+    common_http_errors,
+    exception_decorator
 )
 
 
@@ -38,30 +39,24 @@ class UserCreateRequest(BaseModel):
 
 
 @user_router.post("/register")
+@exception_decorator
 async def register_new_user(
         request: UserCreateRequest,
         session: AsyncSession = Depends(get_db)
 ):
-    try:
-        if len(request.username) < 4:
-            raise ValueError("Minimum name length is 4.")
-        if len(request.password) < 6:
-            raise ValueError("Please use a longer password.")
-        user_crud = BaseCRUD(model=User, session=session)
-        exists = await user_crud.check_fields_exist(username=request.username, email=request.email)
-        if exists:
-            raise ValueError("User with that username or email already exists")
+    if len(request.username) < 4:
+        raise ValueError("Minimum name length is 4.")
+    if len(request.password) < 6:
+        raise ValueError("Please use a longer password.")
+    user_crud = BaseCRUD(model=User, session=session)
+    exists = await user_crud.check_fields_exist(username=request.username, email=request.email)
+    if exists:
+        raise ValueError("User with that username or email already exists")
 
-        user_handler = UserHandler(session=session)
-        result = await user_handler.create_user(request.username, request.password, request.email)
-        user_log.info(f"New User: {request.username}")
-        return ResponseBuilder.success(result)
-    except ValueError as e:
-        await session.rollback()
-        raise common_http_errors.mechanics_error(str(e))
-    except Exception:
-        await session.rollback()
-        raise common_http_errors.server_error()
+    user_handler = UserHandler(session=session)
+    result = await user_handler.create_user(request.username, request.password, request.email)
+    user_log.info(f"New User: {request.username}")
+    return ResponseBuilder.success(result)
 
 
 @user_router.post("/login")

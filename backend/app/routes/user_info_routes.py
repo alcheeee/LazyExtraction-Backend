@@ -6,7 +6,8 @@ from . import (
     ResponseBuilder,
     DataName,
     MyLogger,
-    common_http_errors
+    common_http_errors,
+    exception_decorator
 )
 from ..get_handlers.get_user_info import GetUserInfo
 from ..schemas import UserInfoNeeded
@@ -26,6 +27,7 @@ async def root():
 
 
 @info_router.get("/get-user-info")
+@exception_decorator
 async def get_user_info(
         request: UserInfoNeeded,
         user_id: int = Depends(current_user.ensure_user_exists),
@@ -40,13 +42,9 @@ async def get_user_info(
     elif request.InventoryItems:
         data_name = DataName.InventoryItem
 
-    try:
-        get_info = await GetUserInfo(request, user_id, session).get_info()
-        return ResponseBuilder.success("", data_name, get_info)
+    get_info = await GetUserInfo(request, user_id, session).get_info()
+    return ResponseBuilder.success("", data_name, get_info)
 
-    except Exception as e:
-        MyLogger.log_exception(error_log, e, user_id, request)
-        raise common_http_errors.server_error()
 
 
 

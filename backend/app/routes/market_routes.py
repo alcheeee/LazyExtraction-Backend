@@ -8,7 +8,8 @@ from . import (
     get_db,
     ResponseBuilder,
     MyLogger,
-    common_http_errors
+    common_http_errors,
+    exception_decorator
 )
 
 error_log = MyLogger.errors()
@@ -27,34 +28,26 @@ async def root():
 
 
 @market_router.post("/market-transaction")
+@exception_decorator
 async def all_market_transactions(
         request: MarketTransactionRequest,
         user_id: int = Depends(current_user.ensure_user_exists),
         session: AsyncSession = Depends(get_db)
 ):
-    try:
-        user_in_raid = UserCRUD(None, session).get_user_field_from_id(user_id, 'in_raid')
-        if user_in_raid:
-            raise ValueError("Can't do that while in a raid")
+    user_in_raid = UserCRUD(None, session).get_user_field_from_id(user_id, 'in_raid')
+    if user_in_raid:
+        raise ValueError("Can't do that while in a raid")
 
-        if request.amount <= 0:
-            raise ValueError("Invalid amount")
+    if request.amount <= 0:
+        raise ValueError("Invalid amount")
 
-        market_handler = MarketTransactionHandler(request, user_id, session)
-        msg = await market_handler.market_transaction()
+    market_handler = MarketTransactionHandler(request, user_id, session)
+    msg = await market_handler.market_transaction()
 
-        await session.commit()
-        game_log.info(msg)
-        return ResponseBuilder.success(msg)
+    await session.commit()
+    game_log.info(msg)
+    return ResponseBuilder.success(msg)
 
-    except ValueError as e:
-        await session.rollback()
-        raise common_http_errors.mechanics_error(str(e))
-
-    except Exception as e:
-        await session.rollback()
-        MyLogger.log_exception(error_log, e, user_id, request)
-        raise common_http_errors.server_error()
 
 
 @market_router.get("/market-items-by-name")

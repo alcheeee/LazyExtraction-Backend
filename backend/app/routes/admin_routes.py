@@ -8,7 +8,8 @@ from . import (
     ResponseBuilder,
     DataName,
     MyLogger,
-    common_http_errors
+    common_http_errors,
+    exception_decorator
 )
 from ..models import User, Inventory
 from ..schemas import ItemCreate, openapi_item_examples
@@ -32,28 +33,24 @@ async def root(admin_username: str = Depends(current_user.check_if_admin)):
 
 
 @admin_router.post("/create-item")
+@exception_decorator
 async def create_item_endpoint(
         request: Annotated[ItemCreate, Body(openapi_examples=openapi_item_examples)],
         admin_username: str = Depends(current_user.check_if_admin),
         session: AsyncSession = Depends(get_db)
 ):
-    try:
-        new_item = NewItem(session)
-        item_data = request.dict()
-        response = await new_item.create_item(item_data, admin_request=True)
-        await session.commit()
+    new_item = NewItem(session)
+    item_data = request.dict()
+    response = await new_item.create_item(item_data, admin_request=True)
+    await session.commit()
 
-        msg = f"Admin {admin_username} created item {request.item_name}"
-        admin_log.info(msg)
-        return ResponseBuilder.success(msg, DataName.ItemDetails, response)
-
-    except Exception as e:
-        await session.rollback()
-        MyLogger.log_exception(error_log, e, admin_username, request)
-        raise common_http_errors.server_error()
+    msg = f"Admin {admin_username} created item {request.item_name}"
+    admin_log.info(msg)
+    return ResponseBuilder.success(msg, DataName.ItemDetails, response)
 
 
 @admin_router.put("/add-item-to-user/{username}/{item_id}/{quantity}")
+@exception_decorator
 async def add_an_item_to_user(
         username: str, item_id: int, quantity: int,
         session: AsyncSession = Depends(get_db),
@@ -62,28 +59,21 @@ async def add_an_item_to_user(
 
     user_inventory_crud = UserInventoryCRUD(Inventory, session)
     user_crud = UserCRUD(User, session)
-    try:
-        receiving_inventory_id = await user_crud.get_user_inventory_id_by_username(username)
-        if not receiving_inventory_id:
-            raise common_http_errors.server_error()
 
-        result = await user_inventory_crud.update_user_inventory_item(
-            inventory_id=receiving_inventory_id,
-            item_id=item_id,
-            quantity_change=quantity
-        )
-        await session.commit()
-        msg = f"Admin {admin_username} Added/Removed {quantity} of item {item_id} to {username}"
-        admin_log.info(msg)
-        return ResponseBuilder.success(msg, DataName.ItemGiven, result)
-
-    except ValueError as e:
-        await session.rollback()
-        raise common_http_errors.mechanics_error(str(e))
-    except Exception as e:
-        await session.rollback()
-        MyLogger.log_exception(error_log, e, admin_username, {'username': username, 'item_id': item_id, 'quantity': quantity})
+    receiving_inventory_id = await user_crud.get_user_inventory_id_by_username(username)
+    if not receiving_inventory_id:
         raise common_http_errors.server_error()
+
+    result = await user_inventory_crud.update_user_inventory_item(
+        inventory_id=receiving_inventory_id,
+        item_id=item_id,
+        quantity_change=quantity
+    )
+    await session.commit()
+    msg = f"Admin {admin_username} Added/Removed {quantity} of item {item_id} to {username}"
+    admin_log.info(msg)
+    return ResponseBuilder.success(msg, DataName.ItemGiven, result)
+
 
 
 
