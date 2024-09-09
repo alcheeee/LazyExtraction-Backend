@@ -3,7 +3,7 @@ from ..game_systems.jobs.job_handler import JobService
 from ..game_systems.items.item_stats_handler import ItemStatsHandler
 from ..game_systems.game_world.world_handler import RoomGenerator
 from ..game_systems.game_world.world_interactions import InteractionHandler
-from ..auth import current_user
+from ..auth import AccessTokenBearer
 from ..crud import UserInventoryCRUD
 from ..schemas import (
     JobRequest,
@@ -18,12 +18,13 @@ from . import (
     ResponseBuilder,
     DataName,
     MyLogger,
-    common_http_errors,
+    CommonHTTPErrors,
     exception_decorator
 )
 
 error_log = MyLogger.errors()
 game_log = MyLogger.game()
+
 
 game_router = APIRouter(
     prefix="/game",
@@ -40,9 +41,10 @@ async def root():
 @exception_decorator
 async def create_new_world(
         request: WorldNames,
-        user_id: int = Depends(current_user.ensure_user_exists),
+        user_data: dict = Depends(AccessTokenBearer()),
         session: AsyncSession = Depends(get_db)
 ):
+    user_id = int(user_data['user']['user_id'])
     generator = RoomGenerator(request)
     new_raid = await generator.assign_room_to_user(user_id, session)
     await session.commit()
@@ -53,9 +55,11 @@ async def create_new_world(
 @exception_decorator
 async def world_interaction(
         request: RoomInteraction,
-        user_id: int = Depends(current_user.ensure_user_exists),
+        user_data: dict = Depends(AccessTokenBearer()),
         session: AsyncSession = Depends(get_db)
 ):
+    user_id = int(user_data['user']['user_id'])
+
     handler = InteractionHandler(session, user_id)
     msg, data = await handler.handle(request)
 
@@ -68,9 +72,11 @@ async def world_interaction(
 @exception_decorator
 async def equip_unequip_inventory_item(
         request: int,
-        user_id: int = Depends(current_user.ensure_user_exists),
+        user_data: dict = Depends(AccessTokenBearer()),
         session: AsyncSession = Depends(get_db)
 ):
+    user_id = int(user_data['user']['user_id'])
+
     item_stats_handler = ItemStatsHandler(user_id, request, session)
     result = await item_stats_handler.user_equip_unequip_item()
     await session.commit()
@@ -82,9 +88,11 @@ async def equip_unequip_inventory_item(
 @exception_decorator
 async def job_actions(
         request: JobRequest,
-        user_id: int = Depends(current_user.ensure_user_exists),
+        user_data: dict = Depends(AccessTokenBearer()),
         session: AsyncSession = Depends(get_db)
 ):
+    user_id = int(user_data['user']['user_id'])
+
     job_handler = JobService(request, user_id, session)
     msg = await job_handler.handle_job_action()
     await session.commit()
@@ -95,9 +103,11 @@ async def job_actions(
 @exception_decorator
 async def change_stash_status(
         request: StashStatusSwitch,
-        user_id: int = Depends(current_user.ensure_user_exists),
+        user_data: dict = Depends(AccessTokenBearer()),
         session: AsyncSession = Depends(get_db)
 ):
+    user_id = int(user_data['user']['user_id'])
+
     inv_crud = UserInventoryCRUD(None, session)
     await inv_crud.switch_item_stash_status(user_id, request.item_id, request.to_stash, request.quantity)
     await session.commit()

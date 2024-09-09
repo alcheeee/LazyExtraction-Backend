@@ -1,13 +1,14 @@
 from fastapi import Depends
+
 from jose import JWTError
 from sqlalchemy import select
 
-from .auth_bearer import oauth2_scheme
-from .auth_deps import PasswordSecurity, token_handler
+from .auth_deps import PasswordSecurity, TokenHandler
 from ..crud.user_crud import UserCRUD
 from ..models import User
 from ..database import get_session, redis_client
-from ..utils import common_http_errors, RetryDecorators
+from ..utils import CommonHTTPErrors
+from ..config import settings
 
 
 class UserService:
@@ -41,51 +42,28 @@ class UserService:
 class CurrentUser:
     def __init__(self):
         self.user_cache_ttl = 300
-        self.token_cache_ttl = 60
 
     @staticmethod
-    async def _decode_token(token: str) -> dict:
-        return await token_handler.decode_token(token)
-
-    async def verify_payload(self, token: str) -> int:
-        cached_user_id = await redis_client.get_cache(f"token:{token}")
-        if cached_user_id:
-            return int(cached_user_id)
+    async def verify_payload(token: str) -> int:
         try:
-            payload = await self._decode_token(token)
-            user_id = payload.get("sub")
-            if not user_id:
-                raise common_http_errors.credentials_error()
+            payload = await TokenHandler.decode_token(token)
+            user_data = payload.get("user")
+            if not user_data:
+                raise CommonHTTPErrors.credentials_error()
 
-            user_id = int(user_id)
-            await redis_client.set_cache(f"token:{token}", str(user_id), expire=self.token_cache_ttl)
-            return user_id
+            return user_data
 
         except (JWTError, ValueError):
-            raise common_http_errors.credentials_error()
+            raise CommonHTTPErrors.credentials_error()
 
-    async def ensure_user_exists(self, token: str = Depends(oauth2_scheme)):
-        user_id = await self.verify_payload(token)
-        user_exists = await redis_client.get_cache(f"user_exists:{user_id}")
-        if user_exists:
-            return user_id
-
-        async with get_session() as session:
-            user_crud = UserCRUD(User, session)
-            exists = await user_crud.get_user_field_from_id(user_id, 'id')
-            if not exists:
-                raise common_http_errors.credentials_error()
-
-            await redis_client.set_cache(f"user_exists:{user_id}", "1", expire=self.user_cache_ttl)
-            return user_id
-
-    async def check_if_admin(self, token: str = Depends(oauth2_scheme)):
-        user_id = await self.verify_payload(token)
+    async def check_if_admin(self, auth_token: str = Depends(settings.oauth2_scheme)):
+        user_data = await self.verify_payload(auth_token)
+        user_id = int(user_data['user']['user_id'])
         async with get_session() as session:
             user_crud = UserCRUD(User, session)
             admin_name = await user_crud.is_user_admin(user_id)
             if not admin_name:
-                raise common_http_errors.credentials_error()
+                raise CommonHTTPErrors.credentials_error()
             return admin_name
 
 

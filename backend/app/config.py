@@ -1,4 +1,5 @@
 import os
+from fastapi.security import OAuth2PasswordBearer
 
 
 class Settings:
@@ -14,11 +15,15 @@ class Settings:
     redis_tte = 30
 
     # Security
+    REFRESH_TOKEN_SECRET_KEY = "supersecretkey"
     SECRET_KEY = os.getenv('SECRET_KEY')
-    ACCESS_TOKEN_EXPIRE_MINUTES = 30
+    ALGORITHM = 'HS256'
+    ACCESS_TOKEN_EXPIRE_MINUTES = 60
+    REFRESH_TOKEN_EXPIRE_DAYS = 100
+    oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)
 
     # Database
-    TESTING = True # Wipes DB if called with Pytest
+    TESTING = True # Wipes DB if True
     SHOULD_ECHO = False
     DATABASE_URL = os.getenv('DATABASE_URL')
 

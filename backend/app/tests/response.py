@@ -12,7 +12,12 @@ class Check:
         data = response.json()
         assert 'access_token' in data
         assert data['access_token'] is not None
-        account.set_auth_token(data['access_token'])
+
+        assert 'refresh_token' in data
+        assert data['refresh_token'] is not None
+
+        account.set_auth_token(data['access_token'], data['refresh_token'])
+
 
     @staticmethod
     def valid_room_data(response):

@@ -81,3 +81,22 @@ class TestLogin:
     def test_invalid_logins(self, client, login_input, expected_status_code):
         response = client.post("/user/login", data=login_input)
         assert response.status_code == expected_status_code
+
+
+class TestAuthTokens:
+    def test_token_expiration(self, client, expired_token):
+        import time
+        time.sleep(1)
+        response = client.post(
+            "user/test/expired-token-test",
+            headers={"Authorization": f"Bearer {expired_token}"}
+        )
+        assert response.status_code == 401
+
+    def test_refresh_token(self, client, test_user):
+        refresh_response = client.post(
+            "/user/refresh-token",
+            headers={"Authorization": f"Bearer {test_user.refresh_token}"}
+        )
+        assert refresh_response.status_code == 200
+        assert "access_token" in refresh_response.json()

@@ -1,6 +1,9 @@
 import pytest
+from datetime import timedelta
+
 from fastapi.testclient import TestClient
 
+from ..auth.auth_deps import TokenHandler
 from .account_util import UserAccount
 from ..main import app
 
@@ -18,3 +21,13 @@ def client():
 @pytest.fixture(scope="module")
 def test_user(client):
     return user
+
+
+@pytest.fixture
+def expired_token(test_user):
+    user_data = {"username": test_user.username, "user_id": str(test_user.username)}
+    return TokenHandler.create_access_token(
+        user_data=user_data,
+        expires_delta=timedelta(microseconds=1)
+    )
+

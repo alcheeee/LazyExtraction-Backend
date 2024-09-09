@@ -16,10 +16,11 @@ from ...models import (
 
 
 class MarketTransactionHandler:
-    def __init__(self, request: MarketTransactionRequest, user_id: int, session: AsyncSession, admin_request=False):
+    def __init__(self, request: MarketTransactionRequest, user_data: dict, session: AsyncSession, admin_request=False):
         self.admin_request = admin_request
         self.request = request
-        self.user_id = user_id
+        self.user_id = int(user_data['user']['user_id'])
+        self.username = user_data['user']['username']
         self.session = session
         self.market_crud = MarketCRUD(MarketItems, session)
         self.item_crud = ItemsCRUD(Items, session)
@@ -94,7 +95,7 @@ class MarketTransactionHandler:
             )
 
         # If Admin post it'll just be under Market
-        by_user = 'Market' if self.admin_request else await self.user_crud.get_user_field_from_id(self.user_id, 'username')
+        by_user = 'Market' if self.admin_request else self.username
         new_market_item = MarketItems(
             main_market_post_id=market.id,
             item_id=posting_details['item_id'],
@@ -109,10 +110,9 @@ class MarketTransactionHandler:
     async def buying(self, buying_details: dict):
         # Getting market item instance and Purchasers username
         market_item = await self.market_crud.get_market_item_from_market_id(buying_details['market_id'])
-        current_user_username = await self.user_crud.get_user_field_from_id(self.user_id, 'username')
 
         # Quantity and self-purchasing checks
-        if market_item.by_user == current_user_username:
+        if market_item.by_user == self.username:
             raise ValueError("You can't buy your own items")
         if market_item.item_quantity < buying_details['amount']:
             raise ValueError("Not enough stock")
@@ -165,10 +165,9 @@ class MarketTransactionHandler:
 
 
     async def cancel_market_post(self, cancel_details):
-        current_user_username = await self.user_crud.get_user_field_from_id(self.user_id, 'username')
         market_item = await self.market_crud.get_market_item_from_market_id(cancel_details['market_id'])
 
-        if current_user_username == market_item.by_user:
+        if self.username == market_item.by_user:
             user_inv_id = await self.inv_crud.get_user_inventory_id_by_userid(self.user_id)
             await self.inv_crud.update_user_inventory_item(
                 user_inv_id,

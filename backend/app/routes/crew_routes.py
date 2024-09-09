@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends
 from ..schemas import NewCrewInfo, AddRemoveCrewRequest
 from ..game_systems.crews.crew_handler import CrewHandler
-from ..auth import current_user
+from ..auth import AccessTokenBearer
 from . import (
     AsyncSession,
     get_db,
     ResponseBuilder,
     MyLogger,
-    common_http_errors,
+    CommonHTTPErrors,
     exception_decorator
 )
 
@@ -30,13 +30,15 @@ async def root():
 async def create_crew(
         request: NewCrewInfo,
         session: AsyncSession = Depends(get_db),
-        user_id: int = Depends(current_user.ensure_user_exists)
+        user_data: dict = Depends(AccessTokenBearer())
 ):
+    user_id = int(user_data['user']['user_id'])
+    username = user_data['user']['username']
+
     crew_manager = CrewHandler(session)
-    new_crew = await crew_manager.create_crew(request, user_id)
+    new_crew = await crew_manager.create_crew(request, user_id, username)
     await session.commit()
 
-    username = await crew_manager.get_username(user_id)
     await crew_manager.add_user_to_crew(username, new_crew.id)
     await session.commit()
 
@@ -48,11 +50,13 @@ async def create_crew(
 @exception_decorator
 async def add_user_to_crew(
         request: AddRemoveCrewRequest,
-        user_id: int = Depends(current_user.ensure_user_exists),
+        user_data: dict = Depends(AccessTokenBearer()),
         session: AsyncSession = Depends(get_db)
 ):
+    username = user_data['user']['username']
+
     crew_manager = CrewHandler(session)
-    leader_username = await crew_manager.crew_leader_check(user_id, request.crew_id)
+    leader_username = await crew_manager.crew_leader_check(username, request.crew_id)
     if request.user_to_add_remove == leader_username:
         raise ValueError("You can't add yourself!")
 
@@ -65,11 +69,13 @@ async def add_user_to_crew(
 @exception_decorator
 async def remove_user_from_crew(
         request: AddRemoveCrewRequest,
-        user_id: int = Depends(current_user.ensure_user_exists),
+        user_data: dict = Depends(AccessTokenBearer()),
         session: AsyncSession = Depends(get_db)
 ):
+    username = user_data['user']['username']
+
     crew_manager = CrewHandler(session)
-    leader_username = await crew_manager.crew_leader_check(user_id, request.crew_id)
+    leader_username = await crew_manager.crew_leader_check(username, request.crew_id)
     if request.user_to_add_remove == leader_username:
         raise ValueError("Cannot remove yourself, disband the Crew first")
 

@@ -1,8 +1,13 @@
-from .auth_bearer import SECRET_KEY, ACCESS_TOKEN_EXPIRE_MINUTES
-from datetime import datetime, timedelta, timezone
+import uuid
+
+from typing import Annotated, Union
+from datetime import datetime, timedelta
+
 from passlib.hash import argon2
-from jose import jwt
-from ..database import redis_client
+from jose import jwt, exceptions
+from ..config import settings
+
+from ..utils import CommonHTTPErrors
 
 
 class PasswordSecurity:
@@ -16,30 +21,42 @@ class PasswordSecurity:
 
 
 class TokenHandler:
-    def __init__(self):
-        self.secret_key = SECRET_KEY
-        self.algorithm = 'HS256'
-        self.expiry_minutes = ACCESS_TOKEN_EXPIRE_MINUTES
 
-    def _create_token_payload(self, user_id: int) -> dict:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=self.expiry_minutes)
-        return {"sub": str(user_id), "exp": expire}
+    @staticmethod
+    def create_access_token(
+            user_data: dict,
+            expires_delta: Union[timedelta, None] = None,
+            refresh: bool = False
+    ) -> str:
+        if expires_delta:
+            expire = datetime.now() + expires_delta
+        else:
+            expire = datetime.now() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    async def create_token(self, user_id: int) -> str:
-        payload = self._create_token_payload(user_id)
-        token = jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
-        return token
+        to_encode = {
+            "user": user_data,
+            "refresh": refresh
+        }
 
-    async def decode_token(self, token: str) -> dict:
-        cached_payload = await redis_client.get_cache(f"token:{token}")
-        if cached_payload:
-            return cached_payload
+        to_encode.update({"exp": expire})
+
+        encoded_jwt = jwt.encode(
+            to_encode,
+            settings.SECRET_KEY,
+            algorithm=settings.ALGORITHM
+        )
+        return encoded_jwt
+
+    @staticmethod
+    def decode_token(token: str) -> dict:
         try:
-            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
-            await redis_client.set_cache(f"token:{token}", payload, expire=self.expiry_minutes)
-            return payload
+            token_data = jwt.decode(
+                token,
+                settings.SECRET_KEY,
+                algorithms=[settings.ALGORITHM]
+            )
+            return token_data
+        except exceptions.ExpiredSignatureError:
+            raise CommonHTTPErrors.credentials_error("Please re-login")
         except jwt.JWTError:
-            raise ValueError("Could not validate login")
-
-
-token_handler = TokenHandler()
+            raise CommonHTTPErrors.credentials_error()

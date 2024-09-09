@@ -11,7 +11,7 @@ class TestCrews:
         "crew_input, expected_status_code, headers",
         [
             # Not Authenticated
-            ({'name': 'test-crew', 'private': False}, 401, None),
+            ({'name': 'test-crew', 'private': False}, 403, None),
             # Successful creation
             ({'name': 'test-crew', 'private': False}, 200, user.headers),
             # Missing field
@@ -35,7 +35,7 @@ class TestCrews:
         "add_user_input, expected_status_code, headers",
         [
             # Not Authenticated
-            ({'user_to_add_remove': second_user.username, 'crew_id': 1}, 401, None),
+            ({'user_to_add_remove': second_user.username, 'crew_id': 1}, 403, None),
             # Successful addition
             ({'user_to_add_remove': second_user.username, 'crew_id': 1}, 200, user.headers),
             # Adding yourself
@@ -59,7 +59,7 @@ class TestCrews:
         "remove_user_input, expected_status_code, headers",
         [
             # Not Authenticated
-            ({'user_to_add_remove': user.username, 'crew_id': 1}, 401, None),
+            ({'user_to_add_remove': user.username, 'crew_id': 1}, 403, None),
             # Member tries removing leader
             ({'user_to_add_remove': user.username, 'crew_id': 1}, 400, second_user.headers),
             # Successful removal

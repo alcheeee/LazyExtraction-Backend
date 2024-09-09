@@ -16,10 +16,6 @@ class CrewHandler:
         self.crew_crud = CrewCRUD(Crew, session=session)
         self.user_crud = UserCRUD(User, session=session)
 
-    async def get_username(self, user_id: int):
-        username = await self.user_crud.get_user_field_from_id(user_id, 'username')
-        return username
-
     async def before_create_checks(self, crew_name: str, user_id: int) -> ValueError or None:
         """
         Create Crew checks:
@@ -35,25 +31,25 @@ class CrewHandler:
             raise ValueError("You must leave your current crew first!")
 
 
-    async def create_crew(self, new_crew_data: NewCrewInfo, user_id: int) -> Crew:
+    async def create_crew(self, new_crew_data: NewCrewInfo, user_id: int, username: str) -> Crew:
         """
         Main function for creating a Crew
         """
         await self.before_create_checks(new_crew_data.name, user_id)
-        new_crew = await self.prepare_new_crew(new_crew_data, user_id)
+        new_crew = await self.prepare_new_crew(new_crew_data, username)
         for item in CrewDefaults.items:
             new_item = CrewItems(item_name=item, crew=new_crew)
             self.session.add(new_item)
         return new_crew
 
-    async def prepare_new_crew(self, new_crew_data: NewCrewInfo, user_id: int):
+    async def prepare_new_crew(self, new_crew_data: NewCrewInfo, username: str):
         """
         Prepare transaction for a new crew
         """
         new_crew = Crew(
             name=new_crew_data.name,
             private=new_crew_data.private,
-            leader=await self.get_username(user_id)
+            leader=username
         )
         self.session.add(new_crew)
         return new_crew
@@ -91,13 +87,12 @@ class CrewHandler:
         await self.user_crud.change_user_crew_id(username, crew_id=None)
         return "Successfully removed the player from Crew"
 
-    async def crew_leader_check(self, user_id: int, crew_id: int):
+    async def crew_leader_check(self, username: str, crew_id: int):
         """
         Check if a user is the leader of a crew
         """
-        assumed_leader_username = await self.get_username(user_id)
         actual_leader_username = await self.crew_crud.get_crew_leader(crew_id)
-        if assumed_leader_username != actual_leader_username:
+        if username != actual_leader_username:
             raise ValueError("You do not have permissions to perform this action")
         return actual_leader_username
 

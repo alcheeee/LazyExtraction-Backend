@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends
 from ..game_systems.markets.market_handler import MarketTransactionHandler
 from ..schemas import MarketTransactionRequest
-from ..auth import current_user
+from ..auth import current_user, AccessTokenBearer
 from ..crud import MarketCRUD, UserCRUD
 from . import (
     AsyncSession,
     get_db,
     ResponseBuilder,
     MyLogger,
-    common_http_errors,
+    CommonHTTPErrors,
     exception_decorator
 )
 
@@ -31,9 +31,11 @@ async def root():
 @exception_decorator
 async def all_market_transactions(
         request: MarketTransactionRequest,
-        user_id: int = Depends(current_user.ensure_user_exists),
+        user_data: dict = Depends(AccessTokenBearer()),
         session: AsyncSession = Depends(get_db)
 ):
+    user_id = int(user_data['user']['user_id'])
+
     user_in_raid = UserCRUD(None, session).get_user_field_from_id(user_id, 'in_raid')
     if user_in_raid:
         raise ValueError("Can't do that while in a raid")
@@ -41,7 +43,7 @@ async def all_market_transactions(
     if request.amount <= 0:
         raise ValueError("Invalid amount")
 
-    market_handler = MarketTransactionHandler(request, user_id, session)
+    market_handler = MarketTransactionHandler(request, user_data, session)
     msg = await market_handler.market_transaction()
 
     await session.commit()
@@ -54,11 +56,11 @@ async def all_market_transactions(
 async def get_market_items(
         item_name: str,
         offset: int = 0,
-        user_id: int = Depends(current_user.ensure_user_exists),
+        user_data: dict = Depends(AccessTokenBearer()),
         session: AsyncSession = Depends(get_db)
 ):
     market_crud = MarketCRUD(None, session)
     items = await market_crud.get_all_market_items_by_name(item_name, offset=offset)
     if not items:
-        raise common_http_errors.mechanics_error("No items found")
+        raise CommonHTTPErrors.mechanics_error("No items found")
     return items

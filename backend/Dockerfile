@@ -4,7 +4,7 @@ WORKDIR /app
 COPY . /app
 
 RUN apt-get update && \
-    apt-get install netcat-traditional && \
+    apt-get install -y netcat-traditional postgresql-client && \
     pip install --no-cache-dir -r requirements.txt
 
 COPY entrypoint.sh /app/entrypoint.sh

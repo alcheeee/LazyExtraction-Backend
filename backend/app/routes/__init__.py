@@ -4,7 +4,7 @@ from ..utils import (
     ResponseBuilder,
     DataName,
     MyLogger,
-    common_http_errors,
+    CommonHTTPErrors,
     exception_decorator
 )
 

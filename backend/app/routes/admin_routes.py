@@ -8,7 +8,7 @@ from . import (
     ResponseBuilder,
     DataName,
     MyLogger,
-    common_http_errors,
+    CommonHTTPErrors,
     exception_decorator
 )
 from ..models import User, Inventory
@@ -62,7 +62,7 @@ async def add_an_item_to_user(
 
     receiving_inventory_id = await user_crud.get_user_inventory_id_by_username(username)
     if not receiving_inventory_id:
-        raise common_http_errors.server_error()
+        raise CommonHTTPErrors.server_error()
 
     result = await user_inventory_crud.update_user_inventory_item(
         inventory_id=receiving_inventory_id,

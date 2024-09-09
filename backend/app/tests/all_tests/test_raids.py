@@ -11,7 +11,7 @@ class TestRaids:
         "raid_input, expected_status_code, headers",
         [
             # Not Authenticated
-            ('Forest', 401, None),
+            ('Forest', 403, None),
             # Non-Existent World
             ('InvalidWorld', 422, user.headers),
             # Missing field
@@ -34,7 +34,7 @@ class TestRaids:
         "interaction_option, expected_status_code, headers",
         [
             # Not authenticated
-            ({'action': 'extract', 'id': 0}, 401, None),
+            ({'action': 'extract', 'id': 0}, 403, None),
             # Extract too early, 20 actions required
             ({'action': 'extract', 'id': 0}, 400, user.headers),
             # Item not in room

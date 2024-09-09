@@ -4,11 +4,11 @@ from fastapi import HTTPException, status
 class CommonHTTPErrors:
 
     @staticmethod
-    def credentials_error():
+    def credentials_error(message="Could not validate credentials"):
         """Raise an HTTP 401 error indicating credential validation failure"""
         error = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
+            detail=message,
             headers={"WWW-Authenticate": "Bearer"},
         )
         return error
@@ -31,5 +31,3 @@ class CommonHTTPErrors:
         )
         return error
 
-
-common_http_errors = CommonHTTPErrors()

@@ -1,7 +1,7 @@
 from functools import wraps
 from fastapi import Depends, Request
 from .logger import MyLogger
-from .HTTP_errors import common_http_errors
+from .HTTP_errors import CommonHTTPErrors
 
 
 error_log = MyLogger.errors()
@@ -17,7 +17,7 @@ def exception_decorator(func):
             if 'session' in kwargs:
                 await kwargs['session'].rollback()
             print(str(e))
-            raise common_http_errors.mechanics_error(str(e))
+            raise CommonHTTPErrors.mechanics_error(str(e))
 
         except Exception as e:
             if 'session' in kwargs:
@@ -26,14 +26,15 @@ def exception_decorator(func):
             # Check if user_id is a route dependency
             user_id = None
             for name, value in func.__annotations__.items():
-                if name == 'user_id' and isinstance(value, Depends):
-                    user_id = kwargs.get('user_id')
+                if name == 'user_data' and isinstance(value, Depends):
+                    user_data = kwargs.get('user_data')
+                    user_id = user_data['user']['user_id']
                     break
 
             requested_info = kwargs.get('request', None)
 
             MyLogger.log_exception(error_log, e, user_id, requested_info)
-            raise common_http_errors.server_error()
+            raise CommonHTTPErrors.server_error()
 
     return decorator
 

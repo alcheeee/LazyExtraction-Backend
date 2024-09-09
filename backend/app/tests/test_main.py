@@ -6,7 +6,8 @@ from .all_tests.test_routes import (
 )
 from .all_tests.test_auth import (
     TestRegister,
-    TestLogin
+    TestLogin,
+    TestAuthTokens
 )
 from .all_tests.test_crews import (
     TestCrews

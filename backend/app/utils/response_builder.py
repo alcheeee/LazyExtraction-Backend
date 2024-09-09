@@ -1,5 +1,5 @@
 from enum import Enum
-from .HTTP_errors import common_http_errors
+from .HTTP_errors import CommonHTTPErrors
 
 
 class DataName(str, Enum):
@@ -17,5 +17,6 @@ class ResponseBuilder:
     def success(message: str, data_name: DataName = None, data: dict = None) -> dict:
         response = {"status": "success", "message": message}
         if data:
-            response[data_name.value] = data
+            data_name = "data" if data_name is None else data_name.value
+            response[data_name] = data
         return response

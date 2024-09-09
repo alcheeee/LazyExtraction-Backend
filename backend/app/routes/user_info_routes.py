@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
-from ..auth import current_user
+from ..auth import AccessTokenBearer
 from . import (
     AsyncSession,
     get_db,
     ResponseBuilder,
     DataName,
     MyLogger,
-    common_http_errors,
+    CommonHTTPErrors,
     exception_decorator
 )
 from ..get_handlers.get_user_info import GetUserInfo
@@ -30,10 +30,10 @@ async def root():
 @exception_decorator
 async def get_user_info(
         request: UserInfoNeeded,
-        user_id: int = Depends(current_user.ensure_user_exists),
+        user_data: dict = Depends(AccessTokenBearer()),
         session: AsyncSession = Depends(get_db)
 ):
-
+    user_id = int(user_data['user']['user_id'])
     data_name = None
     if request.Inventory:
         data_name = DataName.UserInventory

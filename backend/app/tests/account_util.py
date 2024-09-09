@@ -7,12 +7,14 @@ class UserAccount:
         self.email: str = f"{self.username}@test.com"
         self.password: str = f"123456"
         self.auth_token: Optional[str] = None
+        self.refresh_token: Optional[str] = None
         self.headers: Dict[str, str] = {"Authorization": ""}
         self.raid = UserAccount.UserRaid()
         self.inventory = UserAccount.Inventory()
 
-    def set_auth_token(self, token: str):
+    def set_auth_token(self, token: str, refresh_token: str):
         self.auth_token = token
+        self.refresh_token = refresh_token
         self.headers["Authorization"] = f"Bearer {self.auth_token}"
 
     class UserRaid:
