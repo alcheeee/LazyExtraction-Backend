@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from ..game_systems.markets.market_handler import MarketTransactionHandler
 from ..schemas import MarketTransactionRequest
-from ..auth import current_user, AccessTokenBearer
+from ..auth import AccessTokenBearer
 from ..crud import MarketCRUD, UserCRUD
 from . import (
     AsyncSession,

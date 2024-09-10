@@ -35,11 +35,11 @@ async def get_user_info(
 ):
     user_id = int(user_data['user']['user_id'])
     data_name = None
-    if request.Inventory:
+    if request == UserInfoNeeded.Inventory:
         data_name = DataName.UserInventory
-    elif request.Stats:
+    elif request == UserInfoNeeded.Stats:
         data_name = DataName.UserStats
-    elif request.InventoryItems:
+    elif request == UserInfoNeeded.InventoryItems:
         data_name = DataName.InventoryItem
 
     get_info = await GetUserInfo(request, user_id, session).get_info()

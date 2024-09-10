@@ -48,6 +48,11 @@ async def create_new_world(
     generator = RoomGenerator(request)
     new_raid = await generator.assign_room_to_user(user_id, session)
     await session.commit()
+
+    new_raid['skill-adjustments'] = {
+        "level-adjustment": 0.1,
+        "knowledge-adjustment": 0.1
+    }
     return ResponseBuilder.success("Entered a raid", DataName.RoomData, new_raid)
 
 
@@ -62,6 +67,7 @@ async def world_interaction(
 
     handler = InteractionHandler(session, user_id)
     msg, data = await handler.handle(request)
+
 
     response = ResponseBuilder.success(message=msg, data_name=DataName.RoomData, data=data)
     await session.commit()
@@ -81,7 +87,6 @@ async def equip_unequip_inventory_item(
     result = await item_stats_handler.user_equip_unequip_item()
     await session.commit()
     return ResponseBuilder.success(f"Item {result}")
-
 
 
 @game_router.post("/job-action")
@@ -107,6 +112,8 @@ async def change_stash_status(
         session: AsyncSession = Depends(get_db)
 ):
     user_id = int(user_data['user']['user_id'])
+    if request.quantity <= 0:
+        raise ValueError("Invalid quantity to move")
 
     inv_crud = UserInventoryCRUD(None, session)
     await inv_crud.switch_item_stash_status(user_id, request.item_id, request.to_stash, request.quantity)

@@ -45,10 +45,10 @@ class TokenBearer(HTTPBearer):
 class AccessTokenBearer(TokenBearer):
     def verify_token_data(self, token_data: dict) -> None:
         if token_data and token_data['refresh']:
-            raise CommonHTTPErrors.credentials_error(message="Provide an access token")
+            raise CommonHTTPErrors.credentials_error(message="Provide an access token", data=token_data)
 
 
 class RefreshTokenBearer(TokenBearer):
     def verify_token_data(self, token_data: dict) -> None:
         if token_data and not token_data['refresh']:
-            raise CommonHTTPErrors.credentials_error(message="Provide a refresh token")
+            raise CommonHTTPErrors.credentials_error(message="Provide a refresh token", data=token_data)

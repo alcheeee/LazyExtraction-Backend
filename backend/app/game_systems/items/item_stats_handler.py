@@ -19,6 +19,8 @@ from ...models import (
 
 
 class ItemStatsHandler:
+    # TODO : Clean this mess up for new logic
+
     def __init__(self, user_id: int, item_id: int, session: AsyncSession):
         self.user_id = user_id
         self.item_id = item_id
@@ -139,20 +141,6 @@ class ItemStatsHandler:
         elif item.category == ItemType.Armor:
             return item.armor_details
         return None
-
-    def get_item_stats_json(self, item):
-        item_details = self.get_item_details(item)
-        if not item_details:
-            return None
-
-        bonus_wrapper = self.get_bonus_wrapper(item_details)
-        item_stats_results = {}
-
-        for stat_key, bonus_attr in bonus_wrapper.items():
-            item_bonus = getattr(item_details, bonus_attr, 0)
-            if item_bonus != 0 and item_bonus:
-                item_stats_results[bonus_attr] = item_bonus
-        return item_stats_results
 
 
 

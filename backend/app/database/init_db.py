@@ -43,22 +43,27 @@ async def create_game_account(session):
 
     user_handler = UserHandler(session)
 
-    bot_id = 1
     username = settings.GAME_BOT_USERNAME
     password = settings.GAME_BOT_PASSWORD
     email = settings.GAME_BOT_EMAIL
 
     _crud = UserCRUD(None, session)
-    already_created = await _crud.get_user_field_from_username(username, 'id')
-    if already_created:
+    bot_existing_id = await _crud.get_user_field_from_username(username, 'id')
+    if bot_existing_id:
+        settings.GAME_BOT_USER_ID = int(bot_existing_id.id)
         return
 
-    await user_handler.create_user(username, password, email)
+    bot_account = await user_handler.create_user(username, password, email, game_bot=True)
+    settings.GAME_BOT_USER_ID = int(bot_account.id)
+
     print('Game bot created')
 
     try:
+        user_crud = UserCRUD(None, session)
         user_inv_crud = UserInventoryCRUD(Items, session)
         items_crud = ItemsCRUD(Items, session)
+
+        await user_crud.make_user_admin(bot_account.id)
 
         items_to_give = [
             'Tactical Helmet',
@@ -70,14 +75,21 @@ async def create_game_account(session):
         ]
         for item in items_to_give:
             item_db_id = await items_crud.check_item_exists(item)
-            await user_inv_crud.update_user_inventory_item(
-                inventory_id=bot_id,
+            new_inventory_item = await user_inv_crud.update_user_inventory_item(
+                inventory_id=bot_account.inventory_id,
                 item_id=item_db_id,
                 quantity_change=1,
                 to_stash=False
             )
+            await user_inv_crud.update_user_inventory_item(
+                inventory_id=bot_account.inventory_id,
+                item_id=item_db_id,
+                quantity_change=1,
+                inventory_item=new_inventory_item,
+                to_stash=True
+            )
 
-            item_stats_handler = ItemStatsHandler(bot_id, item_db_id, session)
+            item_stats_handler = ItemStatsHandler(bot_account.id, item_db_id, session)
             await item_stats_handler.user_equip_unequip_item()
 
     except Exception as e:

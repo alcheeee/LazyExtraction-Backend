@@ -20,14 +20,14 @@ class TestRaids:
             ('Forest', 200, user.headers)
         ]
     )
-    def test_enter_raid(self, client, raid_input, expected_status_code, headers):
+    def test_enter_raid(self, client, raid_input, expected_status_code, headers, test_user):
         response = client.post(f"/game/new-world?request={raid_input}", headers=headers)
         assert response.status_code == expected_status_code
 
         if response.status_code == 200:
             json_data = Check.valid_room_data(response)
             assert json_data['message'] == "Entered a raid"
-            user.raid.set_in_raid(True, json_data=json_data)
+            test_user.raid.set_in_raid(True, json_data=json_data)
 
 
     @pytest.mark.parametrize(
@@ -44,59 +44,56 @@ class TestRaids:
         ]
     )
     def test_raid_interaction_fails(self, client, interaction_option, expected_status_code, headers):
-        # Options: pickup, traverse, extract
         response = client.post("/game/interaction", json=interaction_option, headers=headers)
         assert response.status_code == expected_status_code
 
 
-    def test_raid_pickup(self, client):
-        item_id = user.raid.pop_raid_item_id()
+    def test_raid_pickup(self, client, test_user):
+        item_id = test_user.raid.pop_raid_item_id()
         data = {
             'action': 'pickup',
             'id': int(item_id)
         }
 
-        response = client.post("/game/interaction", json=data, headers=user.headers)
+        response = client.post("/game/interaction", json=data, headers=test_user.headers)
         assert response.status_code == 200
 
-        item_name: str = response.json()['room-data']['name']
-        assert item_name is not None
-        user.inventory.item_picked_up(item_name=item_name)
+        item_data: dict = response.json()['room-data']['picked-up']
+        assert item_data is not None
+        test_user.inventory.item_picked_up(item_data)
 
 
-    def test_raid_extract(self, client):
+    def test_raid_extract(self, client, test_user):
         import time
-        while user.raid.interaction_count < 20:
-            time.sleep(0.2)
-
+        while test_user.raid.interaction_count < 20:
             # Traverse or pickup for interaction counter
-            action_id = user.raid.pop_raid_item_id()
+            action_id = test_user.raid.pop_raid_item_id()
             action = 'pickup' if action_id else 'traverse'
             if action_id is None:
-                action_id = user.raid.pop_connection()
+                action_id = test_user.raid.pop_connection()
 
             data = {
                 'action': action,
                 'id': int(action_id)
             }
-            response = client.post("/game/interaction", json=data, headers=user.headers)
+            response = client.post("/game/interaction", json=data, headers=test_user.headers)
             assert response.status_code == 200
 
             if action == 'traverse':
                 json_data = Check.valid_room_data(response)
                 assert json_data['message'] == "Entered a new room"
-                user.raid.set_in_raid(True, json_data=json_data)
+                test_user.raid.set_in_raid(True, json_data=json_data)
 
             elif action == 'pickup':
-                item_name: str = response.json()['room-data']['name']
-                assert item_name is not None
-                user.inventory.item_picked_up(item_name=item_name)
+                item_data: dict = response.json()['room-data']['picked-up']
+                assert item_data is not None
+                test_user.inventory.item_picked_up(item_data)
 
         data = {
             'action': 'extract',
             'id': 0
         }
-        response = client.post("/game/interaction", json=data, headers=user.headers)
+        response = client.post("/game/interaction", json=data, headers=test_user.headers)
         assert response.status_code == 200
         assert response.json()['status'] == 'success'
         assert response.json()['message'] == "Successfully Extracted!"

@@ -1,6 +1,6 @@
 from fastapi import Depends
 
-from jose import JWTError
+from jose import JWTError, exceptions
 from sqlalchemy import select
 
 from .auth_deps import PasswordSecurity, TokenHandler
@@ -38,33 +38,21 @@ class UserService:
             return user_id
         return False
 
-
-class CurrentUser:
-    def __init__(self):
-        self.user_cache_ttl = 300
-
     @staticmethod
-    async def verify_payload(token: str) -> int:
+    async def check_if_admin(auth_token: str = Depends(settings.oauth2_scheme)):
         try:
-            payload = await TokenHandler.decode_token(token)
+            payload = TokenHandler.decode_token(auth_token)
             user_data = payload.get("user")
             if not user_data:
-                raise CommonHTTPErrors.credentials_error()
+                raise CommonHTTPErrors.credentials_error(data=payload)
 
-            return user_data
+            user_id = int(user_data['user_id'])
+            async with get_session() as session:
+                user_crud = UserCRUD(User, session)
+                admin_name = await user_crud.is_user_admin(user_id)
+                if not admin_name:
+                    raise CommonHTTPErrors.credentials_error(data=user_data)
+                return admin_name
+        except Exception as e:
+            raise e
 
-        except (JWTError, ValueError):
-            raise CommonHTTPErrors.credentials_error()
-
-    async def check_if_admin(self, auth_token: str = Depends(settings.oauth2_scheme)):
-        user_data = await self.verify_payload(auth_token)
-        user_id = int(user_data['user']['user_id'])
-        async with get_session() as session:
-            user_crud = UserCRUD(User, session)
-            admin_name = await user_crud.is_user_admin(user_id)
-            if not admin_name:
-                raise CommonHTTPErrors.credentials_error()
-            return admin_name
-
-
-current_user = CurrentUser()

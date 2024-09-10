@@ -47,26 +47,23 @@ class RoomGenerator:
         return room_data
 
     async def assign_room_to_user(self, user_id: int, session: AsyncSession):
-        user_crud = UserCRUD(None, session)
-        user = await user_crud.get_user_for_interaction(user_id)
+        try:
+            user_crud = UserCRUD(None, session)
+            user = await user_crud.get_user_for_interaction(user_id)
 
-        if user.in_raid:
-            raise ValueError("Already in a raid")
+            if user.in_raid:
+                raise ValueError("Already in a raid")
 
-        user.stats.level += 0.1
-        user.stats.knowledge += 0.1
-        user.stats.round_stats()
+            user.stats.level += 0.1
+            user.stats.knowledge += 0.1
+            user.stats.round_stats()
 
-        room_data = await self.generate_room()
-        user.current_room_data = room_data
-        user.current_world = self.world_name
-        user.actions_left = 20
-        user.in_raid = True
+            room_data = await self.generate_room()
+            user.current_room_data = room_data
+            user.current_world = self.world_name
+            user.actions_left = 20
+            user.in_raid = True
+            return room_data
 
-        room_data['skill-adjustments'] = {
-            "level-adjustment": 0.1,
-            "knowledge-adjustment": 0.1
-        }
-
-        return room_data
-
+        except Exception as e:
+            raise Exception(f"Unexpected error in assign_room_to_user: {e}")

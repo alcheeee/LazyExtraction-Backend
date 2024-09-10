@@ -56,7 +56,7 @@ class TokenHandler:
                 algorithms=[settings.ALGORITHM]
             )
             return token_data
-        except exceptions.ExpiredSignatureError:
-            raise CommonHTTPErrors.credentials_error("Please re-login")
-        except jwt.JWTError:
-            raise CommonHTTPErrors.credentials_error()
+        except exceptions.ExpiredSignatureError as e:
+            raise CommonHTTPErrors.credentials_error("Session expired, please re-login", exception=str(e))
+        except jwt.JWTError as e:
+            raise CommonHTTPErrors.credentials_error(exception=str(e))

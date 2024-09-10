@@ -9,31 +9,48 @@ error_log = MyLogger.errors()
 
 def exception_decorator(func):
     @wraps(func)
-    async def decorator(request: Request, *args, **kwargs):
+    async def decorator(*args, **kwargs):
         try:
-            return await func(request, *args, **kwargs)
+            return await func(*args, **kwargs)
 
         except ValueError as e:
-            if 'session' in kwargs:
-                await kwargs['session'].rollback()
-            print(str(e))
+            session = kwargs.get('session', None)
+            if session:
+                await session.rollback()
             raise CommonHTTPErrors.mechanics_error(str(e))
 
-        except Exception as e:
-            if 'session' in kwargs:
-                await kwargs['session'].rollback()
+        except LookupError as e:
+            session = kwargs.get('session', None)
+            if session:
+                await session.rollback()
 
             # Check if user_id is a route dependency
             user_id = None
-            for name, value in func.__annotations__.items():
-                if name == 'user_data' and isinstance(value, Depends):
-                    user_data = kwargs.get('user_data')
+            if 'user_data' in kwargs:
+                user_data = kwargs.get('user_data')
+                if user_data and 'user' in user_data:
                     user_id = user_data['user']['user_id']
-                    break
 
-            requested_info = kwargs.get('request', None)
+            request = kwargs.get('request', None)
 
-            MyLogger.log_exception(error_log, e, user_id, requested_info)
+            MyLogger.log_exception(error_log, e, user_id, request)
+            raise CommonHTTPErrors.index_error()
+
+        except Exception as e:
+            session = kwargs.get('session', None)
+            if session:
+                await session.rollback()
+
+            # Check if user_id is a route dependency
+            user_id = None
+            if 'user_data' in kwargs:
+                user_data = kwargs.get('user_data')
+                if user_data and 'user' in user_data:
+                    user_id = user_data['user']['user_id']
+
+            request = kwargs.get('request', None)
+
+            MyLogger.log_exception(error_log, e, user_id, request)
             raise CommonHTTPErrors.server_error()
 
     return decorator

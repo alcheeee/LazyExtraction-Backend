@@ -1,9 +1,9 @@
-from .auth_handler import current_user
+from .auth_handler import UserService
 from .auth_bearer import AccessTokenBearer, RefreshTokenBearer
 
 
 __all__ = [
-    'current_user',
+    'UserService',
     'AccessTokenBearer',
     'RefreshTokenBearer'
 ]

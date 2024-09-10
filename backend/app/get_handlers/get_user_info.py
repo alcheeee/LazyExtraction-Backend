@@ -52,12 +52,12 @@ class GetUserInfo:
 
         inventory_items_with_names = [
             {
+                'id': item.id,
+                'item_id': item.item_id,
                 'amount_in_inventory': item.amount_in_inventory,
                 'amount_in_stash': item.amount_in_stash,
                 'inventory_id': item.inventory_id,
                 'weight': item.weight,
-                'id': item.id,
-                'item_id': item.item_id,
                 'item_name': item.item.item_name,
                 'category': item.item.category
             }

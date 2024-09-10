@@ -44,7 +44,7 @@ class UserInventoryCRUD(BaseCRUD):
         """
         :param user_id: User.id
         :return: (Inventory.id, Inventory.bank)
-        :raise Exception
+        :raise LookupError
         """
         query = select(Inventory.id, Inventory.bank).join(
             User, User.inventory_id == Inventory.id
@@ -54,7 +54,7 @@ class UserInventoryCRUD(BaseCRUD):
         result = await self.session.execute(query)
         inventory_details = result.first()
         if inventory_details is None:
-            raise Exception("Failed to get user Inventory or Bank")
+            raise LookupError("Failed to get user Inventory or Bank")
         return inventory_details
 
     @RetryDecorators.db_retry_decorator()
@@ -76,7 +76,7 @@ class UserInventoryCRUD(BaseCRUD):
         :param username: User.username
         :param balance_adjustment: int
         :return: New bank balace
-        :raise Exception
+        :raise LookupError
         """
         subquery = select(Inventory.id, Inventory.bank).join(User).where(User.username == username).subquery()
         query = select(subquery.c.id, subquery.c.bank)
@@ -84,7 +84,7 @@ class UserInventoryCRUD(BaseCRUD):
         inventory_id, current_bank_balance = result.first()
 
         if inventory_id is None:
-            raise Exception("Failed to get user Inventory or Bank")
+            raise LookupError("Failed to get user Inventory or Bank")
 
         # Calculate and update new balance
         new_bank_balance = current_bank_balance + balance_adjustment
@@ -114,13 +114,13 @@ class UserInventoryCRUD(BaseCRUD):
         inventory_item = (await self.session.execute(query)).scalars().first()
 
         if not inventory_item:
-            raise ValueError("Item not found")
+            raise LookupError("Item not found")
 
         if to_stash:
             to_stash_change = inventory_item.amount_in_stash + quantity
             from_inventory_change = inventory_item.amount_in_inventory - quantity
 
-            if from_inventory_change <= 0 or to_stash_change <= 0:
+            if from_inventory_change < 0 or to_stash_change < 0:
                 raise ValueError("Invalid amount")
 
             inventory_item.amount_in_stash = to_stash_change
@@ -131,7 +131,7 @@ class UserInventoryCRUD(BaseCRUD):
             from_stash_change = inventory_item.amount_in_stash - quantity
             to_inventory_change = inventory_item.amount_in_inventory + quantity
 
-            if to_inventory_change <= 0 or from_stash_change <= 0:
+            if to_inventory_change < 0 or from_stash_change < 0:
                 raise ValueError("Invalid amount")
 
             inventory_item.amount_in_stash = from_stash_change
@@ -164,9 +164,10 @@ class UserInventoryCRUD(BaseCRUD):
             amount_to_change = inventory_item.amount_in_stash if to_stash else inventory_item.amount_in_inventory
             if quantity_change < 0 and abs(quantity_change) > amount_to_change:
                 raise ValueError("Insufficient quantity to remove")
-
-            amount_to_change += quantity_change
-
+            if to_stash:
+                inventory_item.amount_in_stash += quantity_change
+            else:
+                inventory_item.amount_in_inventory += quantity_change
         else:
             if quantity_change <= 0:
                 raise ValueError("Cannot add zero or negative quantity")
@@ -191,6 +192,7 @@ class UserInventoryCRUD(BaseCRUD):
                     inventory_item.amount_in_inventory = amount_to_change
 
                 self.session.add(target_inventory_item)
+                return target_inventory_item
             else:
                 new_inventory_item = InventoryItem(
                     inventory_id=inventory_id,
@@ -202,6 +204,7 @@ class UserInventoryCRUD(BaseCRUD):
                     new_inventory_item.amount_in_inventory = quantity_change
 
                 self.session.add(new_inventory_item)
+                return new_inventory_item
 
         return inventory_item
 
@@ -227,7 +230,7 @@ class UserInventoryCRUD(BaseCRUD):
             inventory, stats, inventory_item = result.one()
             return inventory, stats, inventory_item
 
-        except Exception as e:
+        except LookupError as e:
             raise e
 
     @RetryDecorators.db_retry_decorator()

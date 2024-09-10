@@ -4,6 +4,9 @@ from fastapi.security import OAuth2PasswordBearer
 
 class Settings:
 
+    TESTING = True # DANGEROUS! WIPES DATABASE
+
+
     # FastAPI
     TOKEN_URL = "/user/login"
     PROJECT_NAME = os.getenv('PROJECT_NAME')
@@ -15,7 +18,7 @@ class Settings:
     redis_tte = 30
 
     # Security
-    REFRESH_TOKEN_SECRET_KEY = "supersecretkey"
+    REFRESH_TOKEN_SECRET_KEY = os.getenv('REFRESH_KEY')
     SECRET_KEY = os.getenv('SECRET_KEY')
     ALGORITHM = 'HS256'
     ACCESS_TOKEN_EXPIRE_MINUTES = 60
@@ -23,7 +26,6 @@ class Settings:
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)
 
     # Database
-    TESTING = True # Wipes DB if True
     SHOULD_ECHO = False
     DATABASE_URL = os.getenv('DATABASE_URL')
 
@@ -31,6 +33,7 @@ class Settings:
     GAME_BOT_USERNAME = os.getenv('GAME_BOT_USERNAME')
     GAME_BOT_PASSWORD = os.getenv('GAME_BOT_PASSWORD')
     GAME_BOT_EMAIL = os.getenv('GAME_BOT_EMAIL')
+    GAME_BOT_USER_ID = None
 
 
 settings = Settings()

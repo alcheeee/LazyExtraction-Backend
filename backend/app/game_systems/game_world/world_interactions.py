@@ -15,12 +15,16 @@ class InteractionHandler:
         self.item_crud = ItemsCRUD(None, session)
         self.user_inv_crud = UserInventoryCRUD(None, session)
 
+
     async def handle(self, interaction: RoomInteraction):
         user = await self.user_crud.get_user_for_interaction(self.user_id)
         if not user:
-            raise ValueError("User data not found")
+            raise LookupError("User data not found")
 
-        if interaction.action == InteractionTypes.Pickup:
+        if user.in_raid is False:
+            raise ValueError("Not in a raid")
+
+        elif interaction.action == InteractionTypes.Pickup:
             result = await self.item_pickup(user, interaction.id)
 
         elif interaction.action == InteractionTypes.Traverse:
@@ -33,6 +37,7 @@ class InteractionHandler:
 
         self.session.add(user)
         return result
+
 
     async def item_pickup(self, user, item_id: int):
         try:
@@ -51,7 +56,7 @@ class InteractionHandler:
             flag_modified(user, "current_room_data")
 
             try:
-                await self.user_inv_crud.update_user_inventory_item(
+                new_item = await self.user_inv_crud.update_user_inventory_item(
                     user.inventory_id,
                     item_db_id,
                     1,
@@ -66,7 +71,10 @@ class InteractionHandler:
             item['skill-adjustments'] = {
                 "knowledge-adjustment": 0.05
             }
-            return f"You picked up {item['name']}", item
+            item['inv_item'] = new_item
+            room_data['picked-up'] = item
+            return f"You picked up {item['name']}", room_data
+
         except ValueError:
             raise
         except Exception as e:

@@ -11,6 +11,12 @@ from ..utils import RetryDecorators
 
 
 class UserCRUD(BaseCRUD):
+    async def make_user_admin(self, user_id: int) -> bool:
+        update_stmt = update(User).where(User.id == user_id).values(is_admin=True)
+        await self.session.execute(update_stmt)
+        return True
+
+
     @RetryDecorators.db_retry_decorator()
     async def get_user_field_from_id(self, user_id: int, field: str) -> Optional[User]:
         """

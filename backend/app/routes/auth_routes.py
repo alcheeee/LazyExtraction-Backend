@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
+from typing import Optional
 
-from fastapi import APIRouter, Form, Depends
+from fastapi import APIRouter, Form, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
 
@@ -41,6 +42,7 @@ class UserCreateRequest(BaseModel):
     username: str
     password: str
     email: EmailStr
+    guest_account: Optional[bool] = False
 
 
 @user_router.post("/register")
@@ -49,6 +51,10 @@ async def register_new_user(
         request: UserCreateRequest,
         session: AsyncSession = Depends(get_db)
 ):
+    if request.guest_account:
+        # TODO : Add Guest Account logic
+        pass
+
     if len(request.username) < 4:
         raise ValueError("Minimum name length is 4.")
     if len(request.password) < 6:
@@ -66,6 +72,7 @@ async def register_new_user(
 
 
 @user_router.post("/login")
+@exception_decorator
 async def login_for_access_token(
         username: str = Form(...),
         password: str = Form(...),
@@ -74,7 +81,7 @@ async def login_for_access_token(
     auth_service = UserService(session=session)
     user_id = await auth_service.authenticate_user(username, password)
     if not user_id:
-        raise CommonHTTPErrors.mechanics_error("Incorrect username or password")
+        raise ValueError("Incorrect username or password")
 
     user_data = {"username": username, "user_id": str(user_id)}
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -95,15 +102,12 @@ async def login_for_access_token(
             "message": "Login Successful",
             "access_token": access_token,
             "refresh_token": refresh_token
-            #"user": {
-            #    "username": username,
-            #    "user_id": str(user_id)
-            #}
         }
     )
 
 
 @user_router.post("/refresh-token")
+@exception_decorator
 async def get_new_access_token(token_data: dict = Depends(RefreshTokenBearer())):
     expiry_timestamp = token_data['exp']
     if datetime.fromtimestamp(expiry_timestamp) > datetime.now():
@@ -115,10 +119,13 @@ async def get_new_access_token(token_data: dict = Depends(RefreshTokenBearer()))
             "access_token": new_access_token
         })
 
-    raise CommonHTTPErrors.credentials_error(message="Invalid or expired login")
+    raise CommonHTTPErrors.credentials_error(message="Invalid or expired login", data=token_data)
 
 
-@user_router.post("/test/expired-token-test")
-async def expired_token_test(user_data: dict = Depends(AccessTokenBearer())):
+@user_router.post("/test/test-token")
+@exception_decorator
+async def access_token_test(user_data: dict = Depends(AccessTokenBearer())):
+    if not settings.TESTING:
+        raise HTTPException(status_code=418)
     return ResponseBuilder.success("Token Valid")
 

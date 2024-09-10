@@ -1,3 +1,4 @@
+import os
 import inspect
 import logging
 from logging.handlers import RotatingFileHandler
@@ -13,6 +14,10 @@ class LogManager:
         if cls._initialized:
             return
 
+        log_dir = 'app/logs/'
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+
         log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         exclude_filter = ExcludeMessageFilter()
         logs = {
@@ -26,15 +31,15 @@ class LogManager:
             handler = RotatingFileHandler(path, maxBytes=10000000, backupCount=5)
             handler.setLevel(logging.INFO)
             handler.setFormatter(log_formatter)
-            handler.addFilter(exclude_filter)
-
+            #handler.addFilter(exclude_filter)
             logger = logging.getLogger(name)
-            logger.setLevel(logging.INFO)
+            logger.setLevel(logging.DEBUG)
             logger.addHandler(handler)
 
         root_logger = logging.getLogger()
         for handler in root_logger.handlers:
             handler.addFilter(exclude_filter)
+
         cls._initialized = True
 
 LogManager.setup_logging()
@@ -60,11 +65,12 @@ class MyLogger:
         return MyLogger.get_logger('database')
 
     @staticmethod
-    def log_exception(logger, e, user_id, input_data):
+    def log_exception(logger, e=None, user_id=None, input_data=None):
         function_name = inspect.stack()[1].function
+        user_id_text = f"--> User id: {user_id}\n" if user_id else ""
         error_message = (
             f"Unexpected error in {function_name}: {str(e)}\n"
-            f"-> User id: {user_id} - Input: {input_data}"
+            f"{user_id_text}--> Input: {input_data}\n"
         )
         logger.error(error_message)
 

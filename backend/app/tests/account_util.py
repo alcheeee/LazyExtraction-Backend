@@ -5,7 +5,7 @@ class UserAccount:
     def __init__(self, username="test-user"):
         self.username: str = f"{username}"
         self.email: str = f"{self.username}@test.com"
-        self.password: str = f"123456"
+        self.password: str = f"test-user"
         self.auth_token: Optional[str] = None
         self.refresh_token: Optional[str] = None
         self.headers: Dict[str, str] = {"Authorization": ""}
@@ -50,10 +50,24 @@ class UserAccount:
         def __init__(self):
             self.inventory_data: dict = {}
 
-        def item_picked_up(self, item_name: str):
-            if item_name not in self.inventory_data:
-                self.inventory_data[item_name] = 1
+        def item_picked_up(self, item_data: dict):
+            assert item_data['id'] is not None
+            assert item_data['name'] is not None
+            assert item_data['inv_item'] is not None
+
+            item_name = item_data['name']
+
+            if item_name not in self.inventory_data.keys():
+                self.inventory_data[item_name] = item_data['inv_item']
                 return
-            self.inventory_data[item_name] += 1
 
+            self.inventory_data[item_name]['amount_in_inventory'] += 1
 
+        def get_an_item(self):
+            item_name = next(iter(self.inventory_data))
+            item_details = self.inventory_data.get(item_name, None)
+
+            assert item_details is not None
+            item_details['item_name'] = item_name
+
+            return item_details

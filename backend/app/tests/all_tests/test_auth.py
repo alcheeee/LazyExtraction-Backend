@@ -7,11 +7,11 @@ class TestRegister:
     Tests a valid registration request, and various invalid registration requests
     """
 
-    def test_register(self, client):
+    def test_register(self, client, test_user):
         data = {
-            'username': user.username,
-            'password': user.password,
-            'email': user.email
+            'username': test_user.username,
+            'password': test_user.password,
+            'email': test_user.email
         }
         response = client.post("/user/register", json=data)
         Check.valid_request(response)
@@ -88,15 +88,29 @@ class TestAuthTokens:
         import time
         time.sleep(1)
         response = client.post(
-            "user/test/expired-token-test",
+            "user/test/test-token",
             headers={"Authorization": f"Bearer {expired_token}"}
         )
         assert response.status_code == 401
 
-    def test_refresh_token(self, client, test_user):
+    def test_valid_refresh_token(self, client, test_user):
         refresh_response = client.post(
             "/user/refresh-token",
             headers={"Authorization": f"Bearer {test_user.refresh_token}"}
         )
         assert refresh_response.status_code == 200
         assert "access_token" in refresh_response.json()
+
+    def test_refresh_token_as_access(self, client, test_user):
+        access_response = client.post(
+            "user/test/test-token",
+            headers={"Authorization": f"Bearer {test_user.refresh_token}"}
+        )
+        assert access_response.status_code == 401
+
+    def test_access_token_as_refresh(self, client, test_user):
+        refresh_response = client.post(
+            "user/refresh-token",
+            headers={"Authorization": f"Bearer {test_user.auth_token}"}
+        )
+        assert refresh_response.status_code == 401
