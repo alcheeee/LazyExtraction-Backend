@@ -17,7 +17,7 @@ class ItemsCRUD(BaseCRUD):
         query = select(getattr(Items, field)).where(Items.id == item_id)
         result = await self.execute_scalar_one_or_none(query)
         if result is None:
-            raise Exception("Item not found")
+            raise LookupError("Item not found")
         return result
 
     async def check_item_exists(self, name: str):
@@ -40,5 +40,5 @@ class ItemsCRUD(BaseCRUD):
         )
         result = await self.execute_scalar_one_or_none(query)
         if result is None:
-            raise Exception("Item not found")
+            raise LookupError("Item not found")
         return result

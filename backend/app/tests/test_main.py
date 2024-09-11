@@ -24,3 +24,6 @@ from .all_tests.test_item_related import (
 )
 
 
+from .all_tests.test_market import (
+    TestMarket
+)

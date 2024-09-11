@@ -2,6 +2,7 @@ import time
 
 import pytest
 from . import Check, user, second_user
+from ..helper_functions import check_item_in_inventory, get_user_inventory_items
 
 
 class TestInventory:
@@ -132,6 +133,7 @@ class TestInventory:
 
 
     def test_equip_item(self, client, test_user):
+        # TODO : Equip an item for each slot category
         response = client.post(
             "/game/equip-item?request=1",
             headers=test_user.headers
@@ -153,24 +155,64 @@ class TestInventory:
         assert stats_data['head_protection'] > 1
         assert stats_data['agility'] < 1
 
+    def test_equipped_item_inventory(self, client, test_user):
+        response = client.get(
+            '/info/get-user-info?request=inventory',
+            headers=test_user.headers
+        )
+        assert response.status_code == 200
+        response_json = response.json()
+        assert response_json['user-inventory'] is not None
+
+        inventory_data = response_json['user-inventory']
+        assert inventory_data['equipped_head_armor_id'] == 1
+
 
     def test_equipped_item_not_in_inventory(self, client, test_user):
-        response = client.get(
-            "/info/get-user-info?request=inventory_items",
+        inventory_data = get_user_inventory_items(client, test_user)
+        item_found = check_item_in_inventory(
+            inventory_data,
+            item_id=1,
+            expected_inventory=0,
+            expected_stash=0
+        )
+        assert item_found is True
+
+
+    def test_unequip_item(self, client, test_user):
+        response = client.post(
+            "/game/equip-item?request=1",
             headers=test_user.headers
         )
         assert response.status_code == 200
 
-        inventory_data = response.json()['inventory-items']
-        item_found = False
-        for item_data in inventory_data:
-            item_id = item_data['item_id']
-            if item_id == 1:
-                assert item_data['amount_in_inventory'] == 0
-                assert item_data['amount_in_stash'] == 0
-                item_found = True
+        response = client.get(
+            '/info/get-user-info?request=stats',
+            headers=test_user.headers
+        )
+        assert response.status_code == 200
 
+        response_json = response.json()
+        assert response_json['user-stats'] is not None
+
+        stats_data = response_json['user-stats']
+        assert stats_data['head_protection'] == 1
+        assert stats_data['agility'] == 1
+
+
+    def test_unequipped_item_added_to_inv(self, client, test_user):
+        inventory_data = get_user_inventory_items(client, test_user)
+        item_found = check_item_in_inventory(
+            inventory_data,
+            item_id=1,
+            expected_inventory=1,
+            expected_stash=0
+        )
         assert item_found is True
+
+
+
+
 
 
 

@@ -141,6 +141,39 @@ class UserInventoryCRUD(BaseCRUD):
 
         return inventory_item
 
+
+    @RetryDecorators.db_retry_decorator()
+    async def update_any_inventory_quantity(self, inventory_item: InventoryItem, quantity_change: int):
+        """
+        :param inventory_item: Optional[InventoryItem] instance
+        :param quantity_change: int
+        :return: New/Update/Delete InventoryItem instance, stash or inventory
+        :raise ValueError
+        """
+        # Try amount_in_stash first
+        if inventory_item and inventory_item.amount_in_stash > 0:
+            current_amount = inventory_item.amount_in_stash
+            if quantity_change < 0 and abs(quantity_change) > current_amount:
+                raise ValueError("Insufficient quantity available")
+
+            inventory_item.amount_in_stash += quantity_change
+
+        # Try amount_in_inventory second
+        elif inventory_item and inventory_item.amount_in_inventory > 0:
+            current_amount = inventory_item.amount_in_inventory
+            if quantity_change < 0 and abs(quantity_change) > current_amount:
+                raise ValueError("Insufficient quantity available")
+
+            inventory_item.amount_in_inventory += quantity_change
+        else:
+            raise Exception("An Error occurred in update_any_inventory_quantity")
+
+        if inventory_item.amount_in_stash <= 0 and inventory_item.amount_in_inventory <= 0:
+            await self.session.delete(inventory_item)
+
+        return inventory_item
+
+
     @RetryDecorators.db_retry_decorator()
     async def update_user_inventory_item(self, inventory_id: int, item_id: int, quantity_change: int,
                                          inventory_item: InventoryItem = None, to_stash=True):
@@ -163,11 +196,14 @@ class UserInventoryCRUD(BaseCRUD):
         if inventory_item:
             amount_to_change = inventory_item.amount_in_stash if to_stash else inventory_item.amount_in_inventory
             if quantity_change < 0 and abs(quantity_change) > amount_to_change:
-                raise ValueError("Insufficient quantity to remove")
+                raise ValueError("Insufficient quantity available")
             if to_stash:
                 inventory_item.amount_in_stash += quantity_change
             else:
                 inventory_item.amount_in_inventory += quantity_change
+
+            if inventory_item.amount_in_stash <= 0 and inventory_item.amount_in_inventory <= 0:
+                await self.session.delete(inventory_item)
         else:
             if quantity_change <= 0:
                 raise ValueError("Cannot add zero or negative quantity")
@@ -187,9 +223,12 @@ class UserInventoryCRUD(BaseCRUD):
 
                 amount_to_change += quantity_change
                 if to_stash:
-                    inventory_item.amount_in_stash = amount_to_change
+                    target_inventory_item.amount_in_stash = amount_to_change
                 else:
-                    inventory_item.amount_in_inventory = amount_to_change
+                    target_inventory_item.amount_in_inventory = amount_to_change
+
+                if target_inventory_item.amount_in_stash <= 0 and target_inventory_item.amount_in_inventory <= 0:
+                    await self.session.delete(target_inventory_item)
 
                 self.session.add(target_inventory_item)
                 return target_inventory_item
@@ -207,6 +246,7 @@ class UserInventoryCRUD(BaseCRUD):
                 return new_inventory_item
 
         return inventory_item
+
 
     @RetryDecorators.db_retry_decorator()
     async def get_inv_stats_invitem(self, user_id: int, item_id: int):
@@ -233,6 +273,7 @@ class UserInventoryCRUD(BaseCRUD):
         except LookupError as e:
             raise e
 
+
     @RetryDecorators.db_retry_decorator()
     async def get_all_items_by_inventory_id(self, inventory_id: int) -> List[InventoryItem]:
         """
@@ -242,13 +283,9 @@ class UserInventoryCRUD(BaseCRUD):
         """
         query = (
             select(InventoryItem)
-            .options(joinedload(InventoryItem.item))  # Ensure item relationship is loaded
+            .options(joinedload(InventoryItem.item))
             .where(InventoryItem.inventory_id == inventory_id)
         )
+
         result = await self.session.execute(query)
-        inventory_items = result.scalars().all()
-
-        return inventory_items
-
-
-
+        return result.unique().scalars().all()

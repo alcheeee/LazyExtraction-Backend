@@ -14,9 +14,9 @@ class DataName(str, Enum):
 class ResponseBuilder:
 
     @staticmethod
-    def success(message: str, data_name: DataName = None, data: dict = None) -> dict:
+    def success(message: str, data_name: DataName = None, data: dict = {}) -> dict:
         response = {"status": "success", "message": message}
-        if data:
+        if data or data_name:
             data_name = "data" if data_name is None else data_name.value
             response[data_name] = data
         return response

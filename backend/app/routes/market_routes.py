@@ -36,19 +36,22 @@ async def all_market_transactions(
 ):
     user_id = int(user_data['user']['user_id'])
 
-    user_in_raid = UserCRUD(None, session).get_user_field_from_id(user_id, 'in_raid')
+    user_in_raid = await UserCRUD(None, session).get_user_field_from_id(user_id, 'in_raid')
     if user_in_raid:
         raise ValueError("Can't do that while in a raid")
 
     if request.amount <= 0:
         raise ValueError("Invalid amount")
 
+    if request.item_cost < 0:
+        raise ValueError("Invalid item cost")
+
     market_handler = MarketTransactionHandler(request, user_data, session)
-    msg = await market_handler.market_transaction()
+    msg, data = await market_handler.market_transaction()
 
     await session.commit()
     game_log.info(msg)
-    return ResponseBuilder.success(msg)
+    return ResponseBuilder.success(msg, data=data)
 
 
 

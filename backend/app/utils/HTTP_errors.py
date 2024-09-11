@@ -1,8 +1,10 @@
+import inspect
 from fastapi import HTTPException, status
 from .logger import MyLogger
 
 
 user_log = MyLogger.user()
+auth_error_log = MyLogger.auth_errors()
 
 
 class CommonHTTPErrors:
@@ -24,7 +26,14 @@ class CommonHTTPErrors:
             data = data['user']
             user_id = data.get('user_id', None)
 
-        MyLogger.log_exception(user_log, str(exception), input_data=data)
+        function_name = inspect.stack()[1].function
+        MyLogger.log_exception(
+            logger=auth_error_log,
+            e=exception,
+            user_id=user_id,
+            input_data=data,
+            function_name=function_name
+        )
         return error
 
 

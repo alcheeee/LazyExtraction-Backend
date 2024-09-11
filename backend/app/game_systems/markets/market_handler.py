@@ -32,7 +32,7 @@ class MarketTransactionHandler:
     @tenacity.retry(
         wait=tenacity.wait_fixed(1),
         stop=tenacity.stop_after_attempt(3),
-        retry=tenacity.retry_if_not_exception_type(ValueError)
+        retry=tenacity.retry_if_not_exception_type((ValueError, LookupError))
     )
     async def market_transaction(self):
         """
@@ -62,7 +62,6 @@ class MarketTransactionHandler:
                 "method": self.posting,
                 "details": {
                     "item_id": self.request.market_or_item_id,
-                    "market_name": self.request.market_name,
                     "item_cost": self.request.item_cost,
                     "amount": abs(self.request.amount)
                 }
@@ -78,24 +77,23 @@ class MarketTransactionHandler:
 
     async def posting(self, posting_details: dict):
         """
-        :param posting_details: item_id, market_name, item_cost, amount
+        :param posting_details: item_id, item_cost, amount
         :return: Successful post or error
         """
         item_name = await self.item_crud.get_item_name_by_id(posting_details['item_id'])
-        market = await self.market_crud.find_or_create_market(item_name, posting_details['market_name'])
+        market = await self.market_crud.find_or_create_market(item_name)
 
         # Admin requests check (for creating Permanent-Market items)
         if not self.admin_request:
             inv_item = await self.inv_crud.get_inventory_item_by_userid(self.user_id, posting_details['item_id'])
-            await self.inv_crud.update_user_inventory_item(
-                0,
-                posting_details['item_id'],
-                -int(posting_details['amount']),
-                inventory_item=inv_item
+            await self.inv_crud.update_any_inventory_quantity(
+                inventory_item=inv_item,
+                quantity_change=-int(posting_details['amount'])
             )
 
         # If Admin post it'll just be under Market
         by_user = 'Market' if self.admin_request else self.username
+        # TODO : NPCs rather than 'Market'
         new_market_item = MarketItems(
             main_market_post_id=market.id,
             item_id=posting_details['item_id'],
@@ -104,7 +102,7 @@ class MarketTransactionHandler:
             by_user=by_user,
         )
         self.session.add(new_market_item)
-        return "Item Posted Successfully"
+        return "Item Posted Successfully", new_market_item
 
 
     async def buying(self, buying_details: dict):
@@ -114,6 +112,7 @@ class MarketTransactionHandler:
         # Quantity and self-purchasing checks
         if market_item.by_user == self.username:
             raise ValueError("You can't buy your own items")
+
         if market_item.item_quantity < buying_details['amount']:
             raise ValueError("Not enough stock")
 
@@ -136,7 +135,7 @@ class MarketTransactionHandler:
         )
         if market_item.item_quantity <= 0:
             await self.session.delete(market_item)
-        return "Purchase successful"
+        return "Purchase successful", {"bank": adjusted_balance}
 
 
     async def quick_sell(self, selling_details: dict):
@@ -155,13 +154,11 @@ class MarketTransactionHandler:
 
         # Perform operation
         await self.inv_crud.update_bank_balance(user_inv_id, new_bank_balance)
-        await self.inv_crud.update_user_inventory_item(
-            user_inv_id,
-            selling_details['item_id'],
-            -int(selling_details['amount']),
-            inventory_item=inv_item
+        await self.inv_crud.update_any_inventory_quantity(
+            inventory_item=inv_item,
+            quantity_change=-int(selling_details['amount'])
         )
-        return "Quick-Sell Successful"
+        return "Quick-Sell Successful", {'bank': new_bank_balance}
 
 
     async def cancel_market_post(self, cancel_details):
@@ -175,7 +172,8 @@ class MarketTransactionHandler:
                 market_item.item_quantity
             )
             await self.session.delete(market_item)
-            return "Item taken off the market"
+            return "Item taken off the market", market_item
+
         raise ValueError("That's not your item")
 
 

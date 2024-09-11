@@ -6,7 +6,7 @@ from ..models import (
     Market,
     MarketItems
 )
-from ..schemas import MarketNames, MarketTransactionRequest
+from ..schemas import MarketTransactionRequest
 
 
 class MarketCRUD(BaseCRUD):
@@ -19,7 +19,7 @@ class MarketCRUD(BaseCRUD):
         """
         market_item = await self.session.get(MarketItems, market_id)
         if not market_item:
-            raise ValueError("That item is not available")
+            raise ValueError("Item Not found")
         return market_item
 
 
@@ -48,7 +48,6 @@ class MarketCRUD(BaseCRUD):
         """
         query = select(MarketItems).where(
             MarketItems.item_id == details.item_id,
-            MarketItems.market_name == details.market_name,
             MarketItems.item_cost == details.item_cost,
             MarketItems.by_user == by_user
         )
@@ -56,26 +55,22 @@ class MarketCRUD(BaseCRUD):
         return result.one_or_none()
 
 
-
-    async def find_or_create_market(self, item_name, market_name):
+    async def find_or_create_market(self, item_name):
         """
         :param item_name: Items.item_name
-        :param market_name: MarketNames Enum
         :return: New/Updated Market
         """
         """ Find existing or create new market entry """
         market = await self.session.execute(
             select(Market).where(
-                Market.item_name == item_name,
-                Market.market_name == market_name
+                Market.item_name == item_name
             )
         )
         market = market.scalars().first()
 
         if not market:
             market = Market(
-                item_name=item_name,
-                market_name=market_name
+                item_name=item_name
             )
             self.session.add(market)
             await self.session.flush()

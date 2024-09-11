@@ -11,6 +11,7 @@ class UserAccount:
         self.headers: Dict[str, str] = {"Authorization": ""}
         self.raid = UserAccount.UserRaid()
         self.inventory = UserAccount.Inventory()
+        self.posted_items = []
 
     def set_auth_token(self, token: str, refresh_token: str):
         self.auth_token = token

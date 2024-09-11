@@ -25,7 +25,6 @@ from .weapon_schemas.weapon_schemas import (
     AttachmentCreate
 )
 from .market_schema import (
-    MarketNames,
     MarketTransactionRequest,
     Transactions
 )

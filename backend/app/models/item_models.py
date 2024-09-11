@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional, List
 from sqlalchemy import Enum, Column
 from sqlmodel import SQLModel, Field, Relationship
-from ..schemas import ItemType, ItemTier, ClothingType, ArmorType, MarketNames
+from ..schemas import ItemType, ItemTier, ClothingType, ArmorType
 
 
 class Items(SQLModel, table=True):
@@ -70,7 +70,6 @@ class Clothing(SQLModel, table=True):
 class Market(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     item_name: str = Field(index=True)
-    market_name: MarketNames = Field(default=MarketNames.GeneralMarket, index=True)
     postings: List["MarketItems"] = Relationship(back_populates="main_market_post")
 
 

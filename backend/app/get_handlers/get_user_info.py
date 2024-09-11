@@ -50,7 +50,7 @@ class GetUserInfo:
         inventory_id = await self.user_crud.get_user_field_from_id(self.user_id, 'inventory_id')
         inventory_items = await self.inventory_crud.get_all_items_by_inventory_id(inventory_id)
 
-        inventory_items_with_names = [
+        return [
             {
                 'id': item.id,
                 'item_id': item.item_id,
@@ -63,7 +63,5 @@ class GetUserInfo:
             }
             for item in inventory_items
         ]
-
-        return inventory_items_with_names
 
 
