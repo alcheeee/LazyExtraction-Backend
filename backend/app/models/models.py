@@ -90,7 +90,8 @@ class User(SQLModel, table=True):
     is_admin: bool = Field(default=False)
     username: str = Field(index=True, unique=True)
     password: str
-    email: str = Field(index=True, unique=True)
+    email: Optional[str] = Field(index=True, unique=True)
+    guest_account: Optional[bool] = Field(default=True)
     job: Optional[str] = Field(default=None)
     training: Optional[str] = Field(default=None)
 

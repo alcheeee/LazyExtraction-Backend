@@ -36,8 +36,6 @@ class CommonHTTPErrors:
         )
         return error
 
-
-
     @staticmethod
     def mechanics_error(message: str = "Error"):
         """Raises an HTTP 400 error with a custom message"""

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Union
 
 from fastapi import APIRouter, Form, Depends, HTTPException
 from fastapi.responses import JSONResponse
@@ -41,7 +41,7 @@ async def root():
 class UserCreateRequest(BaseModel):
     username: str
     password: str
-    email: EmailStr
+    email: Optional[Union[EmailStr, None]]
     guest_account: Optional[bool] = False
 
 
@@ -51,9 +51,17 @@ async def register_new_user(
         request: UserCreateRequest,
         session: AsyncSession = Depends(get_db)
 ):
-    if request.guest_account:
-        # TODO : Add Guest Account logic
-        pass
+    if request.guest_account is True and request.email is not None:
+        raise ValueError("You're not supposed to be doing that")
+
+    elif request.guest_account is False and request.email is None:
+        raise ValueError("You're not supposed to be doing that")
+
+    #elif request.guest_account:
+        # TODO : Add Guest Account logic,
+        #  Name change logic (New Column, name_changes: int, start with 1 if guest_account)
+        #  else 0, costs $x to change
+
 
     if len(request.username) < 4:
         raise ValueError("Minimum name length is 4.")
@@ -61,14 +69,26 @@ async def register_new_user(
         raise ValueError("Please use a longer password.")
 
     user_crud = BaseCRUD(model=User, session=session)
-    exists = await user_crud.check_fields_exist(username=request.username, email=request.email)
+    if request.guest_account is True:
+        exists = await user_crud.check_fields_exist(username=request.username)
+
+    elif request.guest_account is False and request.email is not None:
+        exists = await user_crud.check_fields_exist(username=request.username, email=request.email)
+    else:
+        raise ValueError("An error occurred while creating the account")
+
     if exists:
         raise ValueError("User with that username or email already exists")
 
     user_handler = UserHandler(session=session)
-    result = await user_handler.create_user(request.username, request.password, request.email)
-    user_log.info(f"New User: {request.username}")
-    return ResponseBuilder.success(result)
+    new_data = await user_handler.create_user(
+        request.username,
+        request.password,
+        request.email if request.email else None,
+        guest_account=request.guest_account
+    )
+    user_log.info(f"New User: {request.username} {request.email}")
+    return ResponseBuilder.success(f"Account created successfully! Welcome {request.username}", data=new_data)
 
 
 @user_router.post("/login")
@@ -83,19 +103,7 @@ async def login_for_access_token(
     if not user_id:
         raise ValueError("Incorrect username or password")
 
-    user_data = {"username": username, "user_id": str(user_id)}
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-
-    access_token = TokenHandler.create_access_token(
-        user_data=user_data,
-        expires_delta=access_token_expires
-    )
-    refresh_token = TokenHandler.create_access_token(
-        user_data=user_data,
-        expires_delta=refresh_token_expires,
-        refresh=True
-    )
+    access_token, refresh_token = UserHandler.create_tokens(username, user_id)
 
     return JSONResponse(
         content={
