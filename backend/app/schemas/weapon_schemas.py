@@ -1,32 +1,32 @@
 from typing import Optional, Dict
 from enum import Enum
-from ..item_schema import ItemCreate
-
-
-weapon_bonus_wrapper = {
-    "strength": "strength",
-    "damage": "damage",
-    "agility": "agility_penalty"
-}
+from .item_schema import ItemCreate
+from pydantic import BaseModel
 
 
 class AttachmentTypes(str, Enum):
-    FrontGrip = "front_grip"
-    Muzzle = "muzzle"
-    Magazine = "magazine"
-    Stock = "stock"
-    Scope = "scope"
-    Laser = "laser"
-    Flashlight = "flashlight"
-    Bipod = "bipod"
-    Barrel = "barrel"
+    FrontGrip = "FrontGrip"
+    Muzzle = "Muzzle"
+    Magazine = "Magazine"
+    Stock = "Stock"
+    Scope = "Scope"
+    Laser = "Laser"
+    Flashlight = "Flashlight"
+    Bipod = "Bipod"
+    Barrel = "Barrel"
+
+
+class AddAttachmentsRequest(BaseModel):
+    weapon_inventory_id: int
+    attachments_to_add: Dict[AttachmentTypes, str] = {
+        "Muzzle": "Flash Suppressor",
+        "Stock": "Adjustable Stock",
+        "Scope": "Sniper Scope",
+        "Laser": "Tactical Laser"
+    }
 
 
 class WeaponCreate(ItemCreate):
-    allowed_attachments: Optional[Dict[str, str]] = {}
-    attachments: Optional[Dict[str, str]] = {}
-
-    weight: float = 3.5
     caliber: Optional[str]
     damage: int = 0
     strength: float = 0.0

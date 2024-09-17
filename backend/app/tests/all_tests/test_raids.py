@@ -1,5 +1,6 @@
 import pytest
 from . import Check, user, second_user
+from ..helper_functions import check_item_in_inventory, get_user_inventory_items
 
 
 class TestRaids:
@@ -61,6 +62,15 @@ class TestRaids:
         item_data: dict = response.json()['room-data']['picked-up']
         assert item_data is not None
         test_user.inventory.item_picked_up(item_data)
+
+        inventory_data = get_user_inventory_items(client, test_user)
+        item_found = check_item_in_inventory(
+            inventory_data,
+            inventory_item_id=item_data['inv_item']['id'],
+            expected_inventory=1,
+            expected_stash=0
+        )
+        assert item_found is True
 
 
     def test_raid_extract(self, client, test_user):

@@ -6,9 +6,10 @@ from sqlalchemy import select
 from .auth_deps import PasswordSecurity, TokenHandler
 from ..crud.user_crud import UserCRUD
 from ..models import User
-from ..database import get_session, redis_client
+from ..database import redis_client, get_db
 from ..utils import CommonHTTPErrors
 from ..config import settings
+from ..database.db import get_session
 
 
 class UserService:

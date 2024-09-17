@@ -1,4 +1,4 @@
-from ..database import get_db, get_session, AsyncSession
+from ..database import get_db, AsyncSession
 from ..models import *
 from ..utils import (
     ResponseBuilder,
@@ -15,6 +15,7 @@ from .admin_routes import admin_router
 from .user_info_routes import info_router
 from .market_routes import market_router
 from .crew_routes import crew_router
+from .combat_routes import combat_router
 
 __all__ = [
     'user_router',
@@ -22,5 +23,6 @@ __all__ = [
     'admin_router',
     'info_router',
     'market_router',
-    'crew_router'
+    'crew_router',
+    'combat_router'
 ]

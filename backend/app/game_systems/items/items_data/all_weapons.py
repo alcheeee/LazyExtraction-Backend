@@ -12,6 +12,7 @@ weapon_items = {
         'tier': ItemTier.Tier1,
         'quick_sell': 150,
         'weight': 1.1,
+        'can_be_modified': True,
         'caliber': '9x19mm',
         'damage': 7,
         'strength': 0.0,
@@ -23,12 +24,11 @@ weapon_items = {
         'armor_penetration': 0,
         'headshot_chance': 15,
         'agility_penalty': -0.5,
-        'allowed_attachments': {
-            "Muzzle": "Flash Suppressor",
-            "Magazine": "Extended Magazine",
-            "Laser": "Tactical Laser"
-        },
-        'attachments': {},
+        'allowed_modifications': {
+            "Muzzle": ["Flash Suppressor", "Suppressor"],
+            "Magazine": ["Extended Magazine"],
+            "Laser": ["Tactical Laser"]
+        }
     },
     'Beretta M9': {
         'item_name': 'Beretta M9',
@@ -36,6 +36,7 @@ weapon_items = {
         'tier': ItemTier.Tier2,
         'quick_sell': 300,
         'weight': 0.95,
+        'can_be_modified': True,
         'caliber': '9x19mm',
         'damage': 8,
         'strength': 0.0,
@@ -47,12 +48,11 @@ weapon_items = {
         'armor_penetration': 5,
         'headshot_chance': 18,
         'agility_penalty': -0.3,
-        'allowed_attachments': {
+        'allowed_modifications': {
             "Muzzle": "Flash Suppressor",
             "Magazine": "Extended Magazine",
             "Laser": "Tactical Laser"
-        },
-        'attachments': {},
+        }
     },
 
     # Shotguns
@@ -62,6 +62,7 @@ weapon_items = {
         'tier': ItemTier.Tier1,
         'quick_sell': 200,
         'weight': 2.5,
+        'can_be_modified': True,
         'caliber': '12 Gauge',
         'damage': 15,
         'strength': 0.0,
@@ -73,10 +74,9 @@ weapon_items = {
         'armor_penetration': 10,
         'headshot_chance': 25,
         'agility_penalty': -1.5,
-        'allowed_attachments': {
+        'allowed_modifications': {
             "Muzzle": "Flash Suppressor"
-        },
-        'attachments': {},
+        }
     },
     'M890': {
         'item_name': 'M890',
@@ -84,6 +84,7 @@ weapon_items = {
         'tier': ItemTier.Tier2,
         'quick_sell': 400,
         'weight': 3.0,
+        'can_be_modified': True,
         'caliber': '12 Gauge',
         'damage': 18,
         'strength': 0.0,
@@ -95,10 +96,9 @@ weapon_items = {
         'armor_penetration': 12,
         'headshot_chance': 30,
         'agility_penalty': -1.2,
-        'allowed_attachments': {
+        'allowed_modifications': {
             "Muzzle": "Flash Suppressor"
-        },
-        'attachments': {},
+        }
     },
 
     # Assault Rifles
@@ -108,6 +108,7 @@ weapon_items = {
         'tier': ItemTier.Tier3,
         'quick_sell': 1500,
         'weight': 3.1,
+        'can_be_modified': True,
         'caliber': '5.56x45mm NATO',
         'damage': 20,
         'strength': 0.0,
@@ -119,14 +120,13 @@ weapon_items = {
         'armor_penetration': 20,
         'headshot_chance': 35,
         'agility_penalty': -2.0,
-        'allowed_attachments': {
+        'allowed_modifications': {
             "Muzzle": "Flash Suppressor",
             "Magazine": "Extended Magazine",
             "Scope": "Sniper Scope",
             "Stock": "Adjustable Stock",
             "Laser": "Tactical Laser"
-        },
-        'attachments': {},
+        }
     },
     'AAC Honey Badger': {
         'item_name': 'AAC Honey Badger',
@@ -134,6 +134,7 @@ weapon_items = {
         'tier': ItemTier.Tier5,
         'quick_sell': 3000,
         'weight': 2.8,
+        'can_be_modified': True,
         'caliber': '300 BLK',
         'damage': 25,
         'strength': 0.0,
@@ -145,13 +146,12 @@ weapon_items = {
         'armor_penetration': 25,
         'headshot_chance': 40,
         'agility_penalty': -1.5,
-        'allowed_attachments': {
+        'allowed_modifications': {
             "Muzzle": "Flash Suppressor",
             "Magazine": "Extended Magazine",
             "Scope": "Sniper Scope",
             "Stock": "Adjustable Stock",
             "Laser": "Tactical Laser"
-        },
-        'attachments': {},
+        }
     },
 }

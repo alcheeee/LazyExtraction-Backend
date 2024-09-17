@@ -9,7 +9,7 @@ class BaseCRUD:
         self.model = model
         self.session = session
 
-    @RetryDecorators.db_retry_decorator()
+
     async def execute_scalar_one_or_none(self, query):
         """
         :param query: SQLAlchemy Statement
@@ -18,7 +18,6 @@ class BaseCRUD:
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
-    @RetryDecorators.db_retry_decorator()
     async def check_fields_exist(self, **conditions):
         """Check if a record exists."""
         if not conditions:

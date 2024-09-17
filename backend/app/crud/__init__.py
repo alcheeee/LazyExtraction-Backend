@@ -6,6 +6,7 @@ from .items_crud import ItemsCRUD
 from .user_inv_crud import UserInventoryCRUD
 from .market_crud import MarketCRUD
 from .weapon_crud import WeaponCRUD
+from .stats_crud import StatsCRUD
 
 
 __all__ = [
@@ -16,5 +17,6 @@ __all__ = [
     'ItemsCRUD',
     'UserInventoryCRUD',
     'MarketCRUD',
-    'WeaponCRUD'
+    'WeaponCRUD',
+    'StatsCRUD'
 ]

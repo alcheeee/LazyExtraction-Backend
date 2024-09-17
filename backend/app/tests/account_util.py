@@ -13,11 +13,6 @@ class UserAccount:
         self.inventory = UserAccount.Inventory()
         self.posted_items = []
 
-    def set_auth_token(self, token: str, refresh_token: str):
-        self.auth_token = token
-        self.refresh_token = refresh_token
-        self.headers["Authorization"] = f"Bearer {self.auth_token}"
-
     class UserRaid:
         def __init__(self):
             self.in_raid: bool = False
@@ -49,26 +44,38 @@ class UserAccount:
 
     class Inventory:
         def __init__(self):
+            self.main_inventory_data: dict = {}
             self.inventory_data: dict = {}
+            self.equipped_items: dict = {}
+            self.last_unequipped_item: dict = None
+            self.admin_provided_item: dict = {}
+            self.temp_data: dict
 
         def item_picked_up(self, item_data: dict):
-            assert item_data['id'] is not None
-            assert item_data['name'] is not None
-            assert item_data['inv_item'] is not None
+            inv_item = item_data['inv_item']
+            item_id = str(inv_item['item_id'])
 
-            item_name = item_data['name']
-
-            if item_name not in self.inventory_data.keys():
-                self.inventory_data[item_name] = item_data['inv_item']
-                return
-
-            self.inventory_data[item_name]['amount_in_inventory'] += 1
+            if item_id not in self.inventory_data:
+                self.inventory_data[item_id] = inv_item
+            else:
+                self.inventory_data[item_id]['amount_in_inventory'] += 1
 
         def get_an_item(self):
-            item_name = next(iter(self.inventory_data))
-            item_details = self.inventory_data.get(item_name, None)
+            item_id = next(iter(self.inventory_data))
+            return self.inventory_data[item_id]
 
-            assert item_details is not None
-            item_details['item_name'] = item_name
+        def equip_item(self, item_data: dict):
+            self.equipped_items[item_data['id']] = item_data
 
-            return item_details
+        def unequip_item(self, item_data: dict):
+            self.equipped_items.pop(item_data['id'], None)
+            self.last_unequipped_item = item_data
+
+        def get_equipped_item(self):
+            return next(iter(self.equipped_items.values())) if self.equipped_items else None
+
+        def get_last_unequipped_item(self):
+            return self.last_unequipped_item
+
+        def get_admin_provided_item(self):
+            return next(iter(self.admin_provided_item.values())) if self.admin_provided_item else None

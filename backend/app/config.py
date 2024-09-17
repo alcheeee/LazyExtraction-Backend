@@ -2,7 +2,7 @@ import os
 from fastapi.security import OAuth2PasswordBearer
 
 
-class Settings:
+class Config:
 
     TESTING = True # DANGEROUS! WIPES DATABASE
 
@@ -27,7 +27,16 @@ class Settings:
 
     # Database
     SHOULD_ECHO = False
-    DATABASE_URL = os.getenv('DATABASE_URL')
+    DB_CONFIG = os.getenv(
+        "DB_CONFIG",
+        "postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}".format(
+            DB_USER=os.getenv("DB_USER", "postgres"),
+            DB_PASSWORD=os.getenv("DB_PASSWORD", "root"),
+            DB_HOST=os.getenv("DB_HOST", "database"),
+            DB_PORT=os.getenv("DB_PORT", "5432"),
+            DB_NAME=os.getenv("DB_NAME", "GameAPI"),
+        )
+    )
 
     # Game setup variables
     GAME_BOT_USERNAME = os.getenv('GAME_BOT_USERNAME')
@@ -36,4 +45,4 @@ class Settings:
     GAME_BOT_USER_ID = None
 
 
-settings = Settings()
+settings = Config()

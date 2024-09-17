@@ -2,7 +2,6 @@ from ...schemas import JobTypes, JobRequest, JobActionType
 from ...database import AsyncSession
 from ...crud import JobsCRUD, UserCRUD
 from ...models import User, Jobs
-import tenacity
 
 
 class JobService:
@@ -28,12 +27,6 @@ class JobService:
         else:
             raise ValueError("Invalid action")
 
-
-    @tenacity.retry(
-        wait=tenacity.wait_fixed(1),
-        stop=tenacity.stop_after_attempt(3),
-        retry=tenacity.retry_if_not_exception_type(ValueError)
-    )
     async def work_job(self):
         user_info = await self.user_crud.get_stats_inv_ids_and_jobname(self.user_id)
         stats_id, inv_id, job_name = user_info
@@ -58,11 +51,6 @@ class JobService:
         return "You quit your job"
 
 
-    @tenacity.retry(
-        wait=tenacity.wait_fixed(1),
-        stop=tenacity.stop_after_attempt(3),
-        retry=tenacity.retry_if_not_exception_type(ValueError)
-    )
     async def apply_to_job(self):
         job_name = self.request.job_name
         user = await self.user_crud.get_stats_education(self.user_id)

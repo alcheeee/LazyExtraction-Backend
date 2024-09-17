@@ -5,6 +5,7 @@ COPY . /app
 
 RUN apt-get update && \
     apt-get install -y netcat-traditional postgresql-client && \
+    pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 COPY entrypoint.sh /app/entrypoint.sh

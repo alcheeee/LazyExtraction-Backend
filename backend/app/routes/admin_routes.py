@@ -61,7 +61,7 @@ async def create_item_endpoint(
 
     msg = f"Admin {admin_username} created item {request.item_name}"
     admin_log.info(msg)
-    return ResponseBuilder.success(msg, DataName.ItemDetails, response)
+    return ResponseBuilder.success(msg, data=response)
 
 
 class AddItemToUser(BaseModel):

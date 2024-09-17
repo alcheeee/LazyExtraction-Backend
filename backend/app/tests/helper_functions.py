@@ -9,15 +9,15 @@ def get_user_inventory_items(client, user):
     assert response.status_code == 200
     response_data = response.json()
 
-    assert 'inventory-items' in response_data
+    assert 'all-inventory-items' in response_data
 
-    return response.json()['inventory-items']
+    return response.json()['all-inventory-items']
 
 
-def check_item_in_inventory(inventory_data, item_id, expected_inventory=0, expected_stash=0):
+def check_item_in_inventory(inventory_data, inventory_item_id, expected_inventory=0, expected_stash=0):
     """Check if an item is in the user's inventory."""
     for item_data in inventory_data:
-        if item_data['item_id'] == item_id:
+        if item_data['id'] == inventory_item_id:
             assert item_data['amount_in_inventory'] == expected_inventory
             assert item_data['amount_in_stash'] == expected_stash
             return True
@@ -36,6 +36,7 @@ def check_bank(client, user, expected_value):
     assert response_json['user-inventory'] is not None
 
     bank_value = response_json['user-inventory']['bank']
+    user.inventory.main_inventory_data['bank'] = bank_value
     return True if bank_value == expected_value else False
 
 

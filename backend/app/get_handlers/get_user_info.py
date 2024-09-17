@@ -24,15 +24,15 @@ class GetUserInfo:
 
 
     async def get_info(self):
-        if self.option == UserInfoNeeded.Stats:
-            return await self.get_user_stats()
-        elif self.option == UserInfoNeeded.Inventory:
-            return await self.get_user_inventory()
-        elif self.option == UserInfoNeeded.InventoryItems:
-            return await self.get_all_inventory_items()
-        else:
-            raise Exception("Invalid Getter request")
-
+        match self.option:
+            case UserInfoNeeded.Stats:
+                return await self.get_user_stats()
+            case UserInfoNeeded.Inventory:
+                return await self.get_user_inventory()
+            case UserInfoNeeded.InventoryItems:
+                return await self.get_all_inventory_items()
+            case _:
+                raise Exception("Invalid Getter request")
 
     async def get_user_stats(self):
         stats_id = await self.user_crud.get_user_field_from_id(self.user_id, 'stats_id')
@@ -49,19 +49,6 @@ class GetUserInfo:
     async def get_all_inventory_items(self):
         inventory_id = await self.user_crud.get_user_field_from_id(self.user_id, 'inventory_id')
         inventory_items = await self.inventory_crud.get_all_items_by_inventory_id(inventory_id)
-
-        return [
-            {
-                'id': item.id,
-                'item_id': item.item_id,
-                'amount_in_inventory': item.amount_in_inventory,
-                'amount_in_stash': item.amount_in_stash,
-                'inventory_id': item.inventory_id,
-                'weight': item.weight,
-                'item_name': item.item.item_name,
-                'category': item.item.category
-            }
-            for item in inventory_items
-        ]
+        return [item for item in inventory_items if item in inventory_items]
 
 

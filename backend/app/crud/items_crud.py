@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union, Any
 from sqlalchemy import select
 from .base_crud import BaseCRUD
 from ..models.item_models import Items
@@ -6,8 +6,16 @@ from ..utils import RetryDecorators
 
 
 class ItemsCRUD(BaseCRUD):
+    async def get_item_from_name(self, item_name: str) -> Union[Items, None]:
+        query = select(Items).where(
+            Items.item_name == item_name
+        )
+        result = await self.session.execute(query)
+        return result.scalars().one_or_none()
 
-    async def get_item_field_from_id(self, item_id: int, field: str) -> Optional[object]:
+    async def get_item_field_from_id(
+            self, item_id: int, field: str
+    ) -> Union[Any, LookupError, None]:
         """
         :param item_id: Items.id
         :param field: Table column name 'str'
@@ -23,7 +31,7 @@ class ItemsCRUD(BaseCRUD):
     async def check_item_exists(self, name: str):
         """
         :param name: str Items.item_name
-        :return: Optional[Items.item_name]
+        :return: Optional[Items]
         """
         query = select(Items.id).where(Items.item_name == name)
         result = await self.session.execute(query)

@@ -16,8 +16,10 @@ class TestMarket:
 
 
     def test_market_posting(self, client, test_user):
+        provided_item = test_user.inventory.get_admin_provided_item()
+
         posting_data = {
-            "market_or_item_id": 1,
+            "inventory_item_id": provided_item['id'],
             "transaction_type": "posting",
             "item_cost": 100,
             "amount": 1
@@ -30,10 +32,10 @@ class TestMarket:
         )
         assert response.status_code == 200
 
-        inventory_data = get_user_inventory_items(client, test_user)
+        updated_inventory = get_user_inventory_items(client, test_user)
         item_found = check_item_in_inventory(
-            inventory_data,
-            item_id=1,
+            updated_inventory,
+            inventory_item_id=provided_item['id'],
             expected_inventory=0,
             expected_stash=0
         )
@@ -41,8 +43,13 @@ class TestMarket:
 
 
     def test_cancel_market_posting(self, client, test_user):
+        provided_item = test_user.inventory.get_admin_provided_item()
+
+        market_items = get_market_items(client, test_user, provided_item['item_name'])
+        market_item_id = market_items[0]['id']
+
         cancel_data = {
-            "market_or_item_id": 1,
+            "market_item_id": market_item_id,
             "transaction_type": "cancel",
             "item_cost": 0,
             "amount": 1
@@ -55,18 +62,20 @@ class TestMarket:
         )
         assert response.status_code == 200
 
-        inventory_data = get_user_inventory_items(client, test_user)
+        updated_inventory = get_user_inventory_items(client, test_user)
         item_found = check_item_in_inventory(
-            inventory_data,
-            item_id=1,
+            updated_inventory,
+            inventory_item_id=response.json()['data']['inventory-item']['id'],
             expected_inventory=0,
             expected_stash=1
         )
         assert item_found is True
 
     def test_buy_item(self, client, test_user, admin_headers):
+        provided_item = test_user.inventory.get_admin_provided_item()
+
         posting_data = {
-            "market_or_item_id": 1,
+            "inventory_item_id": provided_item['item_id'],  # Since Admin always gets this item first
             "transaction_type": "posting",
             "item_cost": 100,
             "amount": 1
@@ -80,7 +89,7 @@ class TestMarket:
         assert response.status_code == 200
 
         buying_data = {
-            "market_or_item_id": 2,
+            "market_item_id": response.json()['data']['market-item']['id'],
             "transaction_type": "buying",
             "item_cost": 0,
             "amount": 1
@@ -92,23 +101,36 @@ class TestMarket:
             headers=test_user.headers
         )
         assert response.status_code == 200
+        response_data = response.json()['data']
+        assert response_data is not None
+        assert response_data['market-item'] is not None
+        assert response_data['inventory-item'] is not None
+
+
+        inventory_item = response_data['inventory-item']
+        market_item = response_data['market-item']
+        test_user.inventory.main_inventory_data['bank'] -= market_item['item_cost']
+        test_user.inventory.temp_data = inventory_item
 
     def test_inventory_and_bank_updated(self, client, test_user):
+        temp_item = test_user.inventory.temp_data
+
         inventory_data = get_user_inventory_items(client, test_user)
         item_found = check_item_in_inventory(
             inventory_data,
-            item_id=1,
+            inventory_item_id=temp_item['id'],
             expected_inventory=0,
             expected_stash=2
         )
         assert item_found is True
 
-        bank_matches = check_bank(client, test_user, 900)
+        bank_matches = check_bank(client, test_user, test_user.inventory.main_inventory_data['bank'])
         assert bank_matches is True
 
     def test_quick_sell(self, client, test_user):
+        temp_item = test_user.inventory.temp_data
         quick_sell_data = {
-            "market_or_item_id": 1,
+            "inventory_item_id": temp_item['id'],
             "transaction_type": "quick_sell",
             "item_cost": 0,
             "amount": 1
@@ -121,8 +143,8 @@ class TestMarket:
         assert response.status_code == 200
 
         # This is kind of sloppy, but works for quick interactions right now
-        item_value = armor_items['Tactical Helmet']['quick_sell']
-        expected_bank = 900 + item_value
+        item_value = temp_item['quick_sell_value']
+        expected_bank = test_user.inventory.main_inventory_data['bank'] + item_value
 
         bank_matches = check_bank(client, test_user, expected_bank)
         assert bank_matches is True
@@ -132,23 +154,23 @@ class TestMarket:
         "buying_data, expected_status_code, headers",
         [
             # Trying to buy own item
-            ({"market_or_item_id": 1, "transaction_type": "buying", "item_cost": 100, "amount": 1},
+            ({"market_item_id": 1, "transaction_type": "buying", "item_cost": 100, "amount": 1},
              400, user.headers),
 
             # Not authenticated
-            ({"market_or_item_id": 1, "transaction_type": "buying", "item_cost": 100, "amount": 1},
+            ({"market_item_id": 1, "transaction_type": "buying", "item_cost": 100, "amount": 1},
              403, None),
 
             # Buying with insufficient funds
-            ({"market_or_item_id": 2, "transaction_type": "buying", "item_cost": 10000, "amount": 1},
+            ({"market_item_id": 2, "transaction_type": "buying", "item_cost": 10000, "amount": 1},
              400, user.headers),
 
             # Buying invalid item
-            ({"market_or_item_id": 9999, "transaction_type": "buying", "item_cost": 100, "amount": 1},
+            ({"market_item_id": 9999, "transaction_type": "buying", "item_cost": 100, "amount": 1},
              400, user.headers),
 
             # Buying an item with 0 quantity
-            ({"market_or_item_id": 1, "transaction_type": "buying", "item_cost": 100, "amount": 0},
+            ({"market_item_id": 1, "transaction_type": "buying", "item_cost": 100, "amount": 0},
              400, user.headers),
         ]
     )
@@ -165,23 +187,23 @@ class TestMarket:
         "posting_data, expected_status_code, headers",
         [
             # Not authenticated
-            ({"market_or_item_id": 1, "transaction_type": "posting", "item_cost": 100, "amount": 1},
+            ({"inventory_item_id": 1, "transaction_type": "posting", "item_cost": 100, "amount": 1},
              403, None),
 
             # Posting non-existent item
-            ({"market_or_item_id": 9999, "transaction_type": "posting", "item_cost": 100, "amount": 1},
+            ({"inventory_item_id": 9999, "transaction_type": "posting", "item_cost": 100, "amount": 1},
              404, user.headers),
 
             # Posting with 0 amount
-            ({"market_or_item_id": 1, "transaction_type": "posting", "item_cost": 100, "amount": 0},
+            ({"inventory_item_id": 1, "transaction_type": "posting", "item_cost": 100, "amount": 0},
              400, user.headers),
 
             # Posting with negative amount
-            ({"market_or_item_id": 1, "transaction_type": "posting", "item_cost": 100, "amount": -1},
+            ({"inventory_item_id": 1, "transaction_type": "posting", "item_cost": 100, "amount": -1},
              400, user.headers),
 
             # Posting with invalid cost
-            ({"market_or_item_id": 1, "transaction_type": "posting", "item_cost": -100, "amount": 1},
+            ({"inventory_item_id": 1, "transaction_type": "posting", "item_cost": -100, "amount": 1},
              400, user.headers),
         ]
     )
@@ -198,15 +220,15 @@ class TestMarket:
         "cancel_data, expected_status_code, headers",
         [
             # Not authenticated
-            ({"market_or_item_id": 1, "transaction_type": "cancel", "item_cost": 0, "amount": 1},
+            ({"market_item_id": 1, "transaction_type": "cancel", "item_cost": 0, "amount": 1},
              403, None),
 
             # Canceling non-existent posting
-            ({"market_or_item_id": 9999, "transaction_type": "cancel", "item_cost": 0, "amount": 1},
+            ({"market_item_id": 9999, "transaction_type": "cancel", "item_cost": 0, "amount": 1},
              400, user.headers),
 
             # Canceling someone else's posting
-            ({"market_or_item_id": 1, "transaction_type": "cancel", "item_cost": 0, "amount": 1},
+            ({"market_item_id": 1, "transaction_type": "cancel", "item_cost": 0, "amount": 1},
              400, user.headers),
         ]
     )
@@ -233,7 +255,7 @@ class TestMarket:
                 used_inventory = False
 
             posting_data = {
-                "market_or_item_id": item_details['item_id'],
+                "inventory_item_id": item_details['id'],
                 "transaction_type": "posting",
                 "item_cost": 100,
                 "amount": amount
@@ -245,15 +267,9 @@ class TestMarket:
                 headers=test_user.headers
             )
             assert response.status_code == 200
-            assert response.json()['data']['id']
+            assert response.json()['data']['market-item']
 
-            test_user.posted_items.append({
-                'market_post_id': response.json()['data']['id'],
-                'item_id': item_details['item_id'],
-                'amount_posted': amount,
-                'item_name': item_details['item_name']
-            })
-
+            test_user.posted_items.append(response.json()['data']['market-item'])
             # Ensure item was deleted or correctly adjusted
             updated_inventory_data = get_user_inventory_items(client, test_user)
 
@@ -262,7 +278,7 @@ class TestMarket:
 
                 item_found = check_item_in_inventory(
                     updated_inventory_data,
-                    item_id=item_details['item_id'],
+                    inventory_item_id=item_details['id'],
                     expected_inventory=0,
                     expected_stash=0
                 )
@@ -271,7 +287,7 @@ class TestMarket:
             elif used_inventory:
                 item_found = check_item_in_inventory(
                     updated_inventory_data,
-                    item_id=item_details['item_id'],
+                    inventory_item_id=item_details['id'],
                     expected_inventory=0,
                     expected_stash=item_details['amount_in_stash']
                 )
@@ -280,7 +296,7 @@ class TestMarket:
             else:
                 item_found = check_item_in_inventory(
                     updated_inventory_data,
-                    item_id=item_details['item_id'],
+                    inventory_item_id=item_details['id'],
                     expected_inventory=0,
                     expected_stash=item_details['amount_in_inventory']
                 )
@@ -290,7 +306,7 @@ class TestMarket:
     def test_posted_items_on_market(self, client, test_user):
         for posted_item in test_user.posted_items:
             item_name = posted_item['item_name']
-            amount_posted = posted_item['amount_posted']
+            amount_posted = posted_item['item_quantity']
             market_items = get_market_items(client, test_user, item_name)
 
             # Ensure the item exists in the market with correct details
@@ -305,10 +321,10 @@ class TestMarket:
 
 
     def test_buy_own_item(self, client, test_user):
-        market_post_id = test_user.posted_items.pop()['market_post_id']
+        market_post_id = test_user.posted_items.pop()['id']
 
         buying_data = {
-            "market_or_item_id": market_post_id,
+            "market_item_id": market_post_id,
             "transaction_type": "buying",
             "item_cost": 0,
             "amount": 1
@@ -320,4 +336,5 @@ class TestMarket:
             headers=test_user.headers
         )
         assert response.status_code == 400
+        assert response.json()['detail'] == "You can't buy your own items"
 

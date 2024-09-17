@@ -1,11 +1,8 @@
 import pytest
-from . import Check, user, second_user
+from . import user, second_user, Check
 
 
 class TestRegister:
-    """
-    Tests a valid registration request, and various invalid registration requests
-    """
 
     def test_register(self, client, test_user):
         data = {
@@ -14,14 +11,17 @@ class TestRegister:
             'email': test_user.email
         }
         response = client.post("/user/register", json=data)
-        Check.valid_request(response)
+        assert response.status_code == 200
+        response_data = response.json()
+        assert response_data['status'] == 'success'
 
         # Creating a second user for follow-up tests
         if response.status_code == 200:
             data['username'] = second_user.username
             data['email'] = second_user.email
             response = client.post("/user/register", json=data)
-            Check.valid_request(response)
+            response_data = response.json()
+            assert response_data['status'] == 'success'
 
     @pytest.mark.parametrize(
         "register_input, expected_status_code",
@@ -42,13 +42,11 @@ class TestRegister:
         response = client.post("/user/register", json=register_input)
         assert response.status_code == expected_status_code
         if response.status_code == 200:
-            Check.valid_request(response)
+            data = response.json()
+            assert data['status'] == 'success'
 
 
 class TestLogin:
-    """
-    Tests a valid login request, obtaining a valid Authorization Token, and various invalid login requests
-    """
 
     def test_login(self, client, test_user):
         data = {

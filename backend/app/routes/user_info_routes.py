@@ -11,6 +11,7 @@ from . import (
 )
 from ..get_handlers.get_user_info import GetUserInfo
 from ..schemas import UserInfoNeeded
+from ..models import InventoryItem, Inventory, Stats
 
 error_log = MyLogger.errors()
 
@@ -35,12 +36,13 @@ async def get_user_info(
 ):
     user_id = int(user_data['user']['user_id'])
     data_name = None
-    if request == UserInfoNeeded.Inventory:
-        data_name = DataName.UserInventory
-    elif request == UserInfoNeeded.Stats:
-        data_name = DataName.UserStats
-    elif request == UserInfoNeeded.InventoryItems:
-        data_name = DataName.InventoryItem
+    match request:
+        case UserInfoNeeded.Inventory:
+            data_name = DataName.UserInventory
+        case UserInfoNeeded.Stats:
+            data_name = DataName.UserStats
+        case UserInfoNeeded.InventoryItems:
+            data_name = DataName.AllInventoryItems
 
     get_info = await GetUserInfo(request, user_id, session).get_info()
     return ResponseBuilder.success("", data_name, get_info)

@@ -49,8 +49,8 @@ async def create_game_account(session):
 
     _crud = UserCRUD(None, session)
     bot_existing_id = await _crud.get_user_field_from_username(username, 'id')
-    if bot_existing_id:
-        settings.GAME_BOT_USER_ID = int(bot_existing_id.id)
+    if bot_existing_id is not None:
+        settings.GAME_BOT_USER_ID = bot_existing_id
         return
 
     bot_account = await user_handler.create_user(username, password, email, game_bot=True)
@@ -64,33 +64,36 @@ async def create_game_account(session):
         items_crud = ItemsCRUD(Items, session)
 
         await user_crud.make_user_admin(bot_account.id)
-
+        attachments_to_give = [
+            'Tactical Laser',
+            'Flash Suppressor',
+            'Adjustable Stock',
+            'Sniper Scope'
+        ]
         items_to_give = [
             'Tactical Helmet',
             'Tactical Vest',
             'M4A1 Carbine',
             'Recon Bandana',
             'Tactical Hoodie',
-            'Cargo Pants'
+            'Cargo Pants',
+            'Tactical Laser',
+            'Flash Suppressor',
+            'Adjustable Stock',
+            'Sniper Scope'
         ]
         for item in items_to_give:
             item_db_id = await items_crud.check_item_exists(item)
-            new_inventory_item = await user_inv_crud.update_user_inventory_item(
+            new_item = await user_inv_crud.update_user_inventory_item(
                 inventory_id=bot_account.inventory_id,
                 item_id=item_db_id,
-                quantity_change=1,
+                quantity_change=10,
                 to_stash=False
             )
-            await user_inv_crud.update_user_inventory_item(
-                inventory_id=bot_account.inventory_id,
-                item_id=item_db_id,
-                quantity_change=1,
-                inventory_item=new_inventory_item,
-                to_stash=True
-            )
-
-            item_stats_handler = ItemStatsHandler(bot_account.id, item_db_id, session)
-            await item_stats_handler.user_equip_unequip_item()
+            await session.flush()
+            if new_item.id is not None and item not in attachments_to_give:
+                item_stats_handler = ItemStatsHandler(bot_account.id, new_item.id, session)
+                await item_stats_handler.user_equip_unequip_item()
 
     except Exception as e:
         print(str(e))

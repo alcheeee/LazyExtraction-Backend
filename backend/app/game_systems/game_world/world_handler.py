@@ -56,7 +56,7 @@ class RoomGenerator:
 
             user.stats.level += 0.1
             user.stats.knowledge += 0.1
-            user.stats.round_stats()
+            await user.stats.round_stats()
 
             room_data = await self.generate_room()
             user.current_room_data = room_data

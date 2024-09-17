@@ -10,8 +10,8 @@ class Transactions(str, Enum):
     Cancel = "cancel"
 
 class MarketTransactionRequest(BaseModel):
-    market_or_item_id: int
+    market_item_id: Optional[int] = None
+    inventory_item_id: Optional[int] = None
     transaction_type: Transactions
-    item_cost: Optional[int]
-    amount: int
-
+    item_cost: Optional[int] = None
+    amount: Optional[int] = None

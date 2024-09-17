@@ -12,7 +12,10 @@ class BaseItemCreator:
             "item_name": request.item_name,
             "category": request.category,
             "tier": request.tier,
-            "quick_sell": request.quick_sell
+            "quick_sell": request.quick_sell,
+            "weight": request.weight,
+            "can_be_modified": request.can_be_modified,
+            "allowed_modifications": request.allowed_modifications
         }
 
         item = Items(**item_data)
@@ -23,7 +26,17 @@ class BaseItemCreator:
     async def create_item_details(self, item_id: int, request, detail_class: Type):
         details = detail_class(
             item_id=item_id,
-            **request.dict(exclude={'item_name', 'category', 'tier', 'quick_sell'})
+            **request.dict(
+                exclude={
+                    'item_name',
+                    'category',
+                    'tier',
+                    'quick_sell',
+                    'weight',
+                    'can_be_modified',
+                    'allowed_attachments'
+                }
+            )
         )
         self.session.add(details)
         return details

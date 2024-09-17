@@ -66,7 +66,7 @@ class InteractionHandler:
                 raise Exception(f"Error in world_interactions.item_pickup.update_user_inventory_item: {e}")
 
             user.stats.knowledge += 0.05
-            user.stats.round_stats()
+            await user.stats.round_stats()
             user.actions_left -= 1
             item['skill-adjustments'] = {
                 "knowledge-adjustment": 0.05
@@ -93,7 +93,7 @@ class InteractionHandler:
 
             user.stats.knowledge += 0.1
             user.stats.level += 0.1
-            user.stats.round_stats()
+            await user.stats.round_stats()
 
             user.current_room_data = new_room_data
             user.actions_left -= 1
@@ -121,7 +121,7 @@ class InteractionHandler:
             user.current_room_data = None
 
             user.stats.level += 0.75
-            user.stats.round_stats()
+            await user.stats.round_stats()
 
             skill_adjustments = {
                 "level-adjustment": 0.75

@@ -32,7 +32,10 @@ class UserHandler:
             if game_bot:
                 return new_user
 
-            access_token, refresh_token = self.create_tokens(username, new_user.id)
+            access_token, refresh_token = self.create_tokens(
+                username,
+                new_user.id
+            )
 
             return {
                 'access_token': access_token,
@@ -50,7 +53,10 @@ class UserHandler:
 
     @staticmethod
     def create_tokens(username: str, user_id: int):
-        user_data = {"username": username, "user_id": str(user_id)}
+        user_data = {
+            "username": username,
+            "user_id": str(user_id)
+        }
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
 

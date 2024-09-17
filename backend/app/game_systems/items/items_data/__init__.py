@@ -15,3 +15,6 @@ __all__ = [
     'attachment_items',
     'valuable_items'
 ]
+
+
+# TODO : Change all JSON data to Class

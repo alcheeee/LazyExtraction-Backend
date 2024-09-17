@@ -27,7 +27,9 @@ class TestCrews:
         assert response.status_code == expected_status_code
 
         if crew_input['name'] == 'test-crew' and response.status_code == 200:
-            Check.valid_request(response)
+            assert response.status_code == 200
+            data = response.json()
+            assert data['status'] == 'success'
             assert response.json().get("message") == "test-crew created successfully!"
 
 
@@ -51,7 +53,9 @@ class TestCrews:
         assert response.status_code == expected_status_code
 
         if response.status_code == 200:
-            Check.valid_request(response)
+            assert response.status_code == 200
+            data = response.json()
+            assert data['status'] == 'success'
             assert response.json().get("message") == "Successfully added to the crew"
 
 
@@ -77,5 +81,7 @@ class TestCrews:
         assert response.status_code == expected_status_code
 
         if response.status_code == 200:
-            Check.valid_request(response)
+            assert response.status_code == 200
+            data = response.json()
+            assert data['status'] == 'success'
             assert response.json().get("message") == "Successfully removed the player from Crew"

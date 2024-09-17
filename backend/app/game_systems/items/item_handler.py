@@ -34,18 +34,10 @@ class NewItem:
         self.creator = BaseItemCreator(session)
 
     @staticmethod
-    def get_item_data(item_name: str, item_dict: Dict[str, Dict[str, Any]]):
-        item_data = item_dict.get(item_name)
-        if item_data:
-            return item_data
-        raise Exception(f"Item {item_name} not found")
-
-    @staticmethod
     def create_request(item_data: Dict[str, Any], schema_class: Type):
         return schema_class(**item_data)
 
-    async def create_item(self, item_data: Dict[str, Any], admin_request: bool = False):
-        item_name = item_data['item_name']
+    async def create_item(self, item_data: Dict[str, Any]):
         item_category = item_data['category']
 
         category_mapping = {
@@ -61,12 +53,7 @@ class NewItem:
             raise ValueError(f"Unsupported item category: {item_category}")
 
         data_dictionary, schema_class, detail_class = category_mapping[item_category]
-
-        if admin_request:
-            request = self.create_request(item_data, schema_class)
-        else:
-            static_item_data = self.get_item_data(item_name, data_dictionary)
-            request = self.create_request(static_item_data, schema_class)
+        request = self.create_request(item_data, schema_class)
 
         return await self.creator.create_item(request, detail_class)
 
