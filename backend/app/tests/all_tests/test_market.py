@@ -6,7 +6,7 @@ from ..helper_functions import (
     check_bank,
     get_market_items
 )
-from ...game_systems.items.items_data.all_armor import armor_items
+from ...game_systems.items.items_data.all_armor import armor_classes
 
 
 class TestMarket:

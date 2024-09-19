@@ -1,20 +1,20 @@
 from .item_schema import (
-    openapi_item_examples,
-    ItemCreate,
+    ItemBase,
     ItemType,
     ItemTier,
-    MedicalCreate,
-    ClothingCreate,
+    MedicalBase,
+    ClothingBase,
     ClothingType,
-    ArmorCreate,
+    ArmorBase,
     ArmorType,
-    StashStatusSwitch
+    StashStatusSwitchRequest,
+    EquippingUnequippingRequest
 )
 from .weapon_schemas import (
-    WeaponCreate,
+    WeaponBase,
     AttachmentTypes,
-    BulletCreate,
-    AttachmentCreate
+    BulletBase,
+    AttachmentBase
 )
 from .market_schema import (
     MarketTransactionRequest,

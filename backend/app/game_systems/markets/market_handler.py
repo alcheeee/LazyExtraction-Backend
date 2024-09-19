@@ -182,7 +182,9 @@ class MarketTransactionHandler:
         user_inv_id = await self.inv_crud.get_user_inventory_id_by_userid(self.user_id)
 
         # Handle the case where the item might be modified
-        inventory_item = await self.inv_crud.get_inventory_item_by_item_id(user_inv_id, market_item.item_id)
+        inventory_item = await self.inv_crud.get_inventory_item_by_item_id(
+            user_inv_id, market_item.item_id
+        )
 
         if inventory_item and not market_item.is_modified:
             await self.inv_crud.update_any_inventory_quantity(

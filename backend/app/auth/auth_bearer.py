@@ -25,7 +25,6 @@ class TokenBearer(HTTPBearer):
         creds = await super().__call__(request)
         token = creds.credentials
         token_data = TokenHandler.decode_token(token)
-
         if not self.token_valid:
             raise CommonHTTPErrors.credentials_error()
 

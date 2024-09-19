@@ -1,6 +1,6 @@
 import uuid
 
-from typing import Annotated, Union
+from typing import Annotated
 from datetime import datetime, timedelta
 
 from passlib.hash import argon2
@@ -25,7 +25,7 @@ class TokenHandler:
     @staticmethod
     def create_access_token(
             user_data: dict,
-            expires_delta: Union[timedelta, None] = None,
+            expires_delta: timedelta | None = None,
             refresh: bool = False
     ) -> str:
         if expires_delta:

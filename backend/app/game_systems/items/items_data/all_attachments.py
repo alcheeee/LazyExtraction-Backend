@@ -1,159 +1,185 @@
 from .. import (
     ItemType,
     ItemTier,
-    AttachmentTypes
+    AttachmentTypes,
+    AttachmentBase,
+    Attachments,
+    StaticItem
 )
 
 
-attachment_items = {
-    # Bipods
-    'Polymer Rifle Bipod': {
-        'item_name': 'Polymer Rifle Bipod',
-        'category': ItemType.Attachments,
-        'tier': ItemTier.Tier4,
-        'quick_sell': 800,
-        'type': AttachmentTypes.Bipod,
-        'weight': 0.0,
-        'damage_adj': 0,
-        'range_adj': 0,
-        'accuracy_adj': 0,
-        'reload_speed_adj': 0.0,
-        'fire_rate_adj': 0.0,
-        'magazine_size_adj': 0,
-        'headshot_chance_adj': 0,
-        'agility_penalty_adj': 0.0
-    },
+class PolymerRifleBipod(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Polymer Rifle Bipod"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier4
+    quick_sell: int = 800
+    type: AttachmentTypes = AttachmentTypes.Bipod
+    weight: float = 0.0
+    damage_adj: int = 0
+    range_adj: int = 0
+    accuracy_adj: int = 0
+    reload_speed_adj: float = 0.0
+    fire_rate_adj: float = 0.0
+    magazine_size_adj: int = 0
+    headshot_chance_adj: int = 0
+    agility_adj: float = 0.0
 
 
-    # Front Grips
-    'Tactical Front Grip': {
-        'item_name': 'Tactical Front Grip',
-        'category': ItemType.Attachments,
-        'tier': ItemTier.Tier3,
-        'quick_sell': 500,
-        'type': AttachmentTypes.FrontGrip,
-        'weight': -0.1,
-        'damage_adj': 0,
-        'range_adj': 0,
-        'accuracy_adj': 10,
-        'reload_speed_adj': -0.1,
-        'fire_rate_adj': 0.0,
-        'magazine_size_adj': 0,
-        'headshot_chance_adj': 0,
-        'agility_penalty_adj': -0.1
-    },
+class TacticalFrontGrip(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Tactical Front Grip"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier3
+    quick_sell: int = 500
+    type: AttachmentTypes = AttachmentTypes.FrontGrip
+    weight: float = 0.1
+    damage_adj: int = 0
+    range_adj: int = 0
+    accuracy_adj: int = 10
+    reload_speed_adj: float = -0.1
+    fire_rate_adj: float = 0.0
+    magazine_size_adj: int = 0
+    headshot_chance_adj: int = 0
+    agility_adj: float = -0.1
 
 
-    # Muzzle
-    'Flash Suppressor': {
-        'item_name': 'Flash Suppressor',
-        'category': ItemType.Attachments,
-        'tier': ItemTier.Tier2,
-        'quick_sell': 400,
-        'type': AttachmentTypes.Muzzle,
-        'weight': 0.0,
-        'damage_adj': 0,
-        'range_adj': 5,
-        'accuracy_adj': 5,
-        'reload_speed_adj': 0.0,
-        'fire_rate_adj': 0.0,
-        'magazine_size_adj': 0,
-        'headshot_chance_adj': 0,
-        'agility_penalty_adj': 0.0
-    },
+class FlashSuppressor(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Flash Suppressor"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier2
+    quick_sell: int = 400
+    type: AttachmentTypes = AttachmentTypes.Muzzle
+    weight: float = 0.3
+    damage_adj: int = 0
+    range_adj: int = 4
+    accuracy_adj: int = 3
+    reload_speed_adj: float = 0.0
+    fire_rate_adj: float = 0.0
+    magazine_size_adj: int = 0
+    headshot_chance_adj: int = 0
+    agility_adj: float = 0.8
 
 
-    # Magazines
-    'Extended Magazine': {
-        'item_name': 'Extended Magazine',
-        'category': ItemType.Attachments,
-        'tier': ItemTier.Tier3,
-        'quick_sell': 600,
-        'type': AttachmentTypes.Magazine,
-        'weight': 0.2,
-        'damage_adj': 0,
-        'range_adj': 0,
-        'accuracy_adj': 0,
-        'reload_speed_adj': -0.2,
-        'fire_rate_adj': 0.0,
-        'magazine_size_adj': 15,
-        'headshot_chance_adj': 0,
-        'agility_penalty_adj': -0.2
-    },
+class UniversalSuppressor(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Universal Suppressor"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier5
+    quick_sell: int = 2200
+    type: AttachmentTypes = AttachmentTypes.Muzzle
+    weight: float = 0.8
+    damage_adj: int = 0
+    range_adj: int = -4
+    accuracy_adj: int = -1
+    reload_speed_adj: float = 0.0
+    fire_rate_adj: float = 0.0
+    magazine_size_adj: int = 0
+    headshot_chance_adj: int = 0
+    agility_adj: float = 2.6
 
 
-    # Stocks
-    'Adjustable Stock': {
-        'item_name': 'Adjustable Stock',
-        'category': ItemType.Attachments,
-        'tier': ItemTier.Tier2,
-        'quick_sell': 450,
-        'type': AttachmentTypes.Stock,
-        'weight': -0.1,
-        'damage_adj': 0,
-        'range_adj': 0,
-        'accuracy_adj': 8,
-        'reload_speed_adj': 0.0,
-        'fire_rate_adj': 0.0,
-        'magazine_size_adj': 0,
-        'headshot_chance_adj': 0,
-        'agility_penalty_adj': -0.1
-    },
+class ExtendedMagazine(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Extended Magazine"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier3
+    quick_sell: int = 600
+    type: AttachmentTypes = AttachmentTypes.Magazine
+    weight: float = 0.2
+    damage_adj: int = 0
+    range_adj: int = 0
+    accuracy_adj: int = 0
+    reload_speed_adj: float = -0.2
+    fire_rate_adj: float = 0.0
+    magazine_size_adj: int = 15
+    headshot_chance_adj: int = 0
+    agility_adj: float = -0.2
 
 
-    # Scopes
-    'Sniper Scope': {
-        'item_name': 'Sniper Scope',
-        'category': ItemType.Attachments,
-        'tier': ItemTier.Tier4,
-        'quick_sell': 1000,
-        'type': AttachmentTypes.Scope,
-        'weight': 0.3,
-        'damage_adj': 0,
-        'range_adj': 50,
-        'accuracy_adj': 20,
-        'reload_speed_adj': 0.0,
-        'fire_rate_adj': 0.0,
-        'magazine_size_adj': 0,
-        'headshot_chance_adj': 5,
-        'agility_penalty_adj': -0.3
-    },
+class AdjustableStock(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Adjustable Stock"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier2
+    quick_sell: int = 450
+    type: AttachmentTypes = AttachmentTypes.Stock
+    weight: float = 0.1
+    damage_adj: int = 0
+    range_adj: int = 0
+    accuracy_adj: int = 8
+    reload_speed_adj: float = 0.0
+    fire_rate_adj: float = 0.0
+    magazine_size_adj: int = 0
+    headshot_chance_adj: int = 0
+    agility_adj: float = -0.1
 
 
-    # Lasers
-    'Tactical Laser': {
-        'item_name': 'Tactical Laser',
-        'category': ItemType.Attachments,
-        'tier': ItemTier.Tier3,
-        'quick_sell': 700,
-        'type': AttachmentTypes.Laser,
-        'weight': 0.1,
-        'damage_adj': 0,
-        'range_adj': 0,
-        'accuracy_adj': 10,
-        'reload_speed_adj': 0.0,
-        'fire_rate_adj': 0.0,
-        'magazine_size_adj': 0,
-        'headshot_chance_adj': 0,
-        'agility_penalty_adj': -0.1
-    },
+class SniperScope(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Sniper Scope"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier4
+    quick_sell: int = 1000
+    type: AttachmentTypes = AttachmentTypes.Scope
+    weight: float = 0.3
+    damage_adj: int = 0
+    range_adj: int = 50
+    accuracy_adj: int = 20
+    reload_speed_adj: float = 0.0
+    fire_rate_adj: float = 0.0
+    magazine_size_adj: int = 0
+    headshot_chance_adj: int = 5
+    agility_adj: float = -0.3
 
 
-    # Barrels
-    'Long Barrel': {
-        'item_name': 'Long Barrel',
-        'category': ItemType.Attachments,
-        'tier': ItemTier.Tier3,
-        'quick_sell': 900,
-        'type': AttachmentTypes.Barrel,
-        'weight': 0.3,
-        'damage_adj': 0,
-        'range_adj': 25,
-        'accuracy_adj': 15,
-        'reload_speed_adj': 0.0,
-        'fire_rate_adj': 0.0,
-        'magazine_size_adj': 0,
-        'headshot_chance_adj': 0,
-        'agility_penalty_adj': -0.2
-    },
-}
+class TacticalLaser(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Tactical Laser"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier3
+    quick_sell: int = 700
+    type: AttachmentTypes = AttachmentTypes.Laser
+    weight: float = 0.1
+    damage_adj: int = 0
+    range_adj: int = 0
+    accuracy_adj: int = 10
+    reload_speed_adj: float = 0.0
+    fire_rate_adj: float = 0.0
+    magazine_size_adj: int = 0
+    headshot_chance_adj: int = 0
+    agility_adj: float = -0.1
+
+
+class LongBarrel(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Long Barrel"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier3
+    quick_sell: int = 900
+    type: AttachmentTypes = AttachmentTypes.Barrel
+    weight: float = 0.3
+    damage_adj: int = 0
+    range_adj: int = 25
+    accuracy_adj: int = 15
+    reload_speed_adj: float = 0.0
+    fire_rate_adj: float = 0.0
+    magazine_size_adj: int = 0
+    headshot_chance_adj: int = 0
+    agility_adj: float = -0.2
+
+
+
+attachment_classes = [
+    PolymerRifleBipod,
+    TacticalFrontGrip,
+    FlashSuppressor,
+    UniversalSuppressor,
+    ExtendedMagazine,
+    AdjustableStock,
+    SniperScope,
+    TacticalLaser,
+    LongBarrel
+]
+

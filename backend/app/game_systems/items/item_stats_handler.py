@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,85 +30,125 @@ class ItemStatsHandler:
         self.user_crud = UserCRUD(User, session)
         self.user_inventory_crud = UserInventoryCRUD(InventoryItem, session)
 
+        self.user = None
+        self.stats = None
+        self.inventory = None
 
-    async def user_equip_unequip_item(self):
-        inventory, inventory_item, stats = await self.get_needed_info()
 
+    async def equip_item(self) -> str:
+        user, inventory, stats, inventory_item = await self.get_user_data()
+        item, item_details = await self.get_item_data(inventory_item)
+        item_slot_attr = self.determine_slot(item, item_details)
+
+        if inventory_item.amount_in_inventory < 1:
+            raise ValueError("Item not found in inventory")
+
+        if not item_slot_attr:
+            raise ValueError("This item cannot be equipped")
+
+        if inventory_item.one_equipped:
+            raise ValueError("Item is already equipped")
+
+        equipped_item_id = getattr(inventory, item_slot_attr)
+        if equipped_item_id:
+            await self.unequip_item(equipped_item_id)
+
+        await self.update_equipped_status(inventory, item_slot_attr, inventory_item, True)
+        await self.adjust_user_stats(stats, item_details, equip=True)
+
+        return "Item Equipped"
+
+    async def unequip_item(self, inventory_item_id: Optional[int] = None) -> str:
+        if inventory_item_id is None:
+            inventory_item_id = self.inventory_item_id
+
+        user, inventory, stats, inventory_item = await self.get_user_data(inventory_item_id)
+        item, item_details = await self.get_item_data(inventory_item)
+        item_slot_attr = self.determine_slot(item, item_details)
+
+        if not item_slot_attr:
+            raise ValueError("This item cannot be equipped")
+
+        if not inventory_item.one_equipped:
+            raise ValueError("Item is not equipped")
+
+        await self.update_equipped_status(inventory, item_slot_attr, inventory_item, False)
+        await self.adjust_user_stats(stats, item_details, equip=False)
+
+        return "Item Unequipped"
+
+
+    async def get_user_data(
+            self, inventory_item_id: Optional[int] = None
+    ) -> tuple[User, Inventory, Stats, InventoryItem]:
+
+        item_id = inventory_item_id or self.inventory_item_id
+        inventory_item = await self.user_inventory_crud.get_inventory_item_by_userid(
+            self.user_id, item_id
+        )
         if not inventory_item:
             raise LookupError("Item not found in inventory")
 
-        item = inventory_item.item
-        item_details = self.get_item_details(item)
+        if None not in [self.user, self.inventory, self.stats]:
+            return self.user, self.inventory, self.stats, inventory_item
+
+        user = await self.session.get(User, self.user_id)
+        if not user:
+            raise LookupError("User not found")
+
+        inventory = await self.session.get(Inventory, user.inventory_id)
+        stats = await self.session.get(Stats, user.stats_id)
+
+        self.user = user
+        self.inventory = inventory
+        self.stats = stats
+        return user, inventory, stats, inventory_item  # type: ignore
+
+
+    async def get_item_data(
+            self, inventory_item: InventoryItem
+    ) -> tuple[Items, Clothing | Weapon | Armor]:
+
+        item = await self.session.get(Items, inventory_item.item_id)
+        if not item:
+            raise LookupError("Item not found")
+
+        item_details = await self.get_item_details(item)  # type: ignore
         if not item_details:
             raise LookupError("Item details not available")
 
-        item_slot_attr = self.determine_slot(item, item_details)
-        if not item_slot_attr:
-            raise ValueError("This item cannot be equipped")
+        return item, item_details  # type: ignore
 
-        equipped_item_id = getattr(inventory, item_slot_attr)
-        if equipped_item_id and equipped_item_id != inventory_item.id:
-            await self.unequip_item(equipped_item_id, inventory, stats)
 
-        if equipped_item_id == inventory_item.id:
-            setattr(inventory, item_slot_attr, None)
-            inventory_item.amount_in_inventory += 1
-            await self.adjust_user_stats(stats, item_details, equip=False)
-            status = "Item Unequipped"
-        else:
-            if inventory_item.amount_in_inventory < 1:
-                raise ValueError("You don't have that item in your inventory")
-
+    async def update_equipped_status(
+            self, inventory: Inventory,
+            item_slot_attr: str,
+            inventory_item: InventoryItem,
+            equip: bool
+    ) -> None:
+        # TODO : Use CRUD
+        if equip:
             setattr(inventory, item_slot_attr, inventory_item.id)
+            inventory_item.one_equipped = True
             inventory_item.amount_in_inventory -= 1
-            await self.adjust_user_stats(stats, item_details, equip=True)
-            status = "Item Equipped"
+        else:
+            setattr(inventory, item_slot_attr, None)
+            inventory_item.one_equipped = False
+            inventory_item.amount_in_inventory += 1
 
-        return status
-
-
-    async def unequip_item(
-            self,
-            equipped_inventory_item_id: int,
-            inventory: Inventory,
-            stats: Stats
-    ):
-        inventory_item = await self.session.get(InventoryItem, equipped_inventory_item_id)
-        if not inventory_item:
-            raise LookupError("Equipped item not found")
-
-        item = inventory_item.item
-        item_details = self.get_item_details(item)
-        if not item_details:
-            raise LookupError("Item details not available")
-
-        item_slot_attr = self.determine_slot(item, item_details)
-        if not item_slot_attr:
-            raise ValueError("This item cannot be equipped")
-
-        setattr(inventory, item_slot_attr, None)
-        inventory_item.amount_in_inventory += 1
-        await self.adjust_user_stats(stats, item_details, equip=False)
-
-
-    async def get_needed_info(self):
-        (inventory, stats, inventory_item) = (
-            await self.user_inventory_crud.get_inv_stats_invitem(self.user_id, self.inventory_item_id)
-        )
-        return inventory, inventory_item, stats
+        await self.session.flush()
 
 
     async def adjust_user_stats(
             self,
             stats: Stats,
-            item_details: Union[Clothing, Weapon, Armor],
+            item_details: Clothing | Weapon | Armor,
             equip: bool = True
     ):
-        """Adjust the users stats based on the item details"""
         multiplier = 1 if equip else -1
-        bonus_wrapper = self.get_bonus_wrapper(item_details)
+        adj_wrapper = self.get_adj_wrapper(item_details)
 
-        for stat_key, attr_name in bonus_wrapper.items():
+        for stat_key, attr_name in adj_wrapper.items():
             base_value = getattr(item_details, attr_name, 0)
             current_value = getattr(stats, stat_key, 0)
             setattr(stats, stat_key, current_value + base_value * multiplier)
@@ -137,44 +177,42 @@ class ItemStatsHandler:
                 return None
 
     @staticmethod
-    def get_bonus_wrapper(item_details: Union[Clothing, Weapon, Armor]):
+    def get_adj_wrapper(item_details: Clothing | Weapon | Armor):
         if isinstance(item_details, Clothing):
             return {
-                "reputation": "reputation_bonus",
-                "max_energy": "max_energy_bonus",
-                "agility": "agility_bonus",
-                "health": "health_bonus",
-                "luck": "luck_bonus",
-                "strength": "strength_bonus",
-                "knowledge": "knowledge_bonus",
+                "reputation": "reputation_adj",
+                "max_energy": "max_energy_adj",
+                "agility": "agility_adj",
+                "health": "health_adj",
+                "luck": "luck_adj",
+                "strength": "strength_adj",
+                "knowledge": "knowledge_adj",
             }
         elif isinstance(item_details, Armor):
             return {
-                "head_protection": "head_protection",
-                "chest_protection": "chest_protection",
-                "stomach_protection": "stomach_protection",
-                "arm_protection": "arm_protection",
-                "agility": "agility_penalty"
+                "head_protection": "head_protection_adj",
+                "chest_protection": "chest_protection_adj",
+                "stomach_protection": "stomach_protection_adj",
+                "arm_protection": "arm_protection_adj",
+                "agility": "agility_adj"
             }
         elif isinstance(item_details, Weapon):
             return {
-                "strength": "strength",
-                "agility": "agility_penalty"
+                "damage": "damage",
+                "strength": "strength_adj",
+                "agility": "agility_adj"
             }
         return {}
 
-    @staticmethod
-    def get_item_details(item: Union[Clothing, Weapon, Armor, None]):
+    async def get_item_details(self, item: Items):
+        await self.session.refresh(item, ["clothing_details", "weapon_details", "armor_details"])
         match item.category:
             case ItemType.Clothing:
                 return item.clothing_details
-
             case ItemType.Weapon:
                 return item.weapon_details
-
             case ItemType.Armor:
                 return item.armor_details
-
             case _:
                 return None
 

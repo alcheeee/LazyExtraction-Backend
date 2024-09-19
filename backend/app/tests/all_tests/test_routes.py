@@ -16,6 +16,7 @@ class TestRoutes:
             ('combat', 200),
             ('market', 200),
             ('info', 200),
+            ('inventory', 200),
             ('admin', 403)
         ]
     )

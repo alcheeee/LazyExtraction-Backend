@@ -20,10 +20,12 @@ class WeaponCRUD:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_user_weapon(self, user_id: int, weapon_inventory_id: int):
+    async def get_user_weapon(
+            self, user_id: int, weapon_inventory_id: int
+    ) -> tuple[Items, InventoryItem]:
         query = (
             select(InventoryItem)
-            .join(Inventory, InventoryItem.inventory_id == Inventory.id)
+            .join(Inventory, InventoryItem.inventory_id == Inventory.id)  # type: ignore
             .join(User, User.inventory_id == Inventory.id)
             .options(joinedload(InventoryItem.item).joinedload(Items.weapon_details))
             .where(InventoryItem.id == weapon_inventory_id)

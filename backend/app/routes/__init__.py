@@ -16,6 +16,7 @@ from .user_info_routes import info_router
 from .market_routes import market_router
 from .crew_routes import crew_router
 from .combat_routes import combat_router
+from .inventory_routes import inventory_router
 
 __all__ = [
     'user_router',
@@ -24,5 +25,6 @@ __all__ = [
     'info_router',
     'market_router',
     'crew_router',
-    'combat_router'
+    'combat_router',
+    'inventory_router'
 ]

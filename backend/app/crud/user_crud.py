@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, Any, Type
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select, update
 from .base_crud import BaseCRUD
@@ -7,18 +7,16 @@ from ..models import (
     Inventory,
     Stats
 )
-from ..utils import RetryDecorators
 
 
 class UserCRUD(BaseCRUD):
     async def make_user_admin(self, user_id: int) -> bool:
-        update_stmt = update(User).where(User.id == user_id).values(is_admin=True)
+        update_stmt = update(User).where(User.id == user_id).values(is_admin=True)  # type: ignore
         await self.session.execute(update_stmt)
         return True
 
 
-    @RetryDecorators.db_retry_decorator()
-    async def get_user_field_from_id(self, user_id: int, field: str) -> Optional[User]:
+    async def get_user_field_from_id(self, user_id: int, field: str) -> Any | None:
         """
         :param user_id: int = User.id
         :param field: User.(field)
@@ -27,8 +25,7 @@ class UserCRUD(BaseCRUD):
         query = select(getattr(User, field)).where(User.id == user_id)
         return await self.execute_scalar_one_or_none(query)
 
-    @RetryDecorators.db_retry_decorator()
-    async def get_user_field_from_username(self, username: str, field: str) -> Optional[User]:
+    async def get_user_field_from_username(self, username: str, field: str) -> Any | None:
         """
         :param username: str = User.username
         :param field: User.(field)
@@ -37,8 +34,7 @@ class UserCRUD(BaseCRUD):
         query = select(getattr(User, field)).where(User.username == username)
         return await self.execute_scalar_one_or_none(query)
 
-    @RetryDecorators.db_retry_decorator()
-    async def get_user_for_interaction(self, user_id: int) -> Optional[User]:
+    async def get_user_for_interaction(self, user_id: int) -> User | None:
         query = (
             select(User)
             .options(selectinload(User.stats))
@@ -48,34 +44,33 @@ class UserCRUD(BaseCRUD):
         result = await self.session.execute(query)
         return result.scalars().first()
 
-    @RetryDecorators.db_retry_decorator()
-    async def get_user_inventory_id_by_username(self, username: str) -> Optional[int]:
+    async def get_user_id_by_username(self, username: str) -> int | None:
         """
         :param username: str = User.username
         :return: Optional[User.inventory_id]
         """
-        query = select(Inventory.id).join(User).where(User.username == username)
+        query = select(User.id).where(User.username == username)
         return await self.execute_scalar_one_or_none(query)
 
-    @RetryDecorators.db_retry_decorator()
-    async def change_user_crew_id(self, username: str, crew_id: Optional[int] = None) -> True or Exception:
+    async def change_user_crew_id(
+            self, username: str, crew_id: int | None = None
+    ) -> Union[True, Exception]:
         """
         :param username: str = User.username
         :param crew_id: int = Crew.id
         :return: True
         :raise Exception
         """
-        update_stmt = update(User).where(User.username == username).values(crew_id=crew_id)
+        update_stmt = update(User).where(User.username == username).values(crew_id=crew_id)  # type: ignore
         await self.session.execute(update_stmt)
         return True
 
-    @RetryDecorators.db_retry_decorator()
-    async def is_user_admin(self, user_id: int) -> Union[str, bool]:
+    async def is_user_admin(self, user_id: int) -> Union[str, False]:
         """
         :param user_id: int = User.id
         :return: username or False
         """
-        query = select(User.is_admin, User.username).where(User.id == user_id)
+        query = select(User.is_admin, User.username).where(User.id == user_id)  # type: ignore
         result = await self.session.execute(query)
         user_data = result.one_or_none()
         if user_data:
@@ -83,8 +78,7 @@ class UserCRUD(BaseCRUD):
             return username if is_admin else False
         return False
 
-    @RetryDecorators.db_retry_decorator()
-    async def get_stats_inv_ids_and_jobname(self, user_id: int) -> Union[(int, int, str)]:
+    async def get_stats_inv_ids_and_jobname(self, user_id: int) -> tuple[int, int, str]:
         """
         :param user_id: int = User.id
         :return: (User.stats_id, User.inventory_id, User.job)
@@ -92,16 +86,17 @@ class UserCRUD(BaseCRUD):
         """
         query = (
             select(User.stats_id, User.inventory_id, User.job)
-            .where(User.id == user_id)
+            .where(User.id == user_id)  # type: ignore
         )
         result = await self.session.execute(query)
         user = result.one_or_none()
         if not user:
             raise Exception("User info not found")
-        return user
+        return user  # type: ignore
 
-    @RetryDecorators.db_retry_decorator()
-    async def get_stats_education(self, user_id: int) -> Optional[User]:
+    async def get_stats_education(
+            self, user_id: int
+    ) -> User | None:
         """
         :param user_id: int = User.id
         :return: (User, User.stats, User.education_progress)
@@ -109,8 +104,8 @@ class UserCRUD(BaseCRUD):
         user = await self.session.get(
             User, user_id,
             options=[
-                selectinload(User.stats),
+                selectinload(User.stats),  # type: ignore
                 selectinload(User.education_progress)
             ]
         )
-        return user
+        return user  # type: ignore

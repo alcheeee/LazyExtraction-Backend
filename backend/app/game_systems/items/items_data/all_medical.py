@@ -1,103 +1,125 @@
 from .. import (
     ItemType,
-    ItemTier
+    ItemTier,
+    MedicalBase,
+    Medical,
+    StaticItem
 )
 
-medical_items = {
-    # Bandages
-    'Gauze': {
-        'item_name': 'Gauze',
-        'category': ItemType.Medical,
-        'tier': ItemTier.Tier1,
-        'quick_sell': 60,
-        'health_increase': 6
-    },
-    'Compression Bandage': {
-        'item_name': 'Compression Bandage',
-        'category': ItemType.Medical,
-        'tier': ItemTier.Tier2,
-        'quick_sell': 100,
-        'health_increase': 8
-    },
+
+class Gauze(StaticItem, MedicalBase):
+    __type__ = Medical
+    item_name: str = "Gauze"
+    category: ItemType = ItemType.Medical
+    tier: ItemTier = ItemTier.Tier1
+    quick_sell: int = 60
+    health_adj: int = 6
 
 
-    # Pain Killers
-    'Tylopain': {
-        'item_name': 'Tylopain',
-        'category': ItemType.Medical,
-        'tier': ItemTier.Tier1,
-        'quick_sell': 80,
-        'pain_reduction': 6,
-        'amount_of_actions': 3
-    },
-    'Morphine': {
-        'item_name': 'Morphine',
-        'category': ItemType.Medical,
-        'tier': ItemTier.Tier2,
-        'quick_sell': 120,
-        'pain_reduction': 10,
-        'amount_of_actions': 1
-    },
+class CompressionBandage(StaticItem, MedicalBase):
+    __type__ = Medical
+    item_name: str = "Compression Bandage"
+    category: ItemType = ItemType.Medical
+    tier: ItemTier = ItemTier.Tier2
+    quick_sell: int = 100
+    health_adj: int = 8
 
 
-    # Stimulant
-    'Adrenaline': {
-        'item_name': 'Adrenaline',
-        'category': ItemType.Medical,
-        'tier': ItemTier.Tier2,
-        'quick_sell': 200,
-        'agility_bonus': 10,
-        'strength_bonus': 5,
-        'amount_of_actions': 1
-    },
-    'Ephedrine': {
-        'item_name': 'Ephedrine',
-        'category': ItemType.Medical,
-        'tier': ItemTier.Tier1,
-        'quick_sell': 150,
-        'agility_bonus': 5,
-        'strength_bonus': 3,
-        'amount_of_actions': 2
-    },
+class Tylopain(StaticItem, MedicalBase):
+    __type__ = Medical
+    item_name: str = "Tylopain"
+    category: ItemType = ItemType.Medical
+    tier: ItemTier = ItemTier.Tier1
+    quick_sell: int = 80
+    pain_reduction: int = 6
+    amount_of_actions: int = 3
 
 
-    # First Aid Kits
-    'First Aid Kit': {
-        'item_name': 'First Aid Kit',
-        'category': ItemType.Medical,
-        'tier': ItemTier.Tier2,
-        'quick_sell': 300,
-        'health_increase': 20,
-        'pain_reduction': 5,
-        'amount_of_actions': 1
-    },
-    'Advanced First Aid Kit': {
-        'item_name': 'Advanced First Aid Kit',
-        'category': ItemType.Medical,
-        'tier': ItemTier.Tier3,
-        'quick_sell': 500,
-        'health_increase': 30,
-        'pain_reduction': 10,
-        'amount_of_actions': 1
-    },
+class Morphine(StaticItem, MedicalBase):
+    __type__ = Medical
+    item_name: str = "Morphine"
+    category: ItemType = ItemType.Medical
+    tier: ItemTier = ItemTier.Tier2
+    quick_sell: int = 120
+    pain_reduction: int = 10
+    amount_of_actions: int = 1
 
 
-    # Injections
-    'Steroid Injection': {
-        'item_name': 'Steroid Injection',
-        'category': ItemType.Medical,
-        'tier': ItemTier.Tier3,
-        'quick_sell': 400,
-        'strength_bonus': 10,
-        'agility_bonus': 5,
-        'amount_of_actions': 1
-    },
-    'Pain Relief Injection': {
-        'item_name': 'Pain Relief Injection',
-        'category': ItemType.Medical,
-        'tier': ItemTier.Tier2,
-        'quick_sell': 250,
-        'pain_reduction': 15,
-        'amount_of_actions': 1
-    }
-}
+class Adrenaline(StaticItem, MedicalBase):
+    __type__ = Medical
+    item_name: str = "Adrenaline"
+    category: ItemType = ItemType.Medical
+    tier: ItemTier = ItemTier.Tier2
+    quick_sell: int = 200
+    agility_adj: int = 10
+    strength_adj: int = 5
+    amount_of_actions: int = 1
+
+
+class Ephedrine(StaticItem, MedicalBase):
+    __type__ = Medical
+    item_name: str = "Ephedrine"
+    category: ItemType = ItemType.Medical
+    tier: ItemTier = ItemTier.Tier1
+    quick_sell: int = 150
+    agility_adj: int = 5
+    strength_adj: int = 3
+    amount_of_actions: int = 2
+
+
+class FirstAidKit(StaticItem, MedicalBase):
+    __type__ = Medical
+    item_name: str = "First Aid Kit"
+    category: ItemType = ItemType.Medical
+    tier: ItemTier = ItemTier.Tier2
+    quick_sell: int = 300
+    health_adj: int = 20
+    pain_reduction: int = 5
+    amount_of_actions: int = 1
+
+
+class AdvancedFirstAidKit(StaticItem, MedicalBase):
+    __type__ = Medical
+    item_name: str = "Advanced First Aid Kit"
+    category: ItemType = ItemType.Medical
+    tier: ItemTier = ItemTier.Tier3
+    quick_sell: int = 500
+    health_adj: int = 30
+    pain_reduction: int = 10
+    amount_of_actions: int = 1
+
+
+class SteroidInjection(StaticItem, MedicalBase):
+    __type__ = Medical
+    item_name: str = "Steroid Injection"
+    category: ItemType = ItemType.Medical
+    tier: ItemTier = ItemTier.Tier3
+    quick_sell: int = 400
+    strength_adj: int = 10
+    agility_adj: int = 5
+    amount_of_actions: int = 1
+
+
+class PainReliefInjection(StaticItem, MedicalBase):
+    __type__ = Medical
+    item_name: str = "Pain Relief Injection"
+    category: ItemType = ItemType.Medical
+    tier: ItemTier = ItemTier.Tier2
+    quick_sell: int = 250
+    pain_reduction: int = 15
+    amount_of_actions: int = 1
+
+
+
+medical_classes = [
+    Gauze,
+    CompressionBandage,
+    Tylopain,
+    Morphine,
+    Adrenaline,
+    Ephedrine,
+    FirstAidKit,
+    AdvancedFirstAidKit,
+    SteroidInjection,
+    PainReliefInjection
+]

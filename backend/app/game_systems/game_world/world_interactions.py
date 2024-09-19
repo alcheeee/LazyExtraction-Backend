@@ -4,7 +4,6 @@ from sqlalchemy.orm.attributes import flag_modified
 from ...crud import UserCRUD, UserInventoryCRUD, ItemsCRUD
 from ...schemas import RoomInteraction, InteractionTypes
 from .world_handler import RoomGenerator
-from ...utils import RetryDecorators
 
 
 class InteractionHandler:

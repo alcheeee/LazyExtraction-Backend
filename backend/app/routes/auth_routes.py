@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional, Union
+from typing import Optional
 
 from fastapi import APIRouter, Form, Depends, HTTPException
 from fastapi.responses import JSONResponse
@@ -41,7 +41,7 @@ async def root():
 class UserCreateRequest(BaseModel):
     username: str
     password: str
-    email: Optional[Union[EmailStr, None]]
+    email: Optional[EmailStr | None]
     guest_account: Optional[bool] = False
 
 

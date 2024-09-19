@@ -22,7 +22,6 @@ class StatsCRUD:
         self.session = session
 
     async def adjust_user_weight(self, user_id: int, weight_change: float):
-        # TODO : Weight changes by 1 bug
         query = select(Inventory.current_weight).join(User).where(User.id == user_id)  # type: ignore
         result = await self.session.execute(query)
         current_weight = result.scalar_one_or_none()
@@ -30,7 +29,7 @@ class StatsCRUD:
         if current_weight is None:
             raise LookupError("No inventory found for user")
 
-        new_weight = max(current_weight + weight_change, 0)
+        new_weight = round(max(current_weight + weight_change, 0), 2)
 
         update_stmt = (
             update(Inventory)

@@ -60,7 +60,7 @@ class TestInventory:
             switch_input['inventory_item_id'] = user.inventory.get_an_item()['id']
 
         response = client.post(
-            "/game/item-stash-status",
+            "/inventory/item-stash-status",
             json=switch_input,
             headers=headers
         )
@@ -76,7 +76,7 @@ class TestInventory:
         }
 
         response = client.post(
-            "/game/item-stash-status",
+            "/inventory/item-stash-status",
             json=data,
             headers=test_user.headers
         )
@@ -85,7 +85,7 @@ class TestInventory:
         # Switch Back
         data['to_stash'] = False
         response = client.post(
-            "/game/item-stash-status",
+            "/inventory/item-stash-status",
             json=data,
             headers=test_user.headers
         )
@@ -111,15 +111,19 @@ class TestInventory:
 
     def test_equip_item_from_stash(self, client, test_user):
         helmet_to_equip = test_user.inventory.get_equipped_item()
+        data = {
+            "inventory_item_id": helmet_to_equip['id']
+        }
         response = client.post(
-            f"/game/equip-item?request={helmet_to_equip['id']}",
+            f"/inventory/equip-item",
+            json=data,
             headers=test_user.headers
         )
         assert response.status_code == 400
 
         # Switch item to Inventory
         response = client.post(
-            "/game/item-stash-status",
+            "/inventory/item-stash-status",
             json={
                 'to_stash': False,
                 'quantity': 1,
@@ -133,8 +137,12 @@ class TestInventory:
     def test_equip_item(self, client, test_user):
         # TODO : Equip an item for each slot category
         helmet_to_equip = test_user.inventory.get_equipped_item()
+        data = {
+            "inventory_item_id": helmet_to_equip['id']
+        }
         response = client.post(
-            f"/game/equip-item?request={helmet_to_equip['id']}",
+            f"/inventory/equip-item",
+            json=data,
             headers=test_user.headers
         )
         assert response.status_code == 200
@@ -153,6 +161,7 @@ class TestInventory:
         stats_data = response_json['user-stats']
         assert stats_data['head_protection'] > 1
         assert stats_data['agility'] < 1
+
 
     def test_equipped_item_inventory(self, client, test_user):
         helmet_to_equip = test_user.inventory.get_equipped_item()
@@ -183,8 +192,12 @@ class TestInventory:
 
     def test_unequip_item(self, client, test_user):
         helmet_to_equip = test_user.inventory.get_equipped_item()
+        data = {
+            "inventory_item_id": helmet_to_equip['id']
+        }
         response = client.post(
-            f"/game/equip-item?request={helmet_to_equip['id']}",
+            f"/inventory/unequip-item",
+            json=data,
             headers=test_user.headers
         )
         assert response.status_code == 200
