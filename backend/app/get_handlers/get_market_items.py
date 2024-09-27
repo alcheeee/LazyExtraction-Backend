@@ -1,14 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..crud import (
+from app.crud import (
     MarketCRUD,
     ItemsCRUD
 )
-from ..models import (
-    Market,
+from app.models import (
     MarketItems,
     Items
 )
-from ..schemas import (
+from app.schemas import (
     GetMarketInfo,
     MarketInfo
 )
@@ -19,7 +18,7 @@ class GetterMarketInfo:
     def __init__(self, market_info: GetMarketInfo, session: AsyncSession):
         self.market_info = market_info
         self.session = session
-        self.market_crud = MarketCRUD(Market, session)
+        self.market_crud = MarketCRUD(MarketItems, session)
         self.items_crud = ItemsCRUD(Items, session)
 
 

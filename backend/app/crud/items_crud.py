@@ -1,7 +1,7 @@
 from typing import Optional, Any
 from sqlalchemy import select
 from .base_crud import BaseCRUD
-from ..models.item_models import Items
+from app.models.item_models import Items
 
 
 class ItemsCRUD(BaseCRUD):

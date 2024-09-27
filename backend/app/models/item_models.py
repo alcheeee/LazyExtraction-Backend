@@ -3,8 +3,8 @@ from typing import Optional, List, Any
 from sqlalchemy import Enum, Column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import SQLModel, Field, Relationship
-from ..schemas import ItemType, ItemTier, ClothingType, ArmorType
-from ..schemas.item_schema import (
+from app.schemas import ItemType, ItemTier, ClothingType, ArmorType
+from app.schemas.item_schema import (
     ItemBase,
     ArmorBase,
     ClothingBase,
@@ -46,15 +46,9 @@ class Clothing(ClothingBase, table=True):
     item: Optional[Items] = Relationship(back_populates="clothing_details")
 
 
-class Market(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
-    item_name: str = Field(index=True)
-    postings: List["MarketItems"] = Relationship(back_populates="main_market_post")
-
-
 class MarketItems(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    item_name: str = Field(default="")
+    item_name: str = Field(default="", index=True)
     item_cost: int = Field(default=0)
     quick_sell_value: int = Field(default=0),
     item_quantity: int = Field(default=0)
@@ -65,7 +59,4 @@ class MarketItems(SQLModel, table=True):
     modifications: Optional[dict[str, Any]] = Field(default={}, sa_type=JSONB)
 
     item_id: int = Field(default=None, foreign_key="items.id")
-    main_market_post_id: int = Field(default=None, foreign_key="market.id")
-
     item: Optional[Items] = Relationship(back_populates="market_items")
-    main_market_post: Optional[Market] = Relationship(back_populates="postings")

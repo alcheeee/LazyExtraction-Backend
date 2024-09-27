@@ -1,7 +1,7 @@
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship, Enum, Column, String
 from .models import InventoryItem, User
-from ..schemas import ItemTier
+from app.schemas import ItemTier
 
 
 class CrewItems(SQLModel, table=True):

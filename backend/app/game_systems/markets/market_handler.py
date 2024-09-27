@@ -1,14 +1,15 @@
 import tenacity
 from sqlalchemy.ext.asyncio import AsyncSession
-from ...schemas import MarketTransactionRequest, Transactions
+from app.schemas import MarketTransactionRequest, Transactions
 
-from ...crud import (
+from app.crud import (
     MarketCRUD,
     ItemsCRUD,
     UserCRUD,
-    UserInventoryCRUD
+    UserInventoryCRUD,
+    UserBankingCRUD
 )
-from ...models import (
+from app.models import (
     User,
     Items,
     MarketItems,
@@ -33,6 +34,7 @@ class MarketTransactionHandler:
         self.market_crud = MarketCRUD(MarketItems, session)
         self.item_crud = ItemsCRUD(Items, session)
         self.inv_crud = UserInventoryCRUD(User, session)
+        self.banking_crud = UserBankingCRUD(session)
 
     async def market_transaction(self):
         """
@@ -65,13 +67,10 @@ class MarketTransactionHandler:
                 self.user_id, -amount, inventory_item  # type: ignore
             )
 
-        market = await self.market_crud.find_or_create_market(inventory_item.item.item_name)
-
-        # If Admin post it'll just be under Market
+        # Template logic for eventual NPC shops
         by_user = 'Market' if self.admin_request else self.username
         # TODO : NPCs rather than 'Market'
         new_market_item = MarketItems(
-            main_market_post_id=market.id,
             item_name=inventory_item.item_name,
             item_id=inventory_item.item_id,
             quick_sell_value=inventory_item.quick_sell_value,
@@ -103,7 +102,7 @@ class MarketTransactionHandler:
             raise ValueError("Not enough stock")
 
         # Getting inventory_id and balance for balance check
-        user_inv_id, user_bank = await self.inv_crud.get_user_bank_from_userid(self.user_id)
+        user_inv_id, user_bank = await self.banking_crud.get_user_bank_from_userid(self.user_id)
         total_cost = market_item.item_cost * amount
         if user_bank < total_cost:
             raise ValueError("Not enough money to purchase that item")
@@ -112,8 +111,8 @@ class MarketTransactionHandler:
         market_item.item_quantity -= amount
         adjusted_balance = user_bank - total_cost
 
-        await self.inv_crud.update_bank_balance(user_inv_id, adjusted_balance)
-        await self.inv_crud.update_bank_balance_by_username(market_item.by_user, total_cost)
+        await self.banking_crud.update_bank_balance(user_inv_id, adjusted_balance)
+        await self.banking_crud.update_bank_balance_by_username(market_item.by_user, total_cost)
 
         # Handles the case where the item is modified
         buyer_inventory_item = await self.inv_crud.get_inventory_item_by_item_id(
@@ -154,13 +153,13 @@ class MarketTransactionHandler:
         if inventory_item.amount_in_stash < amount:
             raise ValueError("Invalid amount")
 
-        user_inv_id, user_bank = await self.inv_crud.get_user_bank_from_userid(self.user_id)
+        user_inv_id, user_bank = await self.banking_crud.get_user_bank_from_userid(self.user_id)
         quick_sell_value = inventory_item.quick_sell_value
 
         total_amount = quick_sell_value * amount
         new_bank_balance = user_bank + total_amount
 
-        await self.inv_crud.update_bank_balance(user_inv_id, new_bank_balance)
+        await self.banking_crud.update_bank_balance(user_inv_id, new_bank_balance)
         await self.inv_crud.update_any_inventory_quantity(
             self.user_id, -amount, inventory_item  # type: ignore
         )

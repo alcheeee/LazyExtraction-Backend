@@ -1,9 +1,9 @@
-from typing import Optional, List, Any, Sequence
-from sqlalchemy import select, update, values, delete, Row, RowMapping
-from sqlalchemy.orm import joinedload, selectinload
+from typing import Optional, List, Any
+from sqlalchemy import select, update, delete
+from sqlalchemy.orm import joinedload
 from .base_crud import BaseCRUD
 from .stats_crud import StatsCRUD
-from ..models import (
+from app.models import (
     InventoryItem,
     Inventory,
     Stats,
@@ -21,12 +21,6 @@ class UserInventoryCRUD(BaseCRUD):
     async def get_inventory_item_by_userid(
             self, user_id: int, inventory_item_id: int
     ) -> InventoryItem | None:
-        """
-        :param user_id: User.id
-        :param inventory_item_id: InventoryItem.id
-        :return: Optional[InventoryItem instance]
-        :raise ValueError
-        """
         query = select(InventoryItem).join(Inventory).join(User).where(
             User.id == user_id,  # type: ignore
             InventoryItem.id == inventory_item_id  # type: ignore
@@ -37,11 +31,6 @@ class UserInventoryCRUD(BaseCRUD):
     async def get_inventory_item_by_item_id(
             self, inventory_id: int, item_id: int
     ) -> Optional[InventoryItem]:
-        """
-        :param inventory_id: Inventory.id
-        :param item_id: Items.id
-        :return: InventoryItem or None
-        """
         query = select(InventoryItem).where(
             InventoryItem.inventory_id == inventory_id,  # type: ignore
             InventoryItem.item_id == item_id  # type: ignore
@@ -51,65 +40,8 @@ class UserInventoryCRUD(BaseCRUD):
 
 
     async def get_user_inventory_id_by_userid(self, user_id: int) -> Optional[int]:
-        """
-        :param user_id:int = User.id
-        :return: Optional[User.Inventory.id]
-        """
         query = select(Inventory.id).join(User).where(User.id == user_id)  # type: ignore
         return await self.execute_scalar_one_or_none(query)
-
-    async def get_user_bank_from_userid(self, user_id) -> Optional[int]:
-        """
-        :param user_id: User.id
-        :return: (Inventory.id, Inventory.bank)
-        :raise LookupError
-        """
-        query = select(Inventory.id, Inventory.bank).join(
-            User, User.inventory_id == Inventory.id  # type: ignore
-        ).where(
-            User.id == user_id
-        )
-        result = await self.session.execute(query)
-        inventory_details = result.first()
-        if inventory_details is None:
-            raise LookupError("Failed to get user Inventory or Bank")
-        return inventory_details
-
-    async def update_bank_balance(self, inventory_id: int, new_balance: int):
-        """
-        :param inventory_id: Inventory.id
-        :param new_balance: int
-        :return: Updated Balance
-        """
-        update_ = update(Inventory).where(
-            Inventory.id == inventory_id
-        ).values(bank=new_balance)
-        result = await self.session.execute(update_)
-        return result
-
-    async def update_bank_balance_by_username(self, username: str, balance_adjustment: int):
-        """
-        :param username: User.username
-        :param balance_adjustment: int
-        :return: New bank balace
-        :raise LookupError
-        """
-        subquery = select(Inventory.id, Inventory.bank).join(User).where(User.username == username).subquery()  # type: ignore
-        query = select(subquery.c.id, subquery.c.bank)
-        result = await self.session.execute(query)
-        inventory_id, current_bank_balance = result.first()
-
-        if inventory_id is None:
-            raise LookupError("Failed to get user Inventory or Bank")
-
-        # Calculate and update new balance
-        new_bank_balance = current_bank_balance + balance_adjustment
-        update_stmt = update(Inventory).where(
-            Inventory.id == inventory_id
-        ).values(bank=new_bank_balance)
-
-        await self.session.execute(update_stmt)
-        return new_bank_balance
 
 
     async def switch_item_stash_status(
@@ -228,12 +160,7 @@ class UserInventoryCRUD(BaseCRUD):
         await self.session.flush()
         return inventory_item
 
-    async def get_all_items_by_inventory_id(self, inventory_id: int) -> Sequence[Row[Any] | RowMapping | Any]:
-        """
-        Fetch all inventory items by inventory ID, including item names.
-        :param inventory_id: int
-        :return: List of InventoryItem with item names
-        """
+    async def get_all_items_by_inventory_id(self, inventory_id: int) -> List[InventoryItem]:
         query = (
             select(InventoryItem)
             .options(joinedload(InventoryItem.item))
@@ -241,4 +168,4 @@ class UserInventoryCRUD(BaseCRUD):
         )
 
         result = await self.session.execute(query)
-        return result.unique().scalars().all()
+        return result.unique().scalars().all()  # type: ignore

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select, update, delete
 from .base_crud import BaseCRUD
-from ..models import (
+from app.models import (
     User,
     Crew,
     CrewItems
@@ -34,6 +34,9 @@ class CrewCRUD(BaseCRUD):
 
     # Main function for removing a Crew from the database
     async def delete_crew(self, crew_id: int):
+        crew = await self.get_crew_by_id(crew_id)
+        if not crew:
+            raise LookupError("Crew not found")
         await self.remove_all_users_from_crew(crew_id)
         await self.delete_crew_items(crew_id)
         delete_query = delete(Crew).where(Crew.id == crew_id)

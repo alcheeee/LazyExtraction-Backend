@@ -1,6 +1,6 @@
-from ...schemas import (
+from app.schemas import (
     WorldCreator,
     WorldNames
 )
-from ...crud import UserCRUD
+from app.crud import UserCRUD
 

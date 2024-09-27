@@ -1,9 +1,9 @@
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship, Column, Enum
 from sqlalchemy.dialects.postgresql import JSONB
-from ..schemas import AttachmentTypes
+from app.schemas import AttachmentTypes
 from . import Items
-from ..schemas.weapon_schemas import (
+from app.schemas.weapon_schemas import (
     BulletBase,
     WeaponBase,
     AttachmentBase

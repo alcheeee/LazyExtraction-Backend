@@ -1,8 +1,10 @@
 import time
-
 import pytest
-from . import Check, user, second_user
-from ..helper_functions import check_item_in_inventory, get_user_inventory_items
+
+from app.tests.response import Check
+from app.tests.helper_functions import check_item_in_inventory, get_user_inventory_items
+
+
 
 
 TACTICAL_HELMET_ID = 1

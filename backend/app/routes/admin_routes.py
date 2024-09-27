@@ -2,20 +2,21 @@ from typing import Annotated
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, Body
 
-from ..auth import UserService, AccessTokenBearer
-from ..crud import UserInventoryCRUD, UserCRUD
-from ..config import settings
+from app.auth import UserService, AccessTokenBearer
+from app.crud import UserInventoryCRUD, UserCRUD
+from app.settings import settings
+
 from . import (
-    AsyncSession,
-    get_db,
-    ResponseBuilder,
     DataName,
+    AsyncSession,
+    ResponseBuilder,
+    error_responses,
     MyLogger,
     CommonHTTPErrors,
     exception_decorator
 )
-
-from ..models import User, Inventory
+from app.dependencies.get_db import get_db
+from app.models import User, Inventory
 
 
 error_log = MyLogger.errors()
@@ -31,7 +32,7 @@ game_bot = {
 admin_router = APIRouter(
     prefix="/admin",
     tags=["admin"],
-    responses={404: {"description": "Not Found"}}
+    responses=error_responses
 )
 
 
@@ -67,7 +68,7 @@ async def add_an_item_to_user(
     user_inventory_crud = UserInventoryCRUD(Inventory, session)
     user_crud = UserCRUD(User, session)
 
-    receiving_user_id = await user_crud.get_user_id_by_username(request.username)
+    receiving_user_id = await user_crud.get_user_field_from_username(request.username, 'id')
     if not receiving_user_id:
         raise CommonHTTPErrors.server_error()
 

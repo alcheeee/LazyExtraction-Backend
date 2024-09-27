@@ -1,11 +1,12 @@
 import pytest
-from . import Check
 
 
 class TestRoutes:
     """
     Make sure all routes are responding
     """
+
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         "route, expected_status_code",
         [
@@ -20,9 +21,8 @@ class TestRoutes:
             ('admin', 403)
         ]
     )
-    @pytest.mark.anyio
-    def test_routes(self, client, route, expected_status_code):
-        response = client.get(f"/{route}/")
+    async def test_routes(self, async_client, route, expected_status_code):
+        response = await async_client.get(f"/{route}/")
         assert response.status_code == expected_status_code
         if expected_status_code != 403:
             assert response.status_code == 200

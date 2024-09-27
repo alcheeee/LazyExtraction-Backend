@@ -37,12 +37,13 @@ async def handle_exception(e, kwargs, log_type):
         )
 
     # Raise HTTP error based exception type
-    if log_type == 'mechanics_error':
-        raise CommonHTTPErrors.mechanics_error(str(e))
-    elif log_type == 'index_error':
-        raise CommonHTTPErrors.index_error(str(e))
-    else:
-        raise CommonHTTPErrors.server_error()
+    match log_type:
+        case "mechanics_error":
+            raise CommonHTTPErrors.mechanics_error(str(e))
+        case "index_error":
+            raise CommonHTTPErrors.index_error(str(e))
+        case _:
+            raise CommonHTTPErrors.server_error()
 
 
 def exception_decorator(func):
@@ -51,11 +52,11 @@ def exception_decorator(func):
         try:
             return await func(*args, **kwargs)
 
-        except ValueError as e:
-            await handle_exception(e, kwargs, log_type='mechanics_error')
-
         except LookupError as e:
             await handle_exception(e, kwargs, log_type='index_error')
+
+        except ValueError as e:
+            await handle_exception(e, kwargs, log_type='mechanics_error')
 
         except Exception as e:
             await handle_exception(e, kwargs, log_type='server_error')

@@ -1,8 +1,9 @@
 import random
 from typing import List
+from fastapi.concurrency import run_in_threadpool
 from functools import lru_cache
 from . import WorldNames
-from .world_data import room_drops_json
+from .room_drop_jsons import room_drops_json
 
 
 class RoomLootTables:
@@ -24,16 +25,10 @@ class RoomLootTables:
         drops = self.base_drops[room_type]
         return zip(*drops.items())
 
-    def pick_drops(self, room_type: str) -> List[str]:
+    async def pick_drops(self, room_type: str) -> List[str]:
+        return await run_in_threadpool(self.pick_drops_sync, room_type)
+
+    def pick_drops_sync(self, room_type: str) -> List[str]:
         items, weights = self._prepare_drops(room_type)
         num_drops = random.randint(*self.num_drops_range)
         return random.choices(items, weights, k=num_drops)
-
-    def regular_room(self):
-        return self.pick_drops(self.base_drops["regular_room"])
-
-    def medical_room(self):
-        return self.pick_drops(self.base_drops["medical_room"])
-
-    def military_room(self):
-        return self.pick_drops(self.base_drops["military_room"])

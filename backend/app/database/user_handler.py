@@ -1,15 +1,19 @@
+from typing import Any
 from datetime import timedelta
 
-from ..auth.auth_deps import PasswordSecurity, TokenHandler
-from ..models import (
+from fastapi.concurrency import run_in_threadpool
+
+from app.auth.auth_deps import PasswordSecurity, TokenHandler
+from app.models import (
     User,
     Stats,
     Inventory,
     TrainingProgress
 )
+from app.schemas.token_schema import TokenData
+from app.utils.logger import MyLogger
+from app.settings import settings
 
-from ..utils.logger import MyLogger
-from ..config import settings
 game_log = MyLogger.game()
 
 
@@ -17,11 +21,12 @@ class UserHandler:
     def __init__(self, session):
         self.session = session
 
-    async def create_user(self, username: str, password: str, email: str,
-                          guest_account: bool = False, game_bot: bool = False
-    ):
+    async def create_user(
+            self, username: str, password: str, email: str,
+            guest_account: bool = False, game_bot: bool = False
+    ) -> dict[str, Any] | User:
         try:
-            hashed_password = await PasswordSecurity.hash_password(password=password)
+            hashed_password = await run_in_threadpool(PasswordSecurity.hash_password, password)
             new_user = User(username=username, password=hashed_password, email=email, guest_account=guest_account)
             new_stats = Stats(user=new_user)
             new_inventory = Inventory(user=new_user)
@@ -32,10 +37,9 @@ class UserHandler:
             if game_bot:
                 return new_user
 
-            access_token, refresh_token = self.create_tokens(
-                username,
-                new_user.id
-            )
+            token_data = TokenData(username=username, user_id=str(new_user.id))
+
+            access_token, refresh_token = await run_in_threadpool(self.create_tokens, token_data)
 
             return {
                 'access_token': access_token,
@@ -45,27 +49,23 @@ class UserHandler:
                 'guest_account': True if guest_account else False,
                 'inventory': new_user.inventory,
                 'stats': new_user.stats,
-                'training': new_user.training_progress
+                'trainingprogress': new_user.training_progress
             }
 
         except Exception as e:
             raise e
 
     @staticmethod
-    def create_tokens(username: str, user_id: int):
-        user_data = {
-            "username": username,
-            "user_id": str(user_id)
-        }
+    def create_tokens(token_data: TokenData):
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
 
         access_token = TokenHandler.create_access_token(
-            user_data=user_data,
+            token_data=token_data,
             expires_delta=access_token_expires
         )
         refresh_token = TokenHandler.create_access_token(
-            user_data=user_data,
+            token_data=token_data,
             expires_delta=refresh_token_expires,
             refresh=True
         )

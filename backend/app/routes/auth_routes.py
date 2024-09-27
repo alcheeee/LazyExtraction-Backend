@@ -3,24 +3,27 @@ from typing import Optional
 
 from fastapi import APIRouter, Form, Depends, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, EmailStr
 
-from ..config import settings
-from ..auth.auth_handler import TokenHandler, UserService
-from ..auth import AccessTokenBearer, RefreshTokenBearer
-from ..database.user_handler import UserHandler
+from app.settings import settings
+from app.schemas.token_schema import TokenData
+from app.auth.auth_handler import TokenHandler, UserService
+from app.auth import AccessTokenBearer, RefreshTokenBearer
 
-from ..crud import BaseCRUD
-from ..models import User
+from app.database.user_handler import UserHandler
+from app.crud import BaseCRUD
+from app.models import User
 from . import (
+    DataName,
     AsyncSession,
-    get_db,
+    error_responses,
     ResponseBuilder,
     MyLogger,
     CommonHTTPErrors,
     exception_decorator
 )
-
+from app.dependencies.get_db import get_db
 
 user_log = MyLogger.user()
 error_log = MyLogger.errors()
@@ -29,13 +32,13 @@ error_log = MyLogger.errors()
 user_router = APIRouter(
     prefix="/user",
     tags=["user"],
-    responses={404: {"description": "Not Found"}}
+    responses=error_responses
 )
 
 
 @user_router.get("/")
 async def root():
-    return ResponseBuilder.success("User routes ready")
+    return ResponseBuilder.success(message="User routes ready")
 
 
 class UserCreateRequest(BaseModel):
@@ -61,7 +64,6 @@ async def register_new_user(
         # TODO : Add Guest Account logic,
         #  Name change logic (New Column, name_changes: int, start with 1 if guest_account)
         #  else 0, costs $x to change
-
 
     if len(request.username) < 4:
         raise ValueError("Minimum name length is 4.")
@@ -102,26 +104,25 @@ async def login_for_access_token(
     user_id = await auth_service.authenticate_user(username, password)
     if not user_id:
         raise ValueError("Incorrect username or password")
-
-    access_token, refresh_token = UserHandler.create_tokens(username, user_id)
-
-    return JSONResponse(
-        content={
-            "message": "Login Successful",
-            "access_token": access_token,
-            "refresh_token": refresh_token
-        }
-    )
+    token_data = TokenData(username=username, user_id=str(user_id))
+    access_token, refresh_token = await run_in_threadpool(UserHandler.create_tokens, token_data)
+    return JSONResponse(content={
+        "message": "Login Successful",
+        "access_token": access_token,
+        "refresh_token": refresh_token
+    })
 
 
 @user_router.post("/refresh-token")
 @exception_decorator
-async def get_new_access_token(token_data: dict = Depends(RefreshTokenBearer())):
-    expiry_timestamp = token_data['exp']
+async def get_new_access_token(user_data: dict = Depends(RefreshTokenBearer())):
+    expiry_timestamp = user_data['exp']
     if datetime.fromtimestamp(expiry_timestamp) > datetime.now():
-        new_access_token = TokenHandler.create_access_token(
-            user_data=token_data['user']
+        new_token_data = TokenData(
+            username=user_data['user']['username'],
+            user_id=user_data['user']['user_id']
         )
+        new_access_token = await run_in_threadpool(TokenHandler.create_access_token, token_data=new_token_data)
 
         return JSONResponse(content={
             "access_token": new_access_token

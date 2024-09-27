@@ -1,7 +1,7 @@
-from ...schemas import JobTypes, JobRequest, JobActionType
-from ...database import AsyncSession
-from ...crud import JobsCRUD, UserCRUD
-from ...models import User, Jobs
+from app.schemas import JobTypes, JobRequest, JobActionType
+from app.database import AsyncSession
+from app.crud import JobsCRUD, UserCRUD
+from app.models import User, Jobs
 
 
 class JobService:
@@ -53,7 +53,7 @@ class JobService:
 
     async def apply_to_job(self):
         job_name = self.request.job_name
-        user = await self.user_crud.get_stats_education(self.user_id)
+        user = await self.user_crud.get_stats_training(self.user_id)
         if user.job:
             raise ValueError("You need to quit your current job first")
 

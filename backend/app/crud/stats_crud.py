@@ -3,7 +3,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..models import (
+from app.models import (
     User,
     Inventory,
     InventoryItem,
@@ -12,8 +12,7 @@ from ..models import (
     Weapon,
     Bullets,
     Attachments,
-    MarketItems,
-    Market
+    MarketItems
 )
 
 

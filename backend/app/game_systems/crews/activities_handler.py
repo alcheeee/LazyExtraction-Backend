@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from ...models import (
+from app.models import (
     User,
     Crew,
     CrewItems

@@ -1,4 +1,5 @@
-from .account_util import UserAccount
+from account_util import UserAccount
+
 
 class Check:
 

@@ -3,8 +3,8 @@ from . import WorldNames
 room_tables = {
     WorldNames.Forest: {
         'potential_rooms': [
-            ['medical_room', 15],
-            ['regular_room', 65]
+            ['medical_room', 25],
+            ['regular_room', 75]
         ]
     },
     WorldNames.Laboratory: {

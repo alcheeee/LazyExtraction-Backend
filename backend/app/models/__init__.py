@@ -8,8 +8,7 @@ from .item_models import (
     Medical,
     Clothing,
     Armor,
-    MarketItems,
-    Market
+    MarketItems
 )
 from .weapon_models import (
     Weapon,
@@ -34,7 +33,6 @@ __all__ = [
     'Armor',
     'Clothing',
     'MarketItems',
-    'Market',
     'User',
     'Inventory',
     'InventoryItem',

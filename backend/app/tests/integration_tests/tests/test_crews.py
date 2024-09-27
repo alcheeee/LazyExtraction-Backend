@@ -1,5 +1,7 @@
 import pytest
-from . import Check, user, second_user
+from app.tests.response import Check
+
+
 
 
 class TestCrews:
@@ -15,15 +17,17 @@ class TestCrews:
             # Successful creation
             ({'name': 'test-crew', 'private': False}, 200, user.headers),
             # Missing field
-            ({'name': None, 'private': False}, 422, second_user.headers),
+            ({'name': None, 'private': False}, 422, None.headers),
             # Same name
-            ({'name': 'test-crew', 'private': False}, 400, second_user.headers),
+            ({'name': 'test-crew', 'private': False}, 400, None.headers),
             # User is already in a crew
             ({'name': 'already-leader', 'private': False}, 400, user.headers)
         ]
     )
     def test_create_crew(self, client, crew_input, expected_status_code, headers):
         response = client.post("/crews/create-crew", json=crew_input, headers=headers)
+        if crew_input['name'] == 'test-crew':
+            print(user.headers)
         assert response.status_code == expected_status_code
 
         if crew_input['name'] == 'test-crew' and response.status_code == 200:
@@ -37,13 +41,13 @@ class TestCrews:
         "add_user_input, expected_status_code, headers",
         [
             # Not Authenticated
-            ({'user_to_add_remove': second_user.username, 'crew_id': 1}, 403, None),
+            ({'user_to_add_remove': None.username, 'crew_id': 1}, 403, None),
             # Successful addition
-            ({'user_to_add_remove': second_user.username, 'crew_id': 1}, 200, user.headers),
+            ({'user_to_add_remove': None.username, 'crew_id': 1}, 200, user.headers),
             # Adding yourself
             ({'user_to_add_remove': user.username, 'crew_id': 1}, 400, user.headers),
             # User already in a crew
-            ({'user_to_add_remove': second_user.username, 'crew_id': 1}, 400, user.headers),
+            ({'user_to_add_remove': None.username, 'crew_id': 1}, 400, user.headers),
             # Non-existing user
             ({'user_to_add_remove': '___', 'crew_id': 1}, 400, user.headers)
         ]
@@ -65,13 +69,13 @@ class TestCrews:
             # Not Authenticated
             ({'user_to_add_remove': user.username, 'crew_id': 1}, 403, None),
             # Member tries removing leader
-            ({'user_to_add_remove': user.username, 'crew_id': 1}, 400, second_user.headers),
+            ({'user_to_add_remove': user.username, 'crew_id': 1}, 400, None.headers),
             # Successful removal
-            ({'user_to_add_remove': second_user.username, 'crew_id': 1}, 200, user.headers),
+            ({'user_to_add_remove': None.username, 'crew_id': 1}, 200, user.headers),
             # Removing yourself
             ({'user_to_add_remove': user.username, 'crew_id': 1}, 400, user.headers),
             # User not in the crew
-            ({'user_to_add_remove': second_user.username, 'crew_id': 1}, 400, user.headers),
+            ({'user_to_add_remove': None.username, 'crew_id': 1}, 400, user.headers),
             # Non-existing user
             ({'user_to_add_remove': '___', 'crew_id': 1}, 400, user.headers)
         ]

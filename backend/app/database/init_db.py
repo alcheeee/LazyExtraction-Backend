@@ -1,6 +1,12 @@
-from ..crud import ItemsCRUD
-from ..models import Items
-from ..game_systems.items.items_data import (
+from app.settings import settings
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database.user_handler import UserHandler
+from app.crud import ItemsCRUD, UserCRUD, UserInventoryCRUD
+from app.models import Items
+
+from app.game_systems.items.item_stats_handler import ItemStatsHandler
+from app.game_systems.items.items_data import (
     armor_classes,
     weapon_classes,
     bullet_classes,
@@ -8,6 +14,8 @@ from ..game_systems.items.items_data import (
     attachment_classes,
     clothing_classes
 )
+from app.utils.logger import MyLogger
+admin_log = MyLogger.admin()
 
 
 async def init_content(session):
@@ -37,49 +45,88 @@ async def init_content(session):
     return True
 
 
-async def create_game_account(session):
-    """
-    Create the game account for testing purposes, and whatever else may come up (Automod? Random Events?)
-    """
-    from ..config import settings
-    from ..database.user_handler import UserHandler
-    from ..crud import UserCRUD, UserInventoryCRUD
-    from ..game_systems.items.item_stats_handler import ItemStatsHandler
+class InitializeLazyBot:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+        self.user_handler = UserHandler(session)
+        self.user_crud = UserCRUD(None, session)
 
-    user_handler = UserHandler(session)
+        self.username = settings.GAME_BOT_USERNAME
+        self.password = settings.GAME_BOT_PASSWORD
+        self.email = settings.GAME_BOT_EMAIL
+        self.bot_id = None
 
-    username = settings.GAME_BOT_USERNAME
-    password = settings.GAME_BOT_PASSWORD
-    email = settings.GAME_BOT_EMAIL
+    async def check_bot_account(self) -> None:
+        bot_existing_id = await self.user_crud.get_user_field_from_username(self.username, 'id')
+        if bot_existing_id is not None:
+            settings.GAME_BOT_USER_ID = bot_existing_id
+            self.bot_id = bot_existing_id
+        else:
+            await self.create_bot_account()
 
-    _crud = UserCRUD(None, session)
-    bot_existing_id = await _crud.get_user_field_from_username(username, 'id')
-    if bot_existing_id is not None:
-        settings.GAME_BOT_USER_ID = bot_existing_id
-        return
+    async def create_bot_account(self) -> None:
+        bot_account = await self.user_handler.create_user(
+            self.username, self.password, self.email, game_bot=True
+        )
+        settings.GAME_BOT_USER_ID = int(bot_account.id)
+        self.bot_id = int(bot_account.id)
 
-    bot_account = await user_handler.create_user(username, password, email, game_bot=True)
-    settings.GAME_BOT_USER_ID = int(bot_account.id)
+        print('--> Bot Account created')
+        await self.make_bot_admin()
+        await self.init_bot_inventory()
+        print('--> Bot Account Finished Initializing')
 
-    print('Game bot created')
+    async def make_bot_admin(self) -> None:
+        await self.user_crud.make_user_admin(self.bot_id)
 
-    try:
-        user_crud = UserCRUD(None, session)
-        user_inv_crud = UserInventoryCRUD(Items, session)
-        items_crud = ItemsCRUD(Items, session)
+    async def init_bot_inventory(self):
+        try:
+            attachments_to_give = self.get_attachments_to_give()
+            items_to_give = self.get_items_to_give()
 
-        await user_crud.make_user_admin(bot_account.id)
-        attachments_to_give = [
+            for item in items_to_give:
+                new_item = await self.add_item_to_inventory(item)
+                await self.handle_equipment(new_item, attachments_to_give)
+
+        except Exception as e:
+            MyLogger.log_exception(admin_log, e)
+
+    async def add_item_to_inventory(self, item: str):
+        items_crud = ItemsCRUD(Items, self.session)
+        user_inv_crud = UserInventoryCRUD(Items, self.session)
+
+        item_db_id = await items_crud.check_item_exists(item)
+        new_item = await user_inv_crud.update_user_inventory_item(
+            user_id=self.bot_id,
+            item_id=item_db_id,
+            quantity_change=10,
+            to_stash=False
+        )
+        await self.session.flush()
+        return new_item
+
+    async def handle_equipment(self, new_item, attachments_to_give):
+        if new_item.id is not None and new_item.item_name not in attachments_to_give:
+            item_stats_handler = ItemStatsHandler(self.bot_id, new_item.id, self.session)
+            await item_stats_handler.equip_item()
+
+    @staticmethod
+    def get_attachments_to_give():
+        return [
             'Tactical Laser',
             'Flash Suppressor',
             'Adjustable Stock',
             'Sniper Scope',
             'Universal Suppressor'
         ]
-        items_to_give = [
+
+    @staticmethod
+    def get_items_to_give():
+        return [
             'Tactical Helmet',
             'Tactical Vest',
             'M4A1 Carbine',
+            'M1911',
             'Recon Bandana',
             'Tactical Hoodie',
             'Cargo Pants',
@@ -89,21 +136,3 @@ async def create_game_account(session):
             'Adjustable Stock',
             'Sniper Scope'
         ]
-        for item in items_to_give:
-            item_db_id = await items_crud.check_item_exists(item)
-            new_item = await user_inv_crud.update_user_inventory_item(
-                user_id=bot_account.id,
-                item_id=item_db_id,
-                quantity_change=10,
-                to_stash=False
-            )
-            await session.flush()
-            if new_item.id is not None and item not in attachments_to_give:
-                item_stats_handler = ItemStatsHandler(bot_account.id, new_item.id, session)
-                await item_stats_handler.equip_item()
-
-    except Exception as e:
-        print(str(e))
-
-
-

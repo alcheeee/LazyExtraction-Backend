@@ -1,9 +1,10 @@
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.requests import Request
+from fastapi.concurrency import run_in_threadpool
 
 from .auth_deps import TokenHandler
-from ..config import settings
-from ..utils import CommonHTTPErrors
+from app.settings import settings
+from app.utils import CommonHTTPErrors
 
 
 class TokenBearer(HTTPBearer):
@@ -24,7 +25,7 @@ class TokenBearer(HTTPBearer):
     async def __call__(self, request: Request) -> HTTPAuthorizationCredentials | None:
         creds = await super().__call__(request)
         token = creds.credentials
-        token_data = TokenHandler.decode_token(token)
+        token_data = await run_in_threadpool(TokenHandler.decode_token, token)
         if not self.token_valid:
             raise CommonHTTPErrors.credentials_error()
 
@@ -33,8 +34,8 @@ class TokenBearer(HTTPBearer):
         return token_data
 
     @staticmethod
-    def token_valid(token: str) -> bool:
-        token_data = TokenHandler.decode_token(token)
+    async def token_valid(token: str) -> bool:
+        token_data = await run_in_threadpool(TokenHandler.decode_token, token)
         return True if token_data is not None else False
 
     def verify_token_data(self, token_data: dict):

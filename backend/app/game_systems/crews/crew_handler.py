@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from ...schemas import NewCrewInfo, CrewDefaults
-from ...crud.crew_crud import CrewCRUD
-from ...crud.user_crud import UserCRUD
-from ...models import (
+from app.schemas import NewCrewInfo, CrewDefaults
+from app.crud.crew_crud import CrewCRUD
+from app.crud.user_crud import UserCRUD
+from app.models import (
     User,
     Crew,
     CrewItems
@@ -35,6 +35,11 @@ class CrewHandler:
         """
         Main function for creating a Crew
         """
+        if len(new_crew_data.name) <= 4:
+            raise ValueError("Crew name is too short")
+        if len(new_crew_data.name) > 12:
+            raise ValueError("Crew name is too long")
+
         await self.before_create_checks(new_crew_data.name, user_id)
         new_crew = await self.prepare_new_crew(new_crew_data, username)
         for item in CrewDefaults.items:

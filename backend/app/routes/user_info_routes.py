@@ -1,17 +1,17 @@
 from fastapi import APIRouter, Depends
-from ..auth import AccessTokenBearer
+from app.auth import AccessTokenBearer
 from . import (
-    AsyncSession,
-    get_db,
-    ResponseBuilder,
     DataName,
+    AsyncSession,
+    ResponseBuilder,
     MyLogger,
     CommonHTTPErrors,
     exception_decorator
 )
-from ..get_handlers.get_user_info import GetUserInfo
-from ..schemas import UserInfoNeeded
-from ..models import InventoryItem, Inventory, Stats
+from app.dependencies.get_db import get_db
+from app.get_handlers.get_user_info import GetUserInfo
+from app.schemas import UserInfoNeeded
+from app.models import InventoryItem, Inventory, Stats
 
 error_log = MyLogger.errors()
 

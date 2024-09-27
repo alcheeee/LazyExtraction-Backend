@@ -5,18 +5,19 @@ from datetime import datetime, timedelta
 
 from passlib.hash import argon2
 from jose import jwt, exceptions
-from ..config import settings
+from app.settings import settings
 
-from ..utils import CommonHTTPErrors
+from app.utils import CommonHTTPErrors
+from app.schemas.token_schema import TokenData
 
 
 class PasswordSecurity:
     @staticmethod
-    async def hash_password(password: str) -> str:
+    def hash_password(password: str) -> str:
         return argon2.using(time_cost=1, memory_cost=65536, parallelism=2).hash(password)
 
     @staticmethod
-    async def check_pass_hash(password: str, hashed_password: str) -> bool:
+    def check_pass_hash(password: str, hashed_password: str) -> bool:
         return argon2.verify(password, hashed_password)
 
 
@@ -24,7 +25,7 @@ class TokenHandler:
 
     @staticmethod
     def create_access_token(
-            user_data: dict,
+            token_data: TokenData,
             expires_delta: timedelta | None = None,
             refresh: bool = False
     ) -> str:
@@ -34,7 +35,7 @@ class TokenHandler:
             expire = datetime.now() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
         to_encode = {
-            "user": user_data,
+            "user": {'username': token_data.username, 'user_id': token_data.user_id},
             "refresh": refresh
         }
 

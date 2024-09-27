@@ -1,12 +1,14 @@
 import pytest
-from . import Check, user, second_user
-from ..helper_functions import (
+
+from app.tests.response import Check
+from app.tests.helper_functions import (
     check_item_in_inventory,
     get_user_inventory_items,
     check_bank,
     get_market_items
 )
-from ...game_systems.items.items_data.all_armor import armor_classes
+from app.game_systems.items.items_data.all_armor import armor_classes
+
 
 
 class TestMarket:

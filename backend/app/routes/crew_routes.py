@@ -1,15 +1,16 @@
 from fastapi import APIRouter, Depends
-from ..schemas import NewCrewInfo, AddRemoveCrewRequest
-from ..game_systems.crews.crew_handler import CrewHandler
-from ..auth import AccessTokenBearer
+from app.schemas import NewCrewInfo, AddRemoveCrewRequest
+from app.game_systems.crews.crew_handler import CrewHandler
+from app.auth import AccessTokenBearer
 from . import (
+    DataName,
     AsyncSession,
-    get_db,
     ResponseBuilder,
     MyLogger,
     CommonHTTPErrors,
     exception_decorator
 )
+from app.dependencies.get_db import get_db
 
 error_log = MyLogger.errors()
 

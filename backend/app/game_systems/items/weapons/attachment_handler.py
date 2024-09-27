@@ -1,21 +1,21 @@
 from typing import List, Dict
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ....crud import (
+from app.crud import (
     UserInventoryCRUD,
     ItemsCRUD,
     WeaponCRUD
 )
-from ....models import (
+from app.models import (
     Items,
     InventoryItem,
     Weapon,
     Attachments
 )
-from ....schemas.weapon_schemas import (
+from app.schemas.weapon_schemas import (
     AttachmentTypes
 )
-from ..items_data.all_attachments import attachment_classes
+from ..items_data import attachment_classes
 
 
 class WeaponStatsHandler:
@@ -33,6 +33,7 @@ class WeaponStatsHandler:
         )
         return weapon_item, weapon_inv_item
 
+    # TODO: seriously this needs cleaning
 
     async def apply_attachments(self, attachments_to_add: Dict[AttachmentTypes, str]):
         user_inv_id = await self.user_inventory_crud.get_user_inventory_id_by_userid(self.user_id)

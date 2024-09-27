@@ -1,20 +1,20 @@
 from fastapi import APIRouter, Depends
-from ..game_systems.items.item_stats_handler import ItemStatsHandler
-from ..auth import AccessTokenBearer
-from ..crud import UserInventoryCRUD
-from ..schemas import (
+from app.game_systems.items.item_stats_handler import ItemStatsHandler
+from app.auth import AccessTokenBearer
+from app.crud import UserInventoryCRUD
+from app.schemas import (
     StashStatusSwitchRequest,
     EquippingUnequippingRequest
 )
 from . import (
-    AsyncSession,
-    get_db,
-    ResponseBuilder,
     DataName,
+    AsyncSession,
+    ResponseBuilder,
     MyLogger,
     CommonHTTPErrors,
     exception_decorator
 )
+from app.dependencies.get_db import get_db
 
 error_log = MyLogger.errors()
 game_log = MyLogger.game()
@@ -43,7 +43,7 @@ async def equip_inventory_item(
     item_stats_handler = ItemStatsHandler(user_id, request.inventory_item_id, session)
     result = await item_stats_handler.equip_item()
     await session.commit()
-    return ResponseBuilder.success(f"Item {result}")
+    return ResponseBuilder.success(f"Equipped Successfully", data=result)
 
 
 @inventory_router.post("/unequip-item")
@@ -58,7 +58,7 @@ async def unequip_inventory_item(
     item_stats_handler = ItemStatsHandler(user_id, request.inventory_item_id, session)
     result = await item_stats_handler.unequip_item()
     await session.commit()
-    return ResponseBuilder.success(f"Item {result}")
+    return ResponseBuilder.success(f"Unequipped Successfully", data=result)
 
 
 @inventory_router.post("/item-stash-status")

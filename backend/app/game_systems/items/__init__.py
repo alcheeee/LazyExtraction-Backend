@@ -1,4 +1,4 @@
-from ...schemas import (
+from app.schemas import (
     ItemTier,
     ItemType,
     AttachmentTypes,
@@ -14,7 +14,7 @@ from ...schemas import (
     AttachmentBase
 )
 
-from ...models import (
+from app.models import (
     Items,
     Armor,
     Weapon,

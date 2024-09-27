@@ -46,6 +46,15 @@ class CommonHTTPErrors:
         return error
 
     @staticmethod
+    def invalid_input(message: str = ""):
+        """Raises an HTTP 422 error with a Pydantic message"""
+        error = HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=message
+        )
+        return error
+
+    @staticmethod
     def server_error(message: str = "Internal Server Error"):
         """Raises an HTTP 500 server error"""
         error = HTTPException(

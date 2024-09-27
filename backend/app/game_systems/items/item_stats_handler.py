@@ -2,13 +2,13 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...crud import UserCRUD, UserInventoryCRUD
+from app.crud import UserCRUD, UserInventoryCRUD
 from . import (
     ItemType,
     ArmorType,
     ClothingType
 )
-from ...models import (
+from app.models import (
     User,
     InventoryItem,
     Clothing,
@@ -18,10 +18,10 @@ from ...models import (
     Stats,
     Items
 )
+from app import globals
 
 
 class ItemStatsHandler:
-    # TODO : Clean this mess up for new logic
 
     def __init__(self, user_id: int, inventory_item_id: int, session: AsyncSession):
         self.user_id = user_id
@@ -29,13 +29,12 @@ class ItemStatsHandler:
         self.session = session
         self.user_crud = UserCRUD(User, session)
         self.user_inventory_crud = UserInventoryCRUD(InventoryItem, session)
-
         self.user = None
         self.stats = None
         self.inventory = None
 
-
-    async def equip_item(self) -> str:
+    async def equip_item(self) -> dict:
+        data_to_return = {}
         user, inventory, stats, inventory_item = await self.get_user_data()
         item, item_details = await self.get_item_data(inventory_item)
         item_slot_attr = self.determine_slot(item, item_details)
@@ -51,14 +50,20 @@ class ItemStatsHandler:
 
         equipped_item_id = getattr(inventory, item_slot_attr)
         if equipped_item_id:
-            await self.unequip_item(equipped_item_id)
+            unequipped_item = await self.unequip_item(equipped_item_id, called_from_equip=True)
+            data_to_return['unequipped-item'] = unequipped_item
 
         await self.update_equipped_status(inventory, item_slot_attr, inventory_item, True)
         await self.adjust_user_stats(stats, item_details, equip=True)
 
-        return "Item Equipped"
+        data_to_return['stats'] = stats
+        data_to_return['user-inventory'] = inventory
+        data_to_return['equipped-item'] = inventory_item
+        return data_to_return
 
-    async def unequip_item(self, inventory_item_id: Optional[int] = None) -> str:
+    async def unequip_item(
+            self, inventory_item_id: Optional[int] = None, called_from_equip: bool = False
+    ) -> dict | InventoryItem:
         if inventory_item_id is None:
             inventory_item_id = self.inventory_item_id
 
@@ -75,8 +80,15 @@ class ItemStatsHandler:
         await self.update_equipped_status(inventory, item_slot_attr, inventory_item, False)
         await self.adjust_user_stats(stats, item_details, equip=False)
 
-        return "Item Unequipped"
+        if called_from_equip:
+            return inventory_item
 
+        data_to_return = {
+            'stats': stats,
+            'user-inventory': inventory,
+            'unequipped-item': inventory_item
+        }
+        return data_to_return
 
     async def get_user_data(
             self, inventory_item_id: Optional[int] = None
@@ -104,7 +116,6 @@ class ItemStatsHandler:
         self.stats = stats
         return user, inventory, stats, inventory_item  # type: ignore
 
-
     async def get_item_data(
             self, inventory_item: InventoryItem
     ) -> tuple[Items, Clothing | Weapon | Armor]:
@@ -119,14 +130,12 @@ class ItemStatsHandler:
 
         return item, item_details  # type: ignore
 
-
     async def update_equipped_status(
             self, inventory: Inventory,
             item_slot_attr: str,
             inventory_item: InventoryItem,
             equip: bool
     ) -> None:
-        # TODO : Use CRUD
         if equip:
             setattr(inventory, item_slot_attr, inventory_item.id)
             inventory_item.one_equipped = True
@@ -137,7 +146,6 @@ class ItemStatsHandler:
             inventory_item.amount_in_inventory += 1
 
         await self.session.flush()
-
 
     async def adjust_user_stats(
             self,

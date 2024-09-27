@@ -5,23 +5,23 @@
 #  I will have the resources to find a better solution
 
 from fastapi import APIRouter, Depends
-from ..auth import AccessTokenBearer
+from app.auth import AccessTokenBearer
 
-from ..game_systems.items.weapons.attachment_handler import WeaponStatsHandler
-from ..schemas.weapon_schemas import (
+from app.game_systems.items.weapons.attachment_handler import WeaponStatsHandler
+from app.schemas.weapon_schemas import (
     AttachmentTypes,
     AddAttachmentsRequest,
     RemoveAttachmentRequest
 )
 from . import (
-    AsyncSession,
-    get_db,
-    ResponseBuilder,
     DataName,
+    AsyncSession,
+    ResponseBuilder,
     MyLogger,
     CommonHTTPErrors,
     exception_decorator
 )
+from app.dependencies.get_db import get_db
 
 error_log = MyLogger.errors()
 game_log = MyLogger.game()

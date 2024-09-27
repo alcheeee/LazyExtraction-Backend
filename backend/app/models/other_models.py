@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Column, Enum, Relationship
-from ..schemas import JobTypes
+from app.schemas import JobTypes
 
 
 class Jobs(SQLModel, table=True):

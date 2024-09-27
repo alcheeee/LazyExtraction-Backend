@@ -1,15 +1,6 @@
-from typing import Union, Any
-from enum import Enum
-from .HTTP_errors import CommonHTTPErrors
-
-
-class DataName(str, Enum):
-    RoomData = "room-data"
-    UserStats = "user-stats"
-    UserInventory = "user-inventory"
-    AllInventoryItems = "all-inventory-items"
-    InventoryItem = "inventory-item"
-    WeaponData = "weapon-data"
+from typing import Union, Any, Optional
+from app.globals import DataName
+from sqlmodel import SQLModel
 
 
 class ResponseBuilder:

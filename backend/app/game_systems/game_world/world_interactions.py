@@ -1,9 +1,9 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
-from ...crud import UserCRUD, UserInventoryCRUD, ItemsCRUD
-from ...schemas import RoomInteraction, InteractionTypes
-from .world_handler import RoomGenerator
+from app.crud import UserCRUD, UserInventoryCRUD, ItemsCRUD
+from app.schemas import RoomInteraction, InteractionTypes
+from .room_generator import RoomGenerator
 
 
 class InteractionHandler:
@@ -23,16 +23,15 @@ class InteractionHandler:
         if user.in_raid is False:
             raise ValueError("Not in a raid")
 
-        elif interaction.action == InteractionTypes.Pickup:
-            result = await self.item_pickup(user, interaction.id)
-
-        elif interaction.action == InteractionTypes.Traverse:
-            result = await self.traverse_room(user, interaction.id)
-
-        elif interaction.action == InteractionTypes.Extract:
-            result = await self.extract_from_raid(user)
-        else:
-            raise ValueError("Invalid action")
+        match interaction.action:
+            case InteractionTypes.Pickup:
+                result = await self.item_pickup(user, interaction.id)
+            case InteractionTypes.Traverse:
+                result = await self.traverse_room(user, interaction.id)
+            case InteractionTypes.Extract:
+                result = await self.extract_from_raid(user)
+            case _:
+                raise ValueError("An Error occurred")
 
         self.session.add(user)
         return result

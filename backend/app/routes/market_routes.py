@@ -1,16 +1,17 @@
 from fastapi import APIRouter, Depends
-from ..game_systems.markets.market_handler import MarketTransactionHandler
-from ..schemas import MarketTransactionRequest
-from ..auth import AccessTokenBearer
-from ..crud import MarketCRUD, UserCRUD
+from app.game_systems.markets.market_handler import MarketTransactionHandler
+from app.schemas import MarketTransactionRequest
+from app.auth import AccessTokenBearer
+from app.crud import MarketCRUD, UserCRUD
 from . import (
+    DataName,
     AsyncSession,
-    get_db,
     ResponseBuilder,
     MyLogger,
     CommonHTTPErrors,
     exception_decorator
 )
+from app.dependencies.get_db import get_db
 
 error_log = MyLogger.errors()
 game_log = MyLogger.game()

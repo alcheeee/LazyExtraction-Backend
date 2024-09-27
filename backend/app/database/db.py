@@ -1,11 +1,7 @@
 import contextlib
-from typing import AsyncGenerator, AsyncIterator
-
-from fastapi import Depends
+from typing import Optional, AsyncIterator
 
 from sqlmodel import SQLModel
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.pool import AsyncAdaptedQueuePool
 from sqlalchemy.ext.asyncio import (
     AsyncConnection,
     AsyncEngine,
@@ -14,9 +10,9 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession
 )
 
-from .redis_handler import redis_client
-from .init_db import init_content, create_game_account
-from ..config import settings
+from app.database.redis_handler import redis_client
+from .init_db import init_content, InitializeLazyBot
+from app.settings import settings
 
 
 class DatabaseSessionManager:
@@ -24,7 +20,7 @@ class DatabaseSessionManager:
         self._engine: AsyncEngine | None = None
         self._sessionmaker: async_sessionmaker | None = None
 
-    def init(self, host: str):
+    def init(self, host: Optional[str] = None):
         self._engine = create_async_engine(
             url=host,
             pool_size=30,
@@ -85,17 +81,6 @@ class DatabaseSessionManager:
 sessionmanager = DatabaseSessionManager()
 
 
-async def get_db() -> AsyncSession:
-    async with sessionmanager.session() as session:
-        yield session
-
-
-@contextlib.asynccontextmanager
-async def get_session() -> AsyncSession:
-    async with sessionmanager.session() as session:
-        yield session
-
-
 async def init_game_content():
     if settings.TESTING:
         async with sessionmanager.connect() as conn:
@@ -107,5 +92,5 @@ async def init_game_content():
         await session.commit()
 
     async with sessionmanager.session() as session:
-        await create_game_account(session)
+        await InitializeLazyBot(session).check_bot_account()
         await session.commit()

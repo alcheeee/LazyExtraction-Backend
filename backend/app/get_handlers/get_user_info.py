@@ -1,16 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..crud import (
+from app.crud import (
     UserCRUD,
     UserInventoryCRUD,
     ItemsCRUD
 )
-from ..models.models import (
+from app.models.models import (
     User,
     Stats,
     Inventory,
     InventoryItem
 )
-from ..schemas import UserInfoNeeded
+from app.schemas import UserInfoNeeded
 
 
 class GetUserInfo:

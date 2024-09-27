@@ -1,11 +1,12 @@
 from sqlalchemy import select, update
 from .base_crud import BaseCRUD
-from ..models import (
+from app.models import (
     User,
     Inventory,
     Stats,
     Jobs
 )
+
 
 class JobsCRUD(BaseCRUD):
 
@@ -14,7 +15,7 @@ class JobsCRUD(BaseCRUD):
         :param name: str Jobs.job_name
         :return: Optional[Jobs.job_name]
         """
-        query = select(Jobs.job_name).where(Jobs.job_name == name)
+        query = select(Jobs.job_name).where(Jobs.job_name == name)  # type: ignore
         return await self.execute_scalar_one_or_none(query)
 
 
@@ -23,7 +24,7 @@ class JobsCRUD(BaseCRUD):
         :param job_name: str = Jobs.job_name
         :return:
         """
-        query = select(Jobs).where(Jobs.job_name == job_name)
+        query = select(Jobs).where(Jobs.job_name == job_name)  # type: ignore
         result = await self.session.execute(query)
         if not result:
             raise Exception("Could not find that job")
@@ -39,7 +40,7 @@ class JobsCRUD(BaseCRUD):
         """
         update_stmt = (
             update(User)
-            .where(User.id == user_id)
+            .where(User.id == user_id)  # type: ignore
             .values(job=job_name)
             .execution_options(synchronize_session="fetch")
         )
@@ -50,7 +51,10 @@ class JobsCRUD(BaseCRUD):
 
 
     async def update_job_stuff(self, inventory_id: int, stats_id: int, update_dict: dict):
-        inv_query = select(Inventory.bank, Inventory.energy).where(Inventory.id == inventory_id)
+        inv_query = select(
+            Inventory.bank, Inventory.energy).where(
+            Inventory.id == inventory_id  # type: ignore
+        )
         inv_info = (await self.session.execute(inv_query)).one_or_none()
         if inv_info is None:
             raise Exception("Inventory not found")
@@ -63,7 +67,7 @@ class JobsCRUD(BaseCRUD):
 
         # Update Inventory table
         inv_update_stmt = update(Inventory).where(
-            Inventory.id == inventory_id
+            Inventory.id == inventory_id  # type: ignore
         ).values(
             bank=new_bank,
             energy=new_energy
@@ -71,7 +75,10 @@ class JobsCRUD(BaseCRUD):
         await self.session.execute(inv_update_stmt)
 
         # Get current stats values
-        stats_query = select(Stats.reputation, Stats.level).where(Stats.id == stats_id)
+        stats_query = select(
+            Stats.reputation, Stats.level).where(
+            Stats.id == stats_id  # type: ignore
+        )
         stats_info = (await self.session.execute(stats_query)).one_or_none()
         if stats_info is None:
             raise ValueError("Stats not found")
@@ -82,7 +89,7 @@ class JobsCRUD(BaseCRUD):
 
         # Update Stats table
         stats_update_stmt = update(Stats).where(
-            Stats.id == stats_id
+            Stats.id == stats_id  # type: ignore
         ).values(
             reputation=new_rep,
             level=new_level

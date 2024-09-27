@@ -1,6 +1,6 @@
 from typing import Optional
 from enum import Enum
-from ...models import (
+from app.models import (
     User,
     Inventory,
     InventoryItem,
@@ -121,22 +121,19 @@ class InventoryItemsCRUDUtils:
             inventory_amount += quantity
 
         if inventory_amount < 0 or stash_amount < 0:
-            raise ValueError("Invalid operation: Resulting quantity would be negative")
+            raise ValueError("Not enough quantity to switch")
 
         return inventory_amount, stash_amount
 
     @staticmethod
     async def validate_inventory_change(
             inv_item: InventoryItem,
-            quantity_change: int,
-            allow_equipped: bool = False
+            quantity_change: int
     ) -> None:
         total_quantity = inv_item.amount_in_stash + inv_item.amount_in_inventory
         new_total_quantity = total_quantity + quantity_change
         if new_total_quantity < 0:
-            raise ValueError("Insufficient quantity available")
-        if new_total_quantity == 0 and inv_item.one_equipped and not allow_equipped:
-            raise ValueError("Can't remove all instances of an equipped item")
+            raise ValueError("Not enough quantity available")
 
 
     @staticmethod
@@ -154,13 +151,12 @@ class InventoryItemsCRUDUtils:
         if not to_modify:
             return None, 0
 
-        if inv_item.is_modified == to_modify:
-            return None, 0
-
         weight_change = inv_item.item.weight
 
         if inv_item.amount_in_stash == 0:
             weight_change = -inv_item.item.weight
+
+        original_modifications = inv_item.modifications if inv_item.modifications and to_modify else {}
 
         new_item = InventoryItem(
             item_name=inv_item.item_name,
@@ -168,7 +164,7 @@ class InventoryItemsCRUDUtils:
             inventory_id=inv_item.inventory_id,
             item_id=inv_item.item_id,
             is_modified=to_modify,
-            modifications=inv_item.modifications.copy() if to_modify else {},
+            modifications=original_modifications,
             amount_in_stash=1,
             amount_in_inventory=0
         )

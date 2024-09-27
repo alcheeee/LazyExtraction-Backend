@@ -1,24 +1,24 @@
 from fastapi import APIRouter, Depends
-from ..game_systems.jobs.job_handler import JobService
-from ..game_systems.game_world.world_handler import RoomGenerator
-from ..game_systems.game_world.world_interactions import InteractionHandler
-from ..auth import AccessTokenBearer
-from ..crud import UserInventoryCRUD
-from ..schemas import (
+from app.game_systems.jobs.job_handler import JobService
+from app.game_systems.game_world.room_generator import RoomGenerator
+from app.game_systems.game_world.world_interactions import InteractionHandler
+from app.auth import AccessTokenBearer
+from app.crud import UserInventoryCRUD
+from app.schemas import (
     JobRequest,
     WorldNames,
     RoomInteraction,
     InteractionTypes
 )
 from . import (
-    AsyncSession,
-    get_db,
-    ResponseBuilder,
     DataName,
+    AsyncSession,
+    ResponseBuilder,
     MyLogger,
     CommonHTTPErrors,
     exception_decorator
 )
+from app.dependencies.get_db import get_db
 
 error_log = MyLogger.errors()
 game_log = MyLogger.game()
