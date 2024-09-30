@@ -34,6 +34,7 @@ class UserHandler:
 
             self.session.add_all([new_user, new_stats, new_inventory, new_training])
             await self.session.commit()
+
             if game_bot:
                 return new_user
 
@@ -46,7 +47,8 @@ class UserHandler:
                 'refresh_token': refresh_token,
                 'id': new_user.id,
                 'username': new_user.username,
-                'guest_account': True if guest_account else False,
+                'email': new_user.email,
+                'guest_account': guest_account,
                 'inventory': new_user.inventory,
                 'stats': new_user.stats,
                 'trainingprogress': new_user.training_progress

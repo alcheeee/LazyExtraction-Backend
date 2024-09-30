@@ -1,6 +1,6 @@
 import traceback
 from functools import wraps
-from fastapi import Depends, Request
+from fastapi import Depends, Request, HTTPException
 from .logger import MyLogger
 from .HTTP_errors import CommonHTTPErrors
 
@@ -26,7 +26,7 @@ async def handle_exception(e, kwargs, log_type):
     tb = traceback.extract_tb(e.__traceback__)
     function_name = tb[-1].name
 
-    if log_type != 'mechanics_error':
+    if log_type != 'mechanics_error' or log_type != 'http_exception':
         # Log the exception if not intentional
         MyLogger.log_exception(
             logger=error_log,
@@ -42,6 +42,8 @@ async def handle_exception(e, kwargs, log_type):
             raise CommonHTTPErrors.mechanics_error(str(e))
         case "index_error":
             raise CommonHTTPErrors.index_error(str(e))
+        case "http_exception":
+            raise e
         case _:
             raise CommonHTTPErrors.server_error()
 
@@ -52,13 +54,16 @@ def exception_decorator(func):
         try:
             return await func(*args, **kwargs)
 
-        except LookupError as e:
-            await handle_exception(e, kwargs, log_type='index_error')
+        except LookupError as lookup_err:
+            await handle_exception(lookup_err, kwargs, log_type='index_error')
 
-        except ValueError as e:
-            await handle_exception(e, kwargs, log_type='mechanics_error')
+        except ValueError as val_err:
+            await handle_exception(val_err, kwargs, log_type='mechanics_error')
 
-        except Exception as e:
-            await handle_exception(e, kwargs, log_type='server_error')
+        except HTTPException as http_exc:
+            await handle_exception(http_exc, kwargs, log_type='http_exception')
+
+        except Exception as exc:
+            await handle_exception(exc, kwargs, log_type='server_error')
 
     return decorator

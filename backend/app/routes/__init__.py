@@ -9,5 +9,3 @@ from app.utils import (
 )
 from app.globals import DataName
 from app.schemas.response_schema import error_responses
-
-# TODO : remove ResponseBuilder in favor of response models

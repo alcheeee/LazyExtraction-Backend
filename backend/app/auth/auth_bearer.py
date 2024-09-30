@@ -29,7 +29,7 @@ class TokenBearer(HTTPBearer):
         if not self.token_valid:
             raise CommonHTTPErrors.credentials_error()
 
-        self.verify_token_data(token_data)
+        await self.verify_token_data(token_data)
 
         return token_data
 
@@ -38,17 +38,17 @@ class TokenBearer(HTTPBearer):
         token_data = await run_in_threadpool(TokenHandler.decode_token, token)
         return True if token_data is not None else False
 
-    def verify_token_data(self, token_data: dict):
+    async def verify_token_data(self, token_data: dict):
         raise NotImplementedError("Please Override this method")
 
 
 class AccessTokenBearer(TokenBearer):
-    def verify_token_data(self, token_data: dict) -> None:
+    async def verify_token_data(self, token_data: dict) -> None:
         if token_data and token_data['refresh']:
             raise CommonHTTPErrors.credentials_error(message="Provide an access token", data=token_data)
 
 
 class RefreshTokenBearer(TokenBearer):
-    def verify_token_data(self, token_data: dict) -> None:
+    async def verify_token_data(self, token_data: dict) -> None:
         if token_data and not token_data['refresh']:
             raise CommonHTTPErrors.credentials_error(message="Provide a refresh token", data=token_data)

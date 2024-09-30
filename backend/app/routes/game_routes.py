@@ -42,7 +42,6 @@ async def create_new_world(
         user_data: dict = Depends(AccessTokenBearer()),
         session: AsyncSession = Depends(get_db)
 ):
-    # TODO : Remove Blocking I/O Operations
     user_id = int(user_data['user']['user_id'])
     generator = RoomGenerator(request)
     new_raid = await generator.assign_room_to_user(user_id, session)
@@ -62,7 +61,6 @@ async def world_interaction(
         user_data: dict = Depends(AccessTokenBearer()),
         session: AsyncSession = Depends(get_db)
 ):
-    # TODO : Remove Blocking I/O Operations
     user_id = int(user_data['user']['user_id'])
     handler = InteractionHandler(session, user_id)
     msg, data = await handler.handle(request)

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Form, Depends, HTTPException
+from fastapi import APIRouter, Form, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, EmailStr
@@ -12,7 +12,7 @@ from app.auth.auth_handler import TokenHandler, UserService
 from app.auth import AccessTokenBearer, RefreshTokenBearer
 
 from app.database.user_handler import UserHandler
-from app.crud import BaseCRUD
+from app.crud import UserCRUD
 from app.models import User
 from . import (
     DataName,
@@ -54,39 +54,37 @@ async def register_new_user(
         request: UserCreateRequest,
         session: AsyncSession = Depends(get_db)
 ):
-    if request.guest_account is True and request.email is not None:
-        raise ValueError("You're not supposed to be doing that")
 
-    elif request.guest_account is False and request.email is None:
-        raise ValueError("You're not supposed to be doing that")
+    request.guest_account = True if not request.email else False
+    request.email = None if request.guest_account else request.email
 
-    #elif request.guest_account:
-        # TODO : Add Guest Account logic,
-        #  Name change logic (New Column, name_changes: int, start with 1 if guest_account)
-        #  else 0, costs $x to change
+    #if request.guest_account:
+    # TODO : Add Guest Account logic,
+    #  Name change logic (New Column, name_changes: int, start with 1 if guest_account)
+    #  else 0, costs $x to change
 
     if len(request.username) < 4:
-        raise ValueError("Minimum name length is 4.")
+        raise ValueError("Minimum name length is 4")
     if len(request.password) < 6:
-        raise ValueError("Please use a longer password.")
+        raise ValueError("Please use a longer password")
 
-    user_crud = BaseCRUD(model=User, session=session)
+    user_crud = UserCRUD(model=User, session=session)
     if request.guest_account is True:
         exists = await user_crud.check_fields_exist(username=request.username)
 
     elif request.guest_account is False and request.email is not None:
         exists = await user_crud.check_fields_exist(username=request.username, email=request.email)
     else:
-        raise ValueError("An error occurred while creating the account")
+        raise ValueError("An error occurred while creating your account")
 
     if exists:
         raise ValueError("User with that username or email already exists")
 
     user_handler = UserHandler(session=session)
     new_data = await user_handler.create_user(
-        request.username,
-        request.password,
-        request.email if request.email else None,
+        username=request.username,
+        password=request.password,
+        email=request.email,
         guest_account=request.guest_account
     )
     user_log.info(f"New User: {request.username} {request.email}")
@@ -117,18 +115,18 @@ async def login_for_access_token(
 @exception_decorator
 async def get_new_access_token(user_data: dict = Depends(RefreshTokenBearer())):
     expiry_timestamp = user_data['exp']
-    if datetime.fromtimestamp(expiry_timestamp) > datetime.now():
-        new_token_data = TokenData(
-            username=user_data['user']['username'],
-            user_id=user_data['user']['user_id']
-        )
-        new_access_token = await run_in_threadpool(TokenHandler.create_access_token, token_data=new_token_data)
+    if datetime.fromtimestamp(expiry_timestamp) <= datetime.now():
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired login")
 
-        return JSONResponse(content={
-            "access_token": new_access_token
-        })
+    new_token_data = TokenData(
+        username=user_data['user']['username'],
+        user_id=user_data['user']['user_id']
+    )
+    new_access_token = await run_in_threadpool(TokenHandler.create_access_token, token_data=new_token_data)
 
-    raise CommonHTTPErrors.credentials_error(message="Invalid or expired login", data=token_data)
+    return JSONResponse(content={
+        "access_token": new_access_token
+    })
 
 
 @user_router.post("/test/test-token")

@@ -32,9 +32,7 @@ class CrewHandler:
 
 
     async def create_crew(self, new_crew_data: NewCrewInfo, user_id: int, username: str) -> Crew:
-        """
-        Main function for creating a Crew
-        """
+        """Main function for creating a Crew"""
         if len(new_crew_data.name) <= 4:
             raise ValueError("Crew name is too short")
         if len(new_crew_data.name) > 12:
@@ -48,9 +46,7 @@ class CrewHandler:
         return new_crew
 
     async def prepare_new_crew(self, new_crew_data: NewCrewInfo, username: str):
-        """
-        Prepare transaction for a new crew
-        """
+        """Prepare transaction for a new crew"""
         new_crew = Crew(
             name=new_crew_data.name,
             private=new_crew_data.private,
@@ -60,18 +56,14 @@ class CrewHandler:
         return new_crew
 
     async def remove_crew(self, crew_id: int):
-        """
-        Delete a crew, must be improved
-        """
+        """Delete a crew, must be improved"""
         result = await self.crew_crud.delete_crew(crew_id)
         if result.rowcount != 1:
             raise Exception("Error removing Crew, value count not 1")
         return "Successfully removed Crew"
 
     async def add_user_to_crew(self, username: str, crew_id: int):
-        """
-        Add a user to a crew based on their username
-        """
+        """Add a user to a crew based on their username"""
         users_id = await self.user_crud.get_user_field_from_username(username, 'id')
         if not users_id:
             raise ValueError("No user with that name found.")
@@ -83,9 +75,7 @@ class CrewHandler:
         return "Successfully added to the crew"
 
     async def remove_player_from_crew(self, username: str, crew_id: int):
-        """
-        Remove a user from a crew based on their username
-        """
+        """Remove a user from a crew based on their username"""
         user_crew_id = await self.user_crud.get_user_field_from_username(username, 'crew_id')
         if user_crew_id != crew_id:
             raise ValueError("That person is not part of the Crew")
@@ -93,9 +83,7 @@ class CrewHandler:
         return "Successfully removed the player from Crew"
 
     async def crew_leader_check(self, username: str, crew_id: int):
-        """
-        Check if a user is the leader of a crew
-        """
+        """Check if a user is the leader of a crew"""
         actual_leader_username = await self.crew_crud.get_crew_leader(crew_id)
         if username != actual_leader_username:
             raise ValueError("You do not have permissions to perform this action")
