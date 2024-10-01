@@ -173,40 +173,6 @@ async def test_invalid_quantity_updates(test_session, db_user):
         await user_inv_crud.update_user_inventory_item(db_user.id, item.id, -5)
 
 
-async def test_handle_item_modifications(test_session, db_user, db_inventory_item):
-    """Test handling item modification and weight adjustments."""
-    user_inv_crud = UserInventoryCRUD(Inventory, test_session)
-    inventory_item = await db_inventory_item(is_modified=False, amount_in_inventory=5)
-    updated_item = await user_inv_crud.update_any_inventory_quantity(
-        db_user.id, quantity_change=0, inventory_item=inventory_item, to_modify=True
-    )
-    assert not inventory_item.is_modified
-    assert updated_item.is_modified
-    assert inventory_item.amount_in_inventory == 5  # Handle removing quantity in modification handlers
-    assert updated_item.amount_in_stash == 1
-    assert updated_item.id != inventory_item.id
-    assert updated_item.item_name == inventory_item.item_name
-    assert updated_item.item_id == inventory_item.item_id
-    assert updated_item.modifications == {}
-
-
-async def test_handle_item_modification_transfer(test_session, db_user, db_inventory_item):
-    """Test handling item modification and weight adjustments."""
-    user_inv_crud = UserInventoryCRUD(Inventory, test_session)
-    inventory_item = await db_inventory_item(
-        is_modified=True, modifications={'test-mod': 'test'}, amount_in_inventory=5
-    )
-    updated_item = await user_inv_crud.update_any_inventory_quantity(
-        db_user.id, quantity_change=0, inventory_item=inventory_item, to_modify=True
-    )
-    assert updated_item.is_modified
-    assert updated_item.amount_in_stash == 1
-    assert updated_item.id != inventory_item.id
-    assert updated_item.item_name == inventory_item.item_name
-    assert updated_item.item_id == inventory_item.item_id
-    assert updated_item.modifications == inventory_item.modifications
-
-
 async def test_item_deletion_when_quantity_zero(test_session, db_user, db_inventory_item):
     """Test that an item is deleted when its quantity reaches zero."""
     user_inv_crud = UserInventoryCRUD(Inventory, test_session)

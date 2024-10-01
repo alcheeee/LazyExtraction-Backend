@@ -55,7 +55,6 @@ class InventoryItemFactory(factory.Factory):
     class Meta:
         model = InventoryItem
 
-    id = factory.Sequence(lambda n: n)
     item_name = factory.LazyAttribute(lambda obj: obj.item.item_name)
     amount_in_stash = 0
     amount_in_inventory = 1

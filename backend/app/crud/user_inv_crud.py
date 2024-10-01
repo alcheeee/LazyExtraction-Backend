@@ -68,26 +68,17 @@ class UserInventoryCRUD(BaseCRUD):
 
         return inventory_item
 
-
     async def update_any_inventory_quantity(
             self,
             user_id: int,
             quantity_change: int,
-            inventory_item: InventoryItem | None = None,
-            to_modify: bool = False
+            inventory_item: InventoryItem | None = None
     ) -> InventoryItem:
         """ Not to be used while user is in_raid """
         if not inventory_item:
             raise LookupError("Not inventory item found")
 
         total_weight_change = 0
-
-        new_item, mod_weight_change = await InvItemUtils.handle_modification(inventory_item, to_modify)
-        if new_item:
-            self.session.add(new_item)
-            total_weight_change += mod_weight_change
-            await self.session.flush()
-            inventory_item = new_item
 
         new_inventory, new_stash, change_weight_change = await InvItemUtils.handle_inventory_change(
             inventory_item, AllowedArea.ANY, quantity_change

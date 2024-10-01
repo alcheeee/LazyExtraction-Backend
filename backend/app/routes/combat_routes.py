@@ -7,7 +7,7 @@
 from fastapi import APIRouter, Depends
 from app.auth import AccessTokenBearer
 
-from app.game_systems.items.weapons.attachment_handler import WeaponStatsHandler
+from app.game_systems.items.weapons.attachment_handler import WeaponAttachmentsHandler
 from app.schemas.weapon_schemas import (
     AttachmentTypes,
     AddAttachmentsRequest,
@@ -45,20 +45,12 @@ async def build_weapon(
         session: AsyncSession = Depends(get_db)
 ):
     user_id = int(user_data['user']['user_id'])
-    weapon_handler = WeaponStatsHandler(
+    weapon_handler = WeaponAttachmentsHandler(
         session, user_id, request.weapon_inventory_id
     )
-    weapon_item, updated_weapon = await weapon_handler.apply_attachments(
+    data = await weapon_handler.build_weapon(
         request.attachments_to_add
     )
-    effective_stats = weapon_handler.calculate_effective_stats(
-        weapon_item.weapon_details, updated_weapon.modifications
-    )
-    data = {
-        "weapon_name": weapon_item.item_name,
-        "modifications": updated_weapon.modifications,
-        "effective-stats": effective_stats
-    }
     await session.commit()
     return ResponseBuilder.success("Weapon built", data_name=DataName.WeaponData, data=data)
 
@@ -71,20 +63,11 @@ async def remove_attachment(
         session: AsyncSession = Depends(get_db)
 ):
     user_id = int(user_data['user']['user_id'])
-    weapon_handler = WeaponStatsHandler(
+    weapon_handler = WeaponAttachmentsHandler(
         session, user_id, request.weapon_inventory_id
     )
-    weapon_item, updated_weapon = await weapon_handler.remove_attachments(
+    data = await weapon_handler.remove_attachments(
         request.attachments_to_remove
     )
-
-    effective_stats = weapon_handler.calculate_effective_stats(
-        weapon_item.weapon_details, updated_weapon.modifications  # type: ignore
-    )
-    data = {
-        "weapon_name": weapon_item.item_name,
-        "modifications": updated_weapon.modifications,
-        "effective-stats": effective_stats
-    }
     await session.commit()
     return ResponseBuilder.success("Attachments Removed", data_name=DataName.WeaponData, data=data)

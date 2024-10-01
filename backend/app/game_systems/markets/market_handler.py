@@ -99,7 +99,7 @@ class MarketTransactionHandler:
             raise ValueError("You can't buy your own items")
 
         if market_item.item_quantity < amount:
-            raise ValueError("Not enough stock")
+            amount = market_item.item_quantity
 
         # Getting inventory_id and balance for balance check
         user_inv_id, user_bank = await self.banking_crud.get_user_bank_from_userid(self.user_id)

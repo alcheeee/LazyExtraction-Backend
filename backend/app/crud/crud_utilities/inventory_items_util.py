@@ -137,42 +137,6 @@ class InventoryItemsCRUDUtils:
 
 
     @staticmethod
-    async def handle_modification(
-            inv_item: InventoryItem,
-            to_modify: bool
-    ) -> tuple[InventoryItem | None, float]:
-        """
-        Handles the modification status change of an item.
-
-        :param inv_item: The InventoryItem to modify
-        :param to_modify: Whether to modify or unmodify the item
-        :return: A new InventoryItem if modification status changed, None otherwise
-        """
-        if not to_modify:
-            return None, 0
-
-        weight_change = inv_item.item.weight
-
-        if inv_item.amount_in_stash == 0:
-            weight_change = -inv_item.item.weight
-
-        original_modifications = inv_item.modifications if inv_item.modifications and to_modify else {}
-
-        new_item = InventoryItem(
-            item_name=inv_item.item_name,
-            quick_sell_value=inv_item.quick_sell_value,
-            inventory_id=inv_item.inventory_id,
-            item_id=inv_item.item_id,
-            is_modified=to_modify,
-            modifications=original_modifications,
-            amount_in_stash=1,
-            amount_in_inventory=0
-        )
-
-        return new_item, weight_change
-
-
-    @staticmethod
     def calculate_weight_change(weight: float, quantity_change: int) -> float:
         return weight * quantity_change
 

@@ -8,4 +8,4 @@ class DataName(str, Enum):
     UserInventory = "user-inventory"
     AllInventoryItems = "all-inventory-items"
     InventoryItem = "inventory-item"
-    WeaponData = "weapon-data"
+    WeaponData = "updated-weapon-data"

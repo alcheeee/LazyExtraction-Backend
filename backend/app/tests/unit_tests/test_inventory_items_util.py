@@ -129,34 +129,3 @@ async def test_validate_inventory_change_insufficient_quantity():
     with pytest.raises(ValueError, match="Not enough quantity available"):
         await InventoryItemsCRUDUtils.validate_inventory_change(inv_item, -2)
 
-
-@pytest.mark.asyncio
-async def test_handle_modification_to_modify(mock_item):
-    """Test marking an item as modified."""
-    mock_item.weight = 2.0
-    inv_item = Mock(spec=InventoryItem, is_modified=False, amount_in_stash=1, item=mock_item)
-    new_item, weight_change = await InventoryItemsCRUDUtils.handle_modification(inv_item, to_modify=True)
-    assert new_item.is_modified
-    assert weight_change == 2.0
-
-
-@pytest.mark.asyncio
-async def test_handle_modification_modified_not_to_modify(mock_item):
-    """Test no change in modification."""
-    mock_item.weight = 2.0
-    inv_item = Mock(spec=InventoryItem, is_modified=True, amount_in_stash=1, item=mock_item)
-    new_item, weight_change = await InventoryItemsCRUDUtils.handle_modification(inv_item, to_modify=False)
-    assert new_item is None
-    assert weight_change == 0.0
-
-
-@pytest.mark.asyncio
-async def test_handle_modification_no_change(mock_item):
-    """Test no change in modification."""
-    mock_item.weight = 2.0
-    inv_item = Mock(spec=InventoryItem, is_modified=True, amount_in_stash=1, item=mock_item)
-    new_item, weight_change = await InventoryItemsCRUDUtils.handle_modification(inv_item, to_modify=True)
-    assert new_item.id != inv_item.id
-    assert new_item.item_id == inv_item.item_id
-
-
