@@ -49,3 +49,8 @@ class ItemsCRUD(BaseCRUD):
         if result is None:
             raise LookupError("Item not found")
         return result
+
+
+    async def get_all_items(self):
+        result = await self.session.execute(select(Items))
+        return result.scalars().all()

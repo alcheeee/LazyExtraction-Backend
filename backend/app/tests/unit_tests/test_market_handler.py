@@ -48,9 +48,9 @@ def handler(mock_session, mock_market_crud, mock_items_crud, mock_user_inv_crud,
     handler.inv_crud = mock_user_inv_crud
     handler.banking_crud = mock_bank_crud
     handler.inv_crud.update_any_inventory_quantity = AsyncMock()
+    handler.banking_crud.get_user_bank_from_userid = AsyncMock(return_value=())
     handler.banking_crud.update_bank_balance = AsyncMock()
     handler.banking_crud.update_bank_balance_by_username = AsyncMock()
-
     return handler
 
 
@@ -122,6 +122,20 @@ class TestMarketHandler:
         mock_session.delete.assert_called_once_with(mock_market_item)
 
 
+    async def test_buying_less_stock(self, handler, mock_session, mock_market_item):
+        mock_market_item.item_quantity = 5
+        handler.market_crud.get_market_item_from_market_id = AsyncMock(return_value=mock_market_item)
+        handler.banking_crud.get_user_bank_from_userid = AsyncMock(return_value=(1, 1000))
+        handler.inv_crud.get_inventory_item_by_item_id = AsyncMock(return_value=None)
+        result, data = await handler.buying(1, 10)
+        assert result == "Purchase successful"
+        assert data['inventory-item'].amount_in_stash == 5
+        assert all(key in data for key in ['market-item', 'inventory-item', 'bank-update'])
+        handler.banking_crud.update_bank_balance.assert_awaited_once_with(1, 500)
+        handler.banking_crud.update_bank_balance_by_username.assert_awaited_once_with("seller", 500)
+        mock_session.add.assert_called_once()
+
+
     async def test_market_transaction_invalid(self, handler):
         handler.transaction_data.transaction_type = "INVALID"
         with pytest.raises(ValueError, match="Invalid Transaction"):
@@ -132,13 +146,6 @@ class TestMarketHandler:
         mock_market_item.by_user = "testuser"
         handler.market_crud.get_market_item_from_market_id = AsyncMock(return_value=mock_market_item)
         with pytest.raises(ValueError, match="You can't buy your own items"):
-            await handler.buying(1, 5)
-
-
-    async def test_buying_insufficient_stock(self, handler, mock_market_item):
-        mock_market_item.item_quantity = 3
-        handler.market_crud.get_market_item_from_market_id = AsyncMock(return_value=mock_market_item)
-        with pytest.raises(ValueError, match="Not enough stock"):
             await handler.buying(1, 5)
 
 

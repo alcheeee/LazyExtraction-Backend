@@ -46,6 +46,27 @@ async def root(user_data: dict = Depends(AccessTokenBearer())):
     return ResponseBuilder.success("Admin routes ready")
 
 
+@admin_router.put("/fill-database")
+@exception_decorator
+async def fill_database_with_test_data(
+        user_data: dict = Depends(AccessTokenBearer()),
+        session: AsyncSession = Depends(get_db)
+):
+    username = user_data['user']['username']
+    user_id = int(user_data['user']['user_id'])
+
+    if username != game_bot['username'] and user_id != int(game_bot['user_id']):
+        raise CommonHTTPErrors.credentials_error()
+
+    if not settings.TESTING:
+        raise ValueError("Not in Testing")
+
+    from app.tests.data_generators.data_handler import CreateTestData
+    await CreateTestData(session).create_mock_data()
+    return ResponseBuilder.success(message="Database filled with test data")
+
+
+
 class AddItemToUser(BaseModel):
     username: str
     item_id: int

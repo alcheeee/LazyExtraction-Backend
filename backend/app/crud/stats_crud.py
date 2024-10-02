@@ -28,13 +28,13 @@ class StatsCRUD:
         if current_weight is None:
             raise LookupError("No inventory found for user")
 
-        new_weight = round(max(current_weight + weight_change, 0), 2)
+        new_weight = max(current_weight + weight_change, 0)
 
         update_stmt = (
             update(Inventory)
             .where(Inventory.id == User.inventory_id)  # type: ignore
             .where(User.id == user_id)
-            .values(current_weight=new_weight)
+            .values(current_weight=round(new_weight, 2))
         )
         await self.session.execute(update_stmt)
         await self.session.flush()
