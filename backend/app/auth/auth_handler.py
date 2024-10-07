@@ -1,6 +1,5 @@
 from fastapi import Depends
 from fastapi.concurrency import run_in_threadpool
-from jose import JWTError, exceptions
 from sqlalchemy import select
 from .auth_deps import PasswordSecurity, TokenHandler
 from app.crud.user_crud import UserCRUD

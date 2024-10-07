@@ -5,7 +5,7 @@ from fastapi.concurrency import run_in_threadpool
 
 from factory import Factory
 from unittest.mock import patch, Mock, AsyncMock
-from jose import jwt
+import jwt
 
 from app.auth.auth_deps import TokenHandler
 from app.database.user_handler import UserHandler

@@ -3,8 +3,9 @@ import uuid
 from typing import Annotated
 from datetime import datetime, timedelta
 
+import jwt
+from jwt import exceptions, PyJWTError
 from passlib.hash import argon2
-from jose import jwt, exceptions
 from app.settings import settings
 
 from app.utils import CommonHTTPErrors
@@ -35,10 +36,12 @@ class TokenHandler:
             expire = datetime.now() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
         to_encode = {
-            "user": {'username': token_data.username, 'user_id': token_data.user_id},
+            "user": {
+                'username': token_data.username,
+                'user_id': token_data.user_id
+            },
             "refresh": refresh
         }
-
         to_encode.update({"exp": expire})
 
         encoded_jwt = jwt.encode(
@@ -59,5 +62,5 @@ class TokenHandler:
             return token_data
         except exceptions.ExpiredSignatureError as e:
             raise CommonHTTPErrors.credentials_error("Session expired, please re-login", exception=str(e))
-        except jwt.JWTError as e:
+        except exceptions.PyJWTError as e:
             raise CommonHTTPErrors.credentials_error(exception=str(e))

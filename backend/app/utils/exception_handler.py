@@ -26,7 +26,7 @@ async def handle_exception(e, kwargs, log_type):
     tb = traceback.extract_tb(e.__traceback__)
     function_name = tb[-1].name
 
-    if log_type != 'mechanics_error' or log_type != 'http_exception':
+    if log_type not in ['mechanics_error', 'http_exception']:
         # Log the exception if not intentional
         MyLogger.log_exception(
             logger=error_log,
@@ -36,7 +36,7 @@ async def handle_exception(e, kwargs, log_type):
             function_name=function_name
         )
 
-    # Raise HTTP error based exception type
+    # Raise HTTP error based on exception type
     match log_type:
         case "mechanics_error":
             raise CommonHTTPErrors.mechanics_error(str(e))
