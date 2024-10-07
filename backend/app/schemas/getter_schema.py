@@ -4,6 +4,7 @@ from enum import Enum
 
 
 class UserInfoNeeded(str, Enum):
+    All = "all"
     Stats = "stats"
     Inventory = "inventory"
     InventoryItems = "inventory_items"

@@ -206,7 +206,6 @@ class ItemStatsHandler:
             }
         elif isinstance(item_details, Weapon):
             return {
-                "damage": "damage",
                 "strength": "strength_adj",
                 "agility": "agility_adj"
             }

@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from fastapi import APIRouter, Depends, Body
 
 from app.auth import UserService, AccessTokenBearer
-from app.crud import UserInventoryCRUD, UserCRUD
+from app.crud import UserInventoryCRUD, UserCRUD, UserBankingCRUD
 from app.settings import settings
 
 from . import (
@@ -42,8 +42,50 @@ async def root(user_data: dict = Depends(AccessTokenBearer())):
     user_id = int(user_data['user']['user_id'])
     if username != game_bot['username'] and user_id != int(game_bot['user_id']):
         raise CommonHTTPErrors.credentials_error()
-
     return ResponseBuilder.success("Admin routes ready")
+
+
+@admin_router.post("/adjust-money")
+@exception_decorator
+async def adjust_admin_money(
+        request: int,
+        user_data: dict = Depends(AccessTokenBearer()),
+        session: AsyncSession = Depends(get_db)
+):
+    username = user_data['user']['username']
+    user_id = int(user_data['user']['user_id'])
+    if username != game_bot['username'] and user_id != int(game_bot['user_id']):
+        raise CommonHTTPErrors.credentials_error()
+    
+    banking_crud = UserBankingCRUD(session=session)
+    new_bank_amount = await banking_crud.update_bank_balance_by_username('admin', request)
+    await session.commit()
+    return ResponseBuilder.success(
+        f"Added ${request} to admin", data_name=DataName.UserData, data={'bank': new_bank_amount}
+    )
+
+
+@admin_router.post("/adjust-in-raid")
+@exception_decorator
+async def adjust_admin_in_raid(
+        request: bool,
+        user_data: dict = Depends(AccessTokenBearer()),
+        session: AsyncSession = Depends(get_db)
+):
+    username = user_data['user']['username']
+    user_id = int(user_data['user']['user_id'])
+    if username != game_bot['username'] and user_id != int(game_bot['user_id']):
+        raise CommonHTTPErrors.credentials_error()
+
+    admin = await session.get(User, int(user_data['user']['user_id']))
+    if not admin:
+        return
+
+    admin.in_raid = request
+    await session.commit()
+    return ResponseBuilder.success(
+        message="Admin raid status changed", data_name=DataName.UserData, data={'in_raid': admin.in_raid}
+    )
 
 
 @admin_router.put("/fill-database")
@@ -54,7 +96,6 @@ async def fill_database_with_test_data(
 ):
     username = user_data['user']['username']
     user_id = int(user_data['user']['user_id'])
-
     if username != game_bot['username'] and user_id != int(game_bot['user_id']):
         raise CommonHTTPErrors.credentials_error()
 
@@ -82,7 +123,6 @@ async def add_an_item_to_user(
 ):
     username = user_data['user']['username']
     user_id = int(user_data['user']['user_id'])
-
     if username != game_bot['username'] and user_id != int(game_bot['user_id']):
         raise CommonHTTPErrors.credentials_error()
 
@@ -100,7 +140,7 @@ async def add_an_item_to_user(
         to_stash=True
     )
     await session.commit()
-    msg = f"Admin {username} Added/Removed {request.quantity} of item {request.item_id} to {request.username}"
+    msg = f"Admin {user_data['user']['username']} Added/Removed {request.quantity} of item {request.item_id} to {request.username}"
     admin_log.info(msg)
     return ResponseBuilder.success(msg, data=result)
 

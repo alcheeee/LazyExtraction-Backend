@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class DataName(str, Enum):
-    NewUser = "created-user"
+    UserData = "user-data"
     RoomData = "room-data"
     UserStats = "user-stats"
     UserInventory = "user-inventory"

@@ -106,8 +106,7 @@ async def register_test_user(async_client, test_user):
     response = await async_client.post("/user/register", json=data)
     assert response.status_code == 200
     response_data = response.json()
-    response_data['data']['password'] = test_user['password']
-    response_data['data']['email'] = test_user['email']
+    response_data['user-data']['user']['password'] = test_user['password']
     return response_data
 
 
@@ -115,8 +114,8 @@ async def register_test_user(async_client, test_user):
 async def login_test_user(async_client, register_test_user):
     """Fixture to log in a registered user and return the token."""
     data = {
-        'username': register_test_user['data']['username'],
-        'password': register_test_user['data']['password']
+        'username': register_test_user['user-data']['user']['username'],
+        'password': register_test_user['user-data']['user']['password']
     }
     response = await async_client.post("/user/login", json=data)
     assert response.status_code == 200

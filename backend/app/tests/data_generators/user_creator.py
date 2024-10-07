@@ -56,7 +56,6 @@ async def create_users_with_related_entities(session: AsyncSession, count: int):
             max_weight=fake.pyfloat(min_value=100, max_value=500, right_digits=2),
             agility=fake.pyfloat(min_value=1, max_value=10, right_digits=2),
             health=fake.random_int(50, 150),
-            damage=fake.random_int(0, 50),
             strength=fake.pyfloat(min_value=1, max_value=10, right_digits=2),
             head_protection=fake.random_int(1, 10),
             chest_protection=fake.random_int(1, 10),

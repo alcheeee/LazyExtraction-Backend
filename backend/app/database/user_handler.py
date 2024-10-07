@@ -45,10 +45,13 @@ class UserHandler:
             return {
                 'access_token': access_token,
                 'refresh_token': refresh_token,
-                'id': new_user.id,
-                'username': new_user.username,
-                'email': new_user.email,
-                'guest_account': guest_account,
+                'user': {
+                    'id': new_user.id,
+                    'username': new_user.username,
+                    'email': new_user.email,
+                    'guest_account': guest_account,
+
+                },
                 'inventory': new_user.inventory,
                 'stats': new_user.stats,
                 'trainingprogress': new_user.training_progress

@@ -462,8 +462,8 @@ class TestStatsHandlerUtils:
     def test_get_adj_wrapper_weapon(self, mock_item_stats_handler):
         mock_weapon = Mock(spec=Weapon)
         wrapper = mock_item_stats_handler.get_adj_wrapper(mock_weapon)
-        assert "damage" in wrapper
-        assert wrapper["damage"] == "damage"
+        assert "strength" in wrapper
+        assert wrapper["strength"] == "strength_adj"
 
 
     async def test_get_item_details_clothing(self, mock_item_stats_handler, mock_item):

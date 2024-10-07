@@ -43,6 +43,8 @@ async def get_user_info(
             data_name = DataName.UserStats
         case UserInfoNeeded.InventoryItems:
             data_name = DataName.AllInventoryItems
+        case UserInfoNeeded.All:
+            data_name = DataName.UserData
 
     get_info = await GetUserInfo(request, user_id, session).get_info()
     return ResponseBuilder.success("", data_name, get_info)

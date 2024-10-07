@@ -88,7 +88,10 @@ async def register_new_user(
         guest_account=request.guest_account
     )
     user_log.info(f"New User: {request.username} {request.email}")
-    return ResponseBuilder.success(f"Account created successfully! Welcome {request.username}", data=new_data)
+    return ResponseBuilder.success(
+        f"Account created successfully! Welcome {request.username}",
+        data_name=DataName.UserData, data=new_data
+    )
 
 
 @user_router.post("/login")

@@ -1,4 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from app.crud import (
     UserCRUD,
     UserInventoryCRUD,
@@ -31,8 +32,40 @@ class GetUserInfo:
                 return await self.get_user_inventory()
             case UserInfoNeeded.InventoryItems:
                 return await self.get_all_inventory_items()
+            case UserInfoNeeded.All:
+                return await self.get_all_user_data()
             case _:
                 raise Exception("Invalid Getter request")
+
+    async def get_all_user_data(self):
+        user = await self.session.get(
+            User, self.user_id,
+            options=[
+                selectinload(User.stats),  # type: ignore
+                selectinload(User.inventory),  # type: ignore
+                selectinload(User.training_progress)  # type: ignore
+            ]
+        )
+        if not user:
+            raise LookupError("Couldn't find user data")
+
+        inventory = user.inventory
+        stats = user.stats
+        trainingprogress = user.training_progress
+
+        del user.is_admin
+        del user.password
+        del user.stats_id
+        del user.inventory_id
+        del user.crew_id
+        del user.training_progress_id
+
+        return {
+            'user': user,
+            'inventory': inventory,
+            'stats': stats,
+            'trainingprogress': trainingprogress
+        }
 
     async def get_user_stats(self):
         stats_id = await self.user_crud.get_user_field_from_id(self.user_id, 'stats_id')

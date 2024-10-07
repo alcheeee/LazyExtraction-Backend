@@ -27,8 +27,8 @@ class TestUserHandle:
         result = await handler.create_user("testuser", "testpassword", "testuser@example.com")
         assert result['access_token'] == "access_token_mock"
         assert result['refresh_token'] == "refresh_token_mock"
-        assert result['username'] == "testuser"
-        assert result['guest_account'] is False
+        assert result['user']['username'] == "testuser"
+        assert result['user']['guest_account'] is False
         assert 'inventory' in result
         assert 'stats' in result
         assert 'trainingprogress' in result
@@ -38,8 +38,8 @@ class TestUserHandle:
     async def test_create_guest_user(self, handler, mock_session):
         result = await handler.create_user("guestuser", "testpassword", None, guest_account=True)
         mock_session.commit.assert_awaited_once()
-        assert result['username'] == "guestuser"
-        assert result['guest_account'] is True
+        assert result['user']['username'] == "guestuser"
+        assert result['user']['guest_account'] is True
 
 
     async def test_create_game_bot(self, handler, mock_session):

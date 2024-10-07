@@ -52,13 +52,18 @@ class TestRegisterRoute:
     async def test_register_new_user_success(self, mock_register_dependencies, mock_session):
         valid_request, mock_user_crud, mock_user_handler = mock_register_dependencies
         mock_user_crud.check_fields_exist.return_value = False
-        mock_user_handler.create_user.return_value = {"id": 1, "username": "testuser"}
+        mock_user_handler.create_user.return_value = {
+            'user': {
+                "id": 1,
+                "username": "testuser"
+            }
+        }
         result = await register_new_user(valid_request, mock_session)
         assert result['status'] == 'success'
         assert "Account created successfully" in result['message']
-        assert 'data' in result
-        assert result['data']['id'] == 1
-        assert result['data']['username'] == 'testuser'
+        assert 'user-data' in result
+        assert result['user-data']['user']['id'] == 1
+        assert result['user-data']['user']['username'] == 'testuser'
         mock_user_crud.check_fields_exist.assert_called_once_with(username="testuser", email="test@example.com")
         mock_user_handler.create_user.assert_called_once()
 
