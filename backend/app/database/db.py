@@ -85,6 +85,8 @@ async def init_game_content():
     if settings.TESTING:
         async with sessionmanager.connect() as conn:
             await sessionmanager.drop_all(conn)
+
+    async with sessionmanager.connect() as conn:
             await sessionmanager.create_all(conn)
 
     async with sessionmanager.session() as session:

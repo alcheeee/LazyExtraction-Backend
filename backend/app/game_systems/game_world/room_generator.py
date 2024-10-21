@@ -8,7 +8,7 @@ from itertools import count
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .room_loot_handler import RoomLootTables
-from .room_drop_jsons import room_tables
+from .room_drop_data import room_tables
 from . import WorldNames
 from . import UserCRUD
 

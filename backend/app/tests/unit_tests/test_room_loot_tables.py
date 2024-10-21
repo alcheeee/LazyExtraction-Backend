@@ -30,7 +30,7 @@ class TestRoomLootTables:
     @pytest.fixture(autouse=True)
     def setup(self, mock_drops):
         """Set up RoomLootTables with mock data."""
-        with patch('app.game_systems.game_world.room_loot_handler.room_drops_json', mock_drops):
+        with patch('app.game_systems.game_world.room_loot_handler.room_loot_tables', mock_drops):
             self.loot_tables = RoomLootTables(WorldNames.Forest)
 
     def test_prepare_drops(self):

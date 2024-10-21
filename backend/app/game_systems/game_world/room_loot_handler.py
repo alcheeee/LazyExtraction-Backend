@@ -3,15 +3,15 @@ from typing import List
 from fastapi.concurrency import run_in_threadpool
 from functools import lru_cache
 from . import WorldNames
-from .room_drop_jsons import room_drops_json
+from .room_drop_data import room_loot_tables
 
 
 class RoomLootTables:
     def __init__(self, world_name: WorldNames):
         self.base_drops = {
-            "regular_room": room_drops_json["regular_room_drops"][world_name],
-            "medical_room": room_drops_json["medical_room_drops"][world_name],
-            "military_room": room_drops_json["military_room_drops"][world_name]
+            "regular_room": room_loot_tables["regular_room_drops"][world_name],
+            "medical_room": room_loot_tables["medical_room_drops"][world_name],
+            "military_room": room_loot_tables["military_room_drops"][world_name]
         }
         self.drop_ranges = {
             WorldNames.Forest: (1, 3),

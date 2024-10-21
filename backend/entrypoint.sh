@@ -10,4 +10,4 @@ echo "Running Alembic Migrations"
 alembic upgrade head
 
 echo "Starting FastAPI application"
-exec uvicorn app.run:server --host ${FASTAPI_HOST} --port ${FASTAPI_PORT} --workers 7 --reload
+exec uvicorn app.run:server --host ${FASTAPI_HOST} --port ${FASTAPI_PORT} --workers 4 --reload

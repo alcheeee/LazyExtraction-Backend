@@ -8,15 +8,12 @@ from .item_schema import ItemBase
 
 
 class AttachmentTypes(str, Enum):
-    FrontGrip = "FrontGrip"
+    Foregrip = "Foregrip"
     Muzzle = "Muzzle"
     Magazine = "Magazine"
     Stock = "Stock"
     Scope = "Scope"
-    Laser = "Laser"
-    Flashlight = "Flashlight"
-    Bipod = "Bipod"
-    Barrel = "Barrel"
+    Handguard = "Handguard"
 
 
 class AttachmentRequest(BaseModel):
@@ -25,16 +22,14 @@ class AttachmentRequest(BaseModel):
 
 class AddAttachmentsRequest(AttachmentRequest):
     attachments_to_add: Dict[AttachmentTypes, str] = {
-        "Muzzle": "Flash Suppressor",
-        "Stock": "Adjustable Stock",
-        "Scope": "Sniper Scope",
-        "Laser": "Tactical Laser"
+        "Foregrip": "Compact Foregrip",
+        "Scope": "Holographic (1x)",
     }
 
 
 class RemoveAttachmentRequest(AttachmentRequest):
     attachments_to_remove: Dict[AttachmentTypes, str] = {
-        "Laser": "Tactical Laser"
+        "Foregrip": "Compact Foregrip"
     }
 
 

@@ -38,12 +38,12 @@ class GetUserInfo:
                 raise Exception("Invalid Getter request")
 
     async def get_all_user_data(self):
-        user = await self.session.get(
+        user: User = await self.session.get(
             User, self.user_id,
             options=[
-                selectinload(User.stats),  # type: ignore
-                selectinload(User.inventory),  # type: ignore
-                selectinload(User.training_progress)  # type: ignore
+                selectinload(User.stats),  # noqa
+                selectinload(User.inventory),  # noqa
+                selectinload(User.training_progress)  # noqa
             ]
         )
         if not user:
@@ -52,14 +52,18 @@ class GetUserInfo:
         inventory = user.inventory
         stats = user.stats
         trainingprogress = user.training_progress
-
-        del user.is_admin
-        del user.password
-        del user.stats_id
-        del user.inventory_id
-        del user.crew_id
-        del user.training_progress_id
-
+        del [
+            user.id,
+            user.is_admin,
+            user.password,
+            user.stats_id,
+            user.stats.id,
+            user.inventory_id,
+            user.inventory.id,
+            user.crew_id,
+            user.training_progress_id,
+            user.training_progress.id
+        ]
         return {
             'user': user,
             'inventory': inventory,
@@ -70,18 +74,22 @@ class GetUserInfo:
     async def get_user_stats(self):
         stats_id = await self.user_crud.get_user_field_from_id(self.user_id, 'stats_id')
         stats = await self.session.get(Stats, stats_id)
+        del stats.id
         return stats
 
 
     async def get_user_inventory(self):
         inventory_id = await self.user_crud.get_user_field_from_id(self.user_id, 'inventory_id')
         inventory = await self.session.get(Inventory, inventory_id)
+        del inventory.id
         return inventory
 
 
     async def get_all_inventory_items(self):
         inventory_id = await self.user_crud.get_user_field_from_id(self.user_id, 'inventory_id')
         inventory_items = await self.inventory_crud.get_all_items_by_inventory_id(inventory_id)
-        return [item for item in inventory_items if item in inventory_items]
+        for item in inventory_items:
+            del item.inventory_id
+        return inventory_items
 
 

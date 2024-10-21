@@ -81,12 +81,10 @@ class InitializeLazyBot:
 
     async def init_bot_inventory(self):
         try:
-            attachments_to_give = self.get_attachments_to_give()
             items_to_give = self.get_items_to_give()
 
             for item in items_to_give:
-                new_item = await self.add_item_to_inventory(item)
-                await self.handle_equipment(new_item, attachments_to_give)
+                await self.add_item_to_inventory(item)
 
         except Exception as e:
             MyLogger.log_exception(admin_log, e)
@@ -105,34 +103,14 @@ class InitializeLazyBot:
         await self.session.flush()
         return new_item
 
-    async def handle_equipment(self, new_item, attachments_to_give):
-        if new_item.id is not None and new_item.item_name not in attachments_to_give:
-            item_stats_handler = ItemStatsHandler(self.bot_id, new_item.id, self.session)
-            await item_stats_handler.equip_item()
-
-    @staticmethod
-    def get_attachments_to_give():
-        return [
-            'Tactical Laser',
-            'Flash Suppressor',
-            'Adjustable Stock',
-            'Sniper Scope',
-            'Universal Suppressor'
-        ]
-
     @staticmethod
     def get_items_to_give():
         return [
-            'Tactical Helmet',
-            'Tactical Vest',
-            'M4A1 Carbine',
-            'M1911',
-            'Recon Bandana',
-            'Tactical Hoodie',
-            'Cargo Pants',
-            'Tactical Laser',
-            'Flash Suppressor',
-            'Universal Suppressor',
-            'Adjustable Stock',
-            'Sniper Scope'
+            'M4 Carbine',
+            'Holographic (1x)',
+            'Holographic (1x-4x)',
+            'Compact Foregrip',
+            'Precision Long Grip',
+            'Heavy Duty Grip',
+            'Tactical Short Grip'
         ]

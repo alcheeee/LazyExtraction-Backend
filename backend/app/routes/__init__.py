@@ -9,3 +9,7 @@ from app.utils import (
 )
 from app.globals import DataName
 from app.schemas.response_schema import error_responses
+
+
+# TODO : Method to check game version, along with changes.
+#        If existing_weapon changes, update resources on front end (No need to update the game for balancing)

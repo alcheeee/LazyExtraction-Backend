@@ -50,7 +50,7 @@ class UserHandler:
                     'username': new_user.username,
                     'email': new_user.email,
                     'guest_account': guest_account,
-
+                    'crew': new_user.crew
                 },
                 'inventory': new_user.inventory,
                 'stats': new_user.stats,

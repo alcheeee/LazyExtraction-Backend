@@ -8,40 +8,131 @@ from .. import (
 )
 
 
-class PolymerRifleBipod(StaticItem, AttachmentBase):
+class TacticalShortGrip(StaticItem, AttachmentBase):
     __type__ = Attachments
-    item_name: str = "Polymer Rifle Bipod"
+    item_name: str = "Tactical Short Grip"
     category: ItemType = ItemType.Attachments
-    tier: ItemTier = ItemTier.Tier4
-    quick_sell: int = 800
-    type: AttachmentTypes = AttachmentTypes.Bipod
-    weight: float = 0.0
-    damage_adj: int = 0
-    range_adj: int = 0
-    accuracy_adj: int = 0
-    reload_speed_adj: float = 0.0
-    fire_rate_adj: float = 0.0
-    magazine_size_adj: int = 0
-    headshot_chance_adj: int = 0
-    agility_adj: float = 0.0
-
-
-class TacticalFrontGrip(StaticItem, AttachmentBase):
-    __type__ = Attachments
-    item_name: str = "Tactical Front Grip"
-    category: ItemType = ItemType.Attachments
-    tier: ItemTier = ItemTier.Tier3
-    quick_sell: int = 500
-    type: AttachmentTypes = AttachmentTypes.FrontGrip
+    tier: ItemTier = ItemTier.Tier1
+    quick_sell: int = 300
+    type: AttachmentTypes = AttachmentTypes.Foregrip
     weight: float = 0.1
     damage_adj: int = 0
     range_adj: int = 0
+    accuracy_adj: int = 5
+    reload_speed_adj: float = 0.15
+    fire_rate_adj: float = 0
+    magazine_size_adj: int = 0
+    headshot_chance_adj: int = 2
+    agility_adj: float = 0.15
+
+
+class CompactForegrip(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Compact Foregrip"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier2
+    quick_sell: int = 450
+    type: AttachmentTypes = AttachmentTypes.Foregrip
+    weight: float = 0.15
+    damage_adj: int = 0
+    range_adj: int = 0
+    accuracy_adj: int = 8
+    reload_speed_adj: float = 0.1
+    fire_rate_adj: float = 0.05
+    magazine_size_adj: int = 0
+    headshot_chance_adj: int = 3
+    agility_adj: float = 0.5
+
+
+class HeavyDutyGrip(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Heavy Duty Grip"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier2
+    quick_sell: int = 500
+    type: AttachmentTypes = AttachmentTypes.Foregrip
+    weight: float = 0.3
+    damage_adj: int = 0
+    range_adj: int = 5
     accuracy_adj: int = 10
-    reload_speed_adj: float = -0.1
+    reload_speed_adj: float = -0.05
     fire_rate_adj: float = 0.0
     magazine_size_adj: int = 0
-    headshot_chance_adj: int = 0
-    agility_adj: float = -0.1
+    headshot_chance_adj: int = 3
+    agility_adj: float = -0.4
+
+
+class PrecisionLongGrip(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Precision Long Grip"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier3
+    quick_sell: int = 720
+    type: AttachmentTypes = AttachmentTypes.Foregrip
+    weight: float = 0.3
+    damage_adj: int = 0
+    range_adj: int = 15
+    accuracy_adj: int = 10
+    reload_speed_adj: float = -0.05
+    fire_rate_adj: float = 0.0
+    magazine_size_adj: int = 0
+    headshot_chance_adj: int = 8
+    agility_adj: float = -0.3
+
+
+class VerticalTiltGrip(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Vertical Tilt Grip"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier4
+    quick_sell: int = 950
+    type: AttachmentTypes = AttachmentTypes.Foregrip
+    weight: float = 0.4
+    damage_adj: int = 0
+    range_adj: int = 12
+    accuracy_adj: int = 24
+    reload_speed_adj: float = -0.24
+    fire_rate_adj: float = 0.0
+    magazine_size_adj: int = 0
+    headshot_chance_adj: int = 18
+    agility_adj: float = -0.35
+
+
+class Holographic1x(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Holographic (1x)"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier2
+    quick_sell: int = 550
+    type: AttachmentTypes = AttachmentTypes.Scope
+    weight: float = 0.3
+    damage_adj: int = 0
+    range_adj: int = 12
+    accuracy_adj: int = 14
+    reload_speed_adj: float = 0.0
+    fire_rate_adj: float = 0.0
+    magazine_size_adj: int = 0
+    headshot_chance_adj: int = 6
+    agility_adj: float = -0.28
+
+
+class Holographic1x4x(StaticItem, AttachmentBase):
+    __type__ = Attachments
+    item_name: str = "Holographic (1x-4x)"
+    category: ItemType = ItemType.Attachments
+    tier: ItemTier = ItemTier.Tier4
+    quick_sell: int = 1350
+    type: AttachmentTypes = AttachmentTypes.Scope
+    weight: float = 0.4
+    damage_adj: int = 0
+    range_adj: int = 28
+    accuracy_adj: int = 32
+    reload_speed_adj: float = 0.0
+    fire_rate_adj: float = 0.0
+    magazine_size_adj: int = 0
+    headshot_chance_adj: int = 28
+    agility_adj: float = -0.52
+
 
 
 class FlashSuppressor(StaticItem, AttachmentBase):
@@ -134,52 +225,19 @@ class SniperScope(StaticItem, AttachmentBase):
     agility_adj: float = -0.3
 
 
-class TacticalLaser(StaticItem, AttachmentBase):
-    __type__ = Attachments
-    item_name: str = "Tactical Laser"
-    category: ItemType = ItemType.Attachments
-    tier: ItemTier = ItemTier.Tier3
-    quick_sell: int = 700
-    type: AttachmentTypes = AttachmentTypes.Laser
-    weight: float = 0.1
-    damage_adj: int = 0
-    range_adj: int = 0
-    accuracy_adj: int = 10
-    reload_speed_adj: float = 0.0
-    fire_rate_adj: float = 0.0
-    magazine_size_adj: int = 0
-    headshot_chance_adj: int = 0
-    agility_adj: float = -0.1
-
-
-class LongBarrel(StaticItem, AttachmentBase):
-    __type__ = Attachments
-    item_name: str = "Long Barrel"
-    category: ItemType = ItemType.Attachments
-    tier: ItemTier = ItemTier.Tier3
-    quick_sell: int = 900
-    type: AttachmentTypes = AttachmentTypes.Barrel
-    weight: float = 0.3
-    damage_adj: int = 0
-    range_adj: int = 25
-    accuracy_adj: int = 15
-    reload_speed_adj: float = 0.0
-    fire_rate_adj: float = 0.0
-    magazine_size_adj: int = 0
-    headshot_chance_adj: int = 0
-    agility_adj: float = -0.2
-
-
-
 attachment_classes = [
-    PolymerRifleBipod,
-    TacticalFrontGrip,
+    TacticalShortGrip,
+    CompactForegrip,
     FlashSuppressor,
     UniversalSuppressor,
     ExtendedMagazine,
     AdjustableStock,
     SniperScope,
-    TacticalLaser,
-    LongBarrel
+    HeavyDutyGrip,
+    PrecisionLongGrip,
+    VerticalTiltGrip,
+    Holographic1x,
+    Holographic1x4x
 ]
+
 

@@ -72,18 +72,7 @@ class TestInitializeLazyBot:
         mock_user_inv_crud.return_value.update_user_inventory_item = AsyncMock(return_value=AsyncMock(id=3))
         bot_initializer = InitializeLazyBot(mock_session)
         bot_initializer.bot_id = 1
-        new_item = await bot_initializer.add_item_to_inventory("M4A1 Carbine")
-        mock_items_crud.return_value.check_item_exists.assert_awaited_once_with("M4A1 Carbine")
+        new_item = await bot_initializer.add_item_to_inventory("M4 Carbine")
+        mock_items_crud.return_value.check_item_exists.assert_awaited_once_with("M4 Carbine")
         mock_user_inv_crud.return_value.update_user_inventory_item.assert_awaited_once()
         assert new_item.id == 3
-
-
-    @patch('app.database.init_db.ItemStatsHandler')
-    async def test_handle_equipment(self, mock_item_stats_handler):
-        mock_session = AsyncMock()
-        mock_item_stats_handler.return_value.equip_item = AsyncMock(return_value=True)
-        new_item = AsyncMock(id=1, item_name="M4A1 Carbine")
-        bot_initializer = InitializeLazyBot(mock_session)
-        bot_initializer.bot_id = 1
-        await bot_initializer.handle_equipment(new_item, ['Tactical Laser', 'Flash Suppressor'])
-        mock_item_stats_handler.return_value.equip_item.assert_awaited_once()
