@@ -11,7 +11,7 @@ services:
     volumes:
       - pg-data:/var/lib/postgresql/data
     networks:
-      - app_network
+      - lazy_api_network
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
       interval: 10s
@@ -19,7 +19,7 @@ services:
       retries: 5
 
 networks:
-  app_network:
+  lazy_api_network:
     external: true
 
 volumes:

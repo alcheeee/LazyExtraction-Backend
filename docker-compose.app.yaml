@@ -10,7 +10,7 @@ services:
     volumes:
       - cache:/data
     networks:
-      - app_network
+      - lazy_api_network
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
@@ -42,7 +42,7 @@ services:
       TESTCONTAINERS_RYUK_DISABLED: "true"
     entrypoint: ["/app/entrypoint.sh"]
     networks:
-      - app_network
+      - lazy_api_network
 
 volumes:
   cache:
@@ -50,5 +50,5 @@ volumes:
   postgres_data:
 
 networks:
-  app_network:
+  lazy_api_network:
     external: true
