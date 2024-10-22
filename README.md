@@ -1,4 +1,4 @@
-# Lazy Extraction API
+<h1 align="center">Lazy Extraction API</h1>
 
 <p align="center">
   <img width="200" height="200" src="lazy_logo.png">
@@ -10,10 +10,10 @@ A REST API for a simple extraction-shooter game, built with [FastAPI](https://gi
 
 - **Framework**: [FastAPI](https://github.com/fastapi/fastapi)
 - **Database**: PostgreSQL, Redis(cache) - not integrated with a majority of the api, but ready to be used.
-- **ORM**: SQLModel, SQLAlchemy
+- **ORM**: SQLAlchemy, [SQLModel](https://github.com/fastapi/sqlmodel)
 - **Testing**: [Testcontainers](https://github.com/testcontainers/testcontainers-python), [pytest](https://github.com/pytest-dev/pytest), unittest
 - **Containerization**: Docker
-- **Frontend Integration**: The API is designed to integrate with any frontend, though I'm creating the frontend with Godot 4 (*will be released soon*)
+- **Frontend Integration**: The API is designed to integrate with any frontend, I'm creating the frontend with Godot 4
 - **Poetry**: This will come in the next update.
 
 ## Features
