@@ -1,5 +1,9 @@
 # Lazy Extraction API
 
+<p align="center">
+  <img width="200" height="200" src="lazy_logo.png">
+</p>
+
 A REST API for a simple extraction-shooter game, built with [FastAPI](https://github.com/fastapi/fastapi). The API uses SQLModel and a PostgreSQL database for user data. Some of the functionality includes weapon customization, inventory management, attachment management, and stat tracking. Much of it is early in development.
 
 ## Stack
